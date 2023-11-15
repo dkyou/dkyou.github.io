@@ -1,9 +1,10 @@
 ---
-layout: artcle
-title:"pix2Vox文献阅读"
+
+title: pix2Vox文献总结(Pix2Vox Context-ware 3D Reconstruction From Single and Multi-View Images)
+tags: TeXt
 
 ---
-
+文献总结
 # pix2Vox文献总结(Pix2Vox Context-ware 3D Reconstruction From Single and Multi-View Images)
 
 ## 研究背景
