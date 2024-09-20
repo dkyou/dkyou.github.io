@@ -321,8 +321,13 @@
 <p><img src="C:\Users\dky\AppData\Roaming\Typora\typora-user-images\image-20240920200638025.png" alt="image-20240920200638025"></p>
 <h1 id="4-更新文章"><a href="#4-更新文章" class="headerlink" title="4.更新文章"></a>4.更新文章</h1><p>可以使用<code>hexo new &#39;文章标题&#39;</code>命令来创建一个<code>文章标题.md</code>文件，也可以按照格式直接将自己的<code>.md</code></p>
 <p>文件复制到<code>&quot;D:\myblog\source\_posts\&quot;</code>文件夹中，同时按照以下格式添加一些命令</p>
+<p>使用<code>hexo new &#39;文章标题&#39;</code>命令来创建一个<code>文章标题.md</code>文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo new <span class="string">&#x27;文章标题&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
 <p>博客语法结构:</p>
-<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">title: Hello World #文章标题</span><br><span class="line">date: 2024-09-20 20:13:20</span><br><span class="line">tags: </span><br><span class="line"><span class="section">categories:</span></span><br><span class="line"><span class="section">---</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">title: Hello World #文章标题</span><br><span class="line">date: 2024-09-20 20:13:20</span><br><span class="line">tags: [tag1,tag2,...]</span><br><span class="line"><span class="section">categories: </span></span><br><span class="line"><span class="section">---</span></span><br></pre></td></tr></table></figure>
 
 <p>将新文章部署到github上</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">hexo g <span class="comment"># 生成，必须</span></span><br><span class="line">hexo s <span class="comment"># 本地渲染，非必要</span></span><br><span class="line">hexo d <span class="comment"># 部署到Github 上，必须</span></span><br></pre></td></tr></table></figure>
