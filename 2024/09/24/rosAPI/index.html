@@ -13,7 +13,7 @@
 
 
 
-<title>ros常用命令 | 又是摸鱼的一天</title>
+<title>rosAPI | 又是摸鱼的一天</title>
 
 
 
@@ -196,7 +196,7 @@
     
     <article class="post-wrap">
         <header class="post-header">
-            <h1 class="post-title">ros常用命令</h1>
+            <h1 class="post-title">rosAPI</h1>
             
                 <div class="post-meta">
                     
@@ -205,7 +205,7 @@
 
                     
                         <span class="post-time">
-                        Date: <a href="#">September 18, 2024&nbsp;&nbsp;13:39:11</a>
+                        Date: <a href="#">September 24, 2024&nbsp;&nbsp;13:39:11</a>
                         </span>
                     
                     
@@ -221,30 +221,96 @@
         </header>
 
         <div class="post-content">
-            <h1 id="ROS文件系统"><a href="#ROS文件系统" class="headerlink" title="ROS文件系统"></a>ROS文件系统</h1><p><img src="/./images/ros%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84.png" alt="ros文件结构"></p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">WorkSpace --- 自定义的工作空间</span><br><span class="line"></span><br><span class="line">    |--- build:编译空间，用于存放CMake和catkin的缓存信息、配置信息和其他中间文件。</span><br><span class="line"></span><br><span class="line">    |--- devel:开发空间，用于存放编译后生成的目标文件，包括头文件、动态&amp;静态链接库、可执行文件等。</span><br><span class="line"></span><br><span class="line">    |--- src: 源码</span><br><span class="line"></span><br><span class="line">        |-- package：功能包(ROS基本单元)包含多个节点、库与配置文件，包名所有字母小写，只能由字母、数字与下划线组成</span><br><span class="line"></span><br><span class="line">            |-- CMakeLists.txt 配置编译规则，比如源文件、依赖项、目标文件</span><br><span class="line"></span><br><span class="line">            |-- package.xml 包信息，比如:包名、版本、作者、依赖项...(以前版本是 manifest.xml)</span><br><span class="line"></span><br><span class="line">            |-- scripts 存储python文件</span><br><span class="line"></span><br><span class="line">            |-- src 存储C++源文件</span><br><span class="line"></span><br><span class="line">            |-- include 头文件</span><br><span class="line"></span><br><span class="line">            |-- msg 消息通信格式文件</span><br><span class="line"></span><br><span class="line">            |-- srv 服务通信格式文件</span><br><span class="line"></span><br><span class="line">            |-- action 动作格式文件</span><br><span class="line"></span><br><span class="line">            |-- launch 可一次性运行多个节点 </span><br><span class="line"></span><br><span class="line">            |-- config 配置信息</span><br><span class="line"></span><br><span class="line">        |-- CMakeLists.txt: 编译的基本配置</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<h3 id="package-xml"><a href="#package-xml" class="headerlink" title="package.xml"></a>package.xml</h3><p>该文件定义有关软件包的属性，例如软件包名称，版本号，作者，维护者以及对其他catkin软件包的依赖性。请注意，该概念类似于旧版 rosbuild 构建系统中使用的manifest.xml文件。</p>
-<h3 id="CMakeLists-txt"><a href="#CMakeLists-txt" class="headerlink" title="CMakeLists.txt"></a>CMakeLists.txt</h3><p>文件<code>CMakeLists.txt</code>是CMake构建系统的输入，用于构建软件包。任何兼容CMake的软件包都包含一个或多个CMakeLists.txt文件，这些文件描述了如何构建代码以及将代码安装到何处。</p>
-<h2 id="ros文件系统相关命令"><a href="#ros文件系统相关命令" class="headerlink" title="ros文件系统相关命令"></a>ros文件系统相关命令</h2><ol>
-<li>增</li>
-<li>删</li>
-<li>改</li>
-<li>查</li>
-<li>启停</li>
-<li></li>
+            <h1 id="ROS-API"><a href="#ROS-API" class="headerlink" title="ROS API"></a>ROS API</h1><ol>
+<li><p>init 函数</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//有3个重载，常用以下</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">ros::init</span><span class="params">(<span class="type">int</span> &amp;argc, <span class="type">char</span> **argv, <span class="type">const</span> std::string &amp;name, <span class="type">uint32_t</span> options = <span class="number">0U</span>)</span></span></span><br></pre></td></tr></table></figure>
+<table>
+<thead>
+<tr>
+<th align="center">作用：</th>
+<th align="center">初始化ROS系统，并创建一个节点，节点名称为name</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">argc</td>
+<td align="center">参数个数</td>
+</tr>
+<tr>
+<td align="center">argv</td>
+<td align="center">参数数组，需要符合ros的特定格式</td>
+</tr>
+<tr>
+<td align="center">name</td>
+<td align="center">节点名称，默认为argv[0]，不允许重复</td>
+</tr>
+<tr>
+<td align="center">options</td>
+<td align="center">ROS中同一个节点不能重复启动，此时可以通过options选项来设置是否允许重复启动,原理是在节点名称后加上生成随机数字尾缀。使用方法：ros::init_options::AnonymousName</td>
+</tr>
+<tr>
+<td align="center">使用细节</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+</li>
+<li><p>发布对象</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//使用示例</span></span><br><span class="line">ros::Publisher pub = nh.<span class="built_in">advertise</span>&lt;geometry_msgs::Twist&gt;(<span class="string">&quot;/turtle1/cmd_vel&quot;</span>,<span class="number">1000</span>);</span><br><span class="line"><span class="comment">//函数原型</span></span><br><span class="line"><span class="keyword">inline</span> ros::Publisher ros::NodeHandle::<span class="built_in">advertise</span>&lt;std_msgs::String&gt;(<span class="type">const</span> std::string &amp;topic, <span class="type">uint32_t</span> queue_size, <span class="type">bool</span> latch = <span class="literal">false</span>)</span><br></pre></td></tr></table></figure>
+<table>
+<thead>
+<tr>
+<th align="center">作用：</th>
+<th align="center">创建发布者对象</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">模板</td>
+<td align="center">被发布者的消息类型</td>
+</tr>
+<tr>
+<td align="center">topic</td>
+<td align="center">话题名称</td>
+</tr>
+<tr>
+<td align="center">queue_size</td>
+<td align="center">缓存消息个数，如果满了丢弃之前的</td>
+</tr>
+<tr>
+<td align="center">latch</td>
+<td align="center">如果为ture,会保存发布方的最后一条消息，并且当新的订阅者连接到发布方时，发布方会将这条信息发送给订阅者。应用场景：静态地图</td>
+</tr>
+<tr>
+<td align="center">使用细节</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+</li>
+<li><p>回旋函数<br>有回调就伴随着回旋</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">ros::spin</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">ros::spinOnce</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+<table>
+<thead>
+<tr>
+<th align="center">作用：</th>
+<th align="center">处理回调函数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">spin()</td>
+<td align="center">是进入了循环执行回调函数，进入循环后不会自己退出，在 ros::spin() 后的语句不会执行到</td>
+</tr>
+<tr>
+<td align="center">spinOnce()</td>
+<td align="center">只会执行一次回调函数(没有循环)，ros::spinOnce() 后的语句可以执行</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>时刻<br>参考系1970年1月1日0时0分0秒</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ros::Time::<span class="built_in">now</span>()</span><br><span class="line"><span class="comment">//now() 返回一个ros::Time对象，表示当前时间</span></span><br><span class="line"><span class="comment">//ros::Time::now().toSec()</span></span><br><span class="line"><span class="comment">//ros::Time::now().sec</span></span><br></pre></td></tr></table></figure></li>
+<li><p>定时器</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ros::Timer timer = nh.<span class="built_in">createTimer</span>(ros::<span class="built_in">Duration</span>(<span class="number">0.5</span>),doSomeThing,<span class="literal">true</span>);<span class="comment">//只执行一次</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><a target="_blank" rel="noopener" href="https://support.3dsystems.com/s/article/OpenHaptics-for-Linux-Developer-Edition-v34?language=en_US">https://support.3dsystems.com/s/article/OpenHaptics-for-Linux-Developer-Edition-v34?language=en_US</a></p>
+</li>
 </ol>
-<h1 id="ros常用命令"><a href="#ros常用命令" class="headerlink" title="ros常用命令"></a>ros常用命令</h1><p>参考网址：<a target="_blank" rel="noopener" href="http://wiki.ros.org/ROS/CommandLineTools">ros命令</a></p>
-<ol>
-<li>rosnode ：操作节点</li>
-<li>rostopic ：操作话题</li>
-<li>rosservicea : 操作服务</li>
-<li>rosmsg : 操作msg消息</li>
-<li>rossrv : 操作srv服务</li>
-<li>rosparam : 操作参数</li>
-</ol>
-<p>新生成一个乌龟</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">rosservice call /spawn <span class="string">&quot;x: 0.0</span></span><br><span class="line"><span class="string">y: 0.0</span></span><br><span class="line"><span class="string">theta: 0.0</span></span><br><span class="line"><span class="string">name:</span></span><br></pre></td></tr></table></figure>
-<h1 id="常用API"><a href="#常用API" class="headerlink" title="常用API"></a>常用API</h1>
+
         </div>
 
         
@@ -258,7 +324,7 @@
                 
                     <p class="copyright-item">
                         <span>Permalink:</span>
-                        <span><a href="https://dkyou.github.io/2024/09/18/ros%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">https://dkyou.github.io/2024/09/18/ros%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</a></span>
+                        <span><a href="https://dkyou.github.io/2024/09/24/rosAPI/">https://dkyou.github.io/2024/09/24/rosAPI/</a></span>
                     </p>
                 
                 
@@ -297,10 +363,8 @@
         </section>
         <section class="post-nav">
             
-                <a class="prev" rel="prev" href="/2024/09/20/hexo+github%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E7%AC%94%E8%AE%B0/">hexo+github搭建博客笔记</a>
             
-            
-            <a class="next" rel="next" href="/2024/09/18/Linux%E5%B5%8C%E5%85%A5%E5%BC%8F/">Linux嵌入式学习粗略笔记</a>
+            <a class="next" rel="next" href="/2024/09/22/%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E5%8F%82%E8%80%83%E8%BF%87%E7%9A%84%E9%93%BE%E6%8E%A5/">搭建博客参考过的链接</a>
             
         </section>
 
