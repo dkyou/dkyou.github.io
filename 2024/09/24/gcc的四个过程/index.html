@@ -13,7 +13,7 @@
 
 
 
-<title>rosAPI | 又是摸鱼的一天</title>
+<title>gcc的四个过程 | 又是摸鱼的一天</title>
 
 
 
@@ -196,7 +196,7 @@
     
     <article class="post-wrap">
         <header class="post-header">
-            <h1 class="post-title">rosAPI</h1>
+            <h1 class="post-title">gcc的四个过程</h1>
             
                 <div class="post-meta">
                     
@@ -212,7 +212,7 @@
                         <span class="post-category">
                     Category:
                             
-                                <a href="/categories/ROS/">ROS</a>
+                                <a href="/categories/C/">C++</a>
                             
                         </span>
                     
@@ -221,96 +221,14 @@
         </header>
 
         <div class="post-content">
-            <h1 id="ROS-API"><a href="#ROS-API" class="headerlink" title="ROS API"></a>ROS API</h1><ol>
-<li><p>init 函数</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//有3个重载，常用以下</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">ros::init</span><span class="params">(<span class="type">int</span> &amp;argc, <span class="type">char</span> **argv, <span class="type">const</span> std::string &amp;name, <span class="type">uint32_t</span> options = <span class="number">0U</span>)</span></span></span><br></pre></td></tr></table></figure>
-<table>
-<thead>
-<tr>
-<th align="center">作用：</th>
-<th align="center">初始化ROS系统，并创建一个节点，节点名称为name</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">argc</td>
-<td align="center">参数个数</td>
-</tr>
-<tr>
-<td align="center">argv</td>
-<td align="center">参数数组，需要符合ros的特定格式</td>
-</tr>
-<tr>
-<td align="center">name</td>
-<td align="center">节点名称，默认为argv[0]，不允许重复</td>
-</tr>
-<tr>
-<td align="center">options</td>
-<td align="center">ROS中同一个节点不能重复启动，此时可以通过options选项来设置是否允许重复启动,原理是在节点名称后加上生成随机数字尾缀。使用方法：ros::init_options::AnonymousName</td>
-</tr>
-<tr>
-<td align="center">使用细节</td>
-<td align="center"></td>
-</tr>
-</tbody></table>
-</li>
-<li><p>发布对象</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//使用示例</span></span><br><span class="line">ros::Publisher pub = nh.<span class="built_in">advertise</span>&lt;geometry_msgs::Twist&gt;(<span class="string">&quot;/turtle1/cmd_vel&quot;</span>,<span class="number">1000</span>);</span><br><span class="line"><span class="comment">//函数原型</span></span><br><span class="line"><span class="keyword">inline</span> ros::Publisher ros::NodeHandle::<span class="built_in">advertise</span>&lt;std_msgs::String&gt;(<span class="type">const</span> std::string &amp;topic, <span class="type">uint32_t</span> queue_size, <span class="type">bool</span> latch = <span class="literal">false</span>)</span><br></pre></td></tr></table></figure>
-<table>
-<thead>
-<tr>
-<th align="center">作用：</th>
-<th align="center">创建发布者对象</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">模板</td>
-<td align="center">被发布者的消息类型</td>
-</tr>
-<tr>
-<td align="center">topic</td>
-<td align="center">话题名称</td>
-</tr>
-<tr>
-<td align="center">queue_size</td>
-<td align="center">缓存消息个数，如果满了丢弃之前的</td>
-</tr>
-<tr>
-<td align="center">latch</td>
-<td align="center">如果为ture,会保存发布方的最后一条消息，并且当新的订阅者连接到发布方时，发布方会将这条信息发送给订阅者。应用场景：静态地图</td>
-</tr>
-<tr>
-<td align="center">使用细节</td>
-<td align="center"></td>
-</tr>
-</tbody></table>
-</li>
-<li><p>回旋函数<br>有回调就伴随着回旋</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">ros::spin</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">ros::spinOnce</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
-<table>
-<thead>
-<tr>
-<th align="center">作用：</th>
-<th align="center">处理回调函数</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">spin()</td>
-<td align="center">是进入了循环执行回调函数，进入循环后不会自己退出，在 ros::spin() 后的语句不会执行到</td>
-</tr>
-<tr>
-<td align="center">spinOnce()</td>
-<td align="center">只会执行一次回调函数(没有循环)，ros::spinOnce() 后的语句可以执行</td>
-</tr>
-</tbody></table>
-</li>
-<li><p>时刻<br>参考系1970年1月1日0时0分0秒</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ros::Time::<span class="built_in">now</span>()</span><br><span class="line"><span class="comment">//now() 返回一个ros::Time对象，表示当前时间</span></span><br><span class="line"><span class="comment">//ros::Time::now().toSec()</span></span><br><span class="line"><span class="comment">//ros::Time::now().sec</span></span><br></pre></td></tr></table></figure></li>
-<li><p>定时器</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ros::Timer timer = nh.<span class="built_in">createTimer</span>(ros::<span class="built_in">Duration</span>(<span class="number">0.5</span>),doSomeThing,<span class="literal">true</span>);<span class="comment">//只执行一次</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p><a target="_blank" rel="noopener" href="https://support.3dsystems.com/s/article/OpenHaptics-for-Linux-Developer-Edition-v34?language=en_US">https://support.3dsystems.com/s/article/OpenHaptics-for-Linux-Developer-Edition-v34?language=en_US</a></p>
-</li>
+            <h1 id="gcc四个过程"><a href="#gcc四个过程" class="headerlink" title="gcc四个过程"></a>gcc四个过程</h1><p>C&#x2F;C++通过gcc&#x2F;g++编译器包括以下四个过程：<br>预处理，编译，汇编，链接</p>
+<ol>
+<li>预处理(preprocess)<br>预处理可以理解为将#里边的内容展开，包括宏定义，头文件路径等等，然后直接插入到程序里边去。<br>预处理通过预处理器将.c文件转换成.i文件。<br>预处理阶段不会检查语法错误</li>
+<li>编译(compile)<br>编译是通过编译器(ccl)将.i文件转换为汇编代码文件，一般是.s文件。<br>在编译阶段会进行语法分析等</li>
+<li>汇编(assemble)<br>汇编器(as)将.s文件翻译成二进制机器语言指令（二进制机器码），生成.o文件。</li>
+<li>链接(link)<br>链接器(ld)将上述产生的一堆文件还有各种库通过某种方式链接起来，生成.out(.exe)文件</li>
 </ol>
-
+<h1 id="以上都是自己理解"><a href="#以上都是自己理解" class="headerlink" title="以上都是自己理解"></a>以上都是自己理解</h1>
         </div>
 
         
@@ -324,7 +242,7 @@
                 
                     <p class="copyright-item">
                         <span>Permalink:</span>
-                        <span><a href="https://dkyou.github.io/2024/09/24/rosAPI/">https://dkyou.github.io/2024/09/24/rosAPI/</a></span>
+                        <span><a href="https://dkyou.github.io/2024/09/24/gcc%E7%9A%84%E5%9B%9B%E4%B8%AA%E8%BF%87%E7%A8%8B/">https://dkyou.github.io/2024/09/24/gcc%E7%9A%84%E5%9B%9B%E4%B8%AA%E8%BF%87%E7%A8%8B/</a></span>
                     </p>
                 
                 
@@ -350,7 +268,7 @@
                     
                         <a href="/tags/%E7%AC%94%E8%AE%B0/"># 笔记</a>
                     
-                        <a href="/tags/ros/"># ros</a>
+                        <a href="/tags/c/"># c++</a>
                     
                         
                 </span>
@@ -363,8 +281,10 @@
         </section>
         <section class="post-nav">
             
+                <a class="prev" rel="prev" href="/2024/09/24/rosAPI/">rosAPI</a>
             
-            <a class="next" rel="next" href="/2024/09/24/gcc%E7%9A%84%E5%9B%9B%E4%B8%AA%E8%BF%87%E7%A8%8B/">gcc的四个过程</a>
+            
+            <a class="next" rel="next" href="/2024/09/22/%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E5%8F%82%E8%80%83%E8%BF%87%E7%9A%84%E9%93%BE%E6%8E%A5/">搭建博客参考过的链接</a>
             
         </section>
 
