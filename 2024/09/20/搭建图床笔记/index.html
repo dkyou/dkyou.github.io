@@ -221,7 +221,79 @@
         </header>
 
         <div class="post-content">
-            <h1 id="图床"><a href="#图床" class="headerlink" title="图床"></a>图床</h1>
+            <h1 id="图床"><a href="#图床" class="headerlink" title="图床"></a>图床</h1><h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><ul>
+<li><p>github账号注册：必须，但省略</p>
+</li>
+<li><p>下载PicGo,链接如下：必须</p>
+</li>
+</ul>
+<p>​	<a target="_blank" rel="noopener" href="https://mirrors.sdu.edu.cn/github-release/Molunerfinn_PicGo/v2.3.1/">https://mirrors.sdu.edu.cn/github-release/Molunerfinn_PicGo/v2.3.1/</a></p>
+<ul>
+<li>typora软件：非必须，最好有。也可找其他mrakdown代替，比如我使用的vscode+Markdown All in One</li>
+</ul>
+<h2 id="图床是什么"><a href="#图床是什么" class="headerlink" title="图床是什么"></a>图床是什么</h2><p>图床可以翻译为”image hosting”或者”image storage”，主要功能包括：</p>
+<ol>
+<li><strong>图片上传</strong>：用户可以将图片上传到图床平台。</li>
+<li><strong>图片存储</strong>：平台会存储用户的图片，并提供一定的管理和访问权限。</li>
+<li><strong>图片分享</strong>：用户可以获得图片的直接链接，并通过这些链接在其他网站、论坛、社交媒体等地方分享图片。</li>
+<li><strong>图片管理</strong>：用户可以在图床上管理自己的图片，包括查看、编辑、删除等操作。</li>
+</ol>
+<h2 id="国内常见的图床服务"><a href="#国内常见的图床服务" class="headerlink" title="国内常见的图床服务"></a>国内常见的图床服务</h2><ul>
+<li>七牛云</li>
+<li>阿里云oss</li>
+<li>又拍云</li>
+</ul>
+<p>之前我一直将图片上传到七牛云，但是七牛云的免费域名只有30天，到期了有需要重新申请，解决方案是自己申请一个域名，便可以长期使用七牛云的免费空间额度进行图床搭建。个人实在不想折腾，于是选择了github的搭建方案，相比于其他国内的搭建方案，步骤可谓非常简单，而且不限制容量。</p>
+<p>网上查了一些攻略说github搭建图床的缺点是访问速度慢，但是仔细一想，我的笔记写来是给自己看的，对速度没有要求。</p>
+<h1 id="使用github搭建图床"><a href="#使用github搭建图床" class="headerlink" title="使用github搭建图床"></a>使用github搭建图床</h1><p>思路：其实很简单，就是在github上建立一个public的仓库，然后使用该仓库作为图床服务器存储</p>
+<h2 id="1-创建新仓库"><a href="#1-创建新仓库" class="headerlink" title="1. 创建新仓库"></a>1. 创建新仓库</h2><p><img src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/image-20240929110859291.png" alt="image-20240929110859291">默认</p>
+<p>仓库名随意，一定设置为public</p>
+<p><img src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/image-20240929111036997.png" alt="image-20240929111036997"></p>
+<h2 id="2-生成token令牌"><a href="#2-生成token令牌" class="headerlink" title="2. 生成token令牌"></a>2. 生成token令牌</h2><p>setting-&gt;Developer Settings-&gt;Personal access tokens-&gt;Tokens(classic)-&gt;Generate new token(classic)</p>
+<p><img src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/image-20240929112002237.png" alt="image-20240929112002237"></p>
+<p>然后创建tokens即可，这个步骤可能让你验证账号之类的，接下来就是一些token的设置如下：</p>
+<p><strong>note：</strong>随便填写，没有影响</p>
+<p><strong>expiration：</strong>也可以随便填写，可以填永久，也可以按照自己的需求填写，我目前还不知道到期了有什么影响</p>
+<p>**select scopes:**勾选repo前边的选项</p>
+<p>具体设置见下图：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/image-20240929112435178.png" alt="image-20240929112435178"></p>
+<p>其他设置全部默认，然后拉到最后点击蓝色的<code>Generate Tokes</code>等待生成即可</p>
+<p><strong>注意：生成的token记得复制备份，之后的PicGo设置需要用到</strong></p>
+<h1 id="PicGo来实现图片上传"><a href="#PicGo来实现图片上传" class="headerlink" title="PicGo来实现图片上传"></a>PicGo来实现图片上传</h1><p>PicGo是方便我们进行图片上传的，而且方便我们对图片进行管理。</p>
+<p>下载地址：<a target="_blank" rel="noopener" href="https://mirrors.sdu.edu.cn/github-release/Molunerfinn_PicGo/v2.3.1/">https://mirrors.sdu.edu.cn/github-release/Molunerfinn_PicGo/v2.3.1/</a></p>
+<h2 id="1-PicGo设置："><a href="#1-PicGo设置：" class="headerlink" title="1. PicGo设置："></a>1. <strong>PicGo设置：</strong></h2><p>选择：图床设置-&gt;Github，然后进行核心配置</p>
+<p><strong>设定仓库名：</strong>格式为<code>用户名/仓库名</code>直接复制下方红框中的内容也可。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/image-20240929105601077.png" alt="image-20240929105601077"></p>
+<p><strong>设定分支名：</strong>一般为<code>main</code>或者<code>master</code>，具体需要看自己的设置</p>
+<p><img src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/image-20240929105901786.png" alt="image-20240929105901786"></p>
+<p><strong>设置<code>token</code>：</strong>就是<strong>github搭建图床</strong>生成的token</p>
+<p><strong>设定存储路径：</strong><code>img/</code>可根据自己喜好填写即可</p>
+<p><strong>自定义域名：</strong>这个需要一个免费的加速域名，可以直接用<code>https://cdn.jsdelivr.net/gh/</code>,或者自己申请一个。</p>
+<p>具体格式为：<code>加速域名+账户名+仓库名/分支名</code>，中间<code>+</code>号不用填写，举例：</p>
+<p><code>https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku</code></p>
+<p>以上便完成了PicGo的所有设置，详情见下图：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/image-20240929105414368.png" alt="image-20240929105414368"></p>
+<p>之后，可以返回上传区域，直接上传即可，也可以把github设置为默认图床</p>
+<h2 id="2-使用PicGo上传图片到github仓库"><a href="#2-使用PicGo上传图片到github仓库" class="headerlink" title="2. 使用PicGo上传图片到github仓库"></a>2. 使用PicGo上传图片到github仓库</h2><p>拖拽即可，非常简单</p>
+<p><img src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/image-20240929113745531.png" alt="image-20240929113745531"></p>
+<h2 id="3-引用PicGo的链接到typora中进行测试"><a href="#3-引用PicGo的链接到typora中进行测试" class="headerlink" title="3. 引用PicGo的链接到typora中进行测试"></a>3. 引用PicGo的链接到typora中进行测试</h2><p>点击复制即可得到以下markdown格式的图片链接，插入到markdown中即可解析出图片</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">![](<span class="link">https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/%E3%80%90%E9%9B%AA%E3%80%912024-09-20%2023_57_02.png</span>)`</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/image-20240929114132613.png" alt="image-20240929114132613"></p>
+<p>当然也可以选择HTML URL等等其他格式的链接，非常灵活</p>
+<h2 id="4-测试结果"><a href="#4-测试结果" class="headerlink" title="4. 测试结果"></a>4. 测试结果</h2><p><img src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/%E3%80%90%E9%9B%AA%E3%80%912024-09-20%2023_57_02.png"></p>
+<h1 id="设置Typora实现插入到typora的图片自动上传到图床"><a href="#设置Typora实现插入到typora的图片自动上传到图床" class="headerlink" title="设置Typora实现插入到typora的图片自动上传到图床"></a>设置Typora实现插入到typora的图片自动上传到图床</h1><p>前提：开启代理</p>
+<p>打开typora，依次点击：文件-&gt;偏好设置-&gt;图像。选择 上传服务，设置一下picgo和picgo路径。比较简单，就不贴图了。</p>
+<p>这样之后插入到Typora的图片就会自动上传到github仓库里了</p>
+<h1 id="批量转移图床"><a href="#批量转移图床" class="headerlink" title="批量转移图床"></a>批量转移图床</h1><p>这里只是记录一下批量转移图床的思路，具体我还没有遇到过，但是我感觉我很有可能以后会遇到。</p>
+<p>简单思路：使用vscode或者typora的批量替换功能可以实现图片关键信息链接的替换，vscode似乎可以替换多个文件。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/xdnxl/article/details/129466060">如何用github搭建图床（亲测有效）_github图床-CSDN博客</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/xianrenzhou/article/details/137369119?ops_request_misc=%7B%22request_id%22:%2278194E2A-5095-4395-9188-F55AAB978EC8%22,%22scm%22:%2220140713.130102334..%22%7D&request_id=78194E2A-5095-4395-9188-F55AAB978EC8&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~sobaiduend~default-2-137369119-null-null.142%5Ev100%5Epc_search_result_base6&utm_term=github%E5%9B%BE%E5%BA%8A&spm=1018.2226.3001.4187">2024新版-使用GitHub搭建个人图床-CSDN博客</a></p>
+</li>
+</ol>
+
         </div>
 
         
@@ -275,7 +347,7 @@
                 <a class="prev" rel="prev" href="/2024/09/21/hello-world/">Hello World</a>
             
             
-            <a class="next" rel="next" href="/2024/09/20/hexo+github%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E7%AC%94%E8%AE%B0/">hexo+github搭建博客笔记</a>
+            <a class="next" rel="next" href="/2024/09/20/%E5%9B%BE%E5%BA%8A%E9%93%BE%E6%8E%A5%E6%A0%BC%E5%BC%8F%E6%B5%8B%E8%AF%95/">图床链接格式测试</a>
             
         </section>
 
