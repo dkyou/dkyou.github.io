@@ -13,7 +13,7 @@
 
 
 
-<title>rosAPI | 又是摸鱼的一天</title>
+<title>小杜的重庆之行 | 又是摸鱼的一天</title>
 
 
 
@@ -196,7 +196,7 @@
     
     <article class="post-wrap">
         <header class="post-header">
-            <h1 class="post-title">rosAPI</h1>
+            <h1 class="post-title">小杜的重庆之行</h1>
             
                 <div class="post-meta">
                     
@@ -205,14 +205,14 @@
 
                     
                         <span class="post-time">
-                        Date: <a href="#">September 24, 2024&nbsp;&nbsp;13:39:11</a>
+                        Date: <a href="#">September 29, 2024&nbsp;&nbsp;12:39:11</a>
                         </span>
                     
                     
                         <span class="post-category">
                     Category:
                             
-                                <a href="/categories/ROS/">ROS</a>
+                                <a href="/categories/%E6%97%85%E8%A1%8C/">旅行</a>
                             
                         </span>
                     
@@ -221,95 +221,340 @@
         </header>
 
         <div class="post-content">
-            <h1 id="ROS-API"><a href="#ROS-API" class="headerlink" title="ROS API"></a>ROS API</h1><ol>
-<li><p>init 函数</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//有3个重载，常用以下</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">ros::init</span><span class="params">(<span class="type">int</span> &amp;argc, <span class="type">char</span> **argv, <span class="type">const</span> std::string &amp;name, <span class="type">uint32_t</span> options = <span class="number">0U</span>)</span></span></span><br></pre></td></tr></table></figure>
+            <h1 id="小杜的重庆之行"><a href="#小杜的重庆之行" class="headerlink" title="小杜的重庆之行"></a>小杜的重庆之行</h1><img src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/R-C.gif" alt="R-C" style="zoom:30%;" />
+
 <table>
 <thead>
 <tr>
-<th align="center">作用：</th>
-<th align="center">初始化ROS系统，并创建一个节点，节点名称为name</th>
+<th align="center">出发时间</th>
+<th align="center">抵达时间</th>
 </tr>
 </thead>
 <tbody><tr>
-<td align="center">argc</td>
-<td align="center">参数个数</td>
+<td align="center">2024年9月30日 15:06</td>
+<td align="center">2024年10月1日 15:43</td>
+</tr>
+</tbody></table>
+<img src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大头黑猫咪.jpg" alt="大头黑猫咪" style="zoom:15%;" />
+
+<hr>
+<p><strong>Day1</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center">地点</th>
+<th align="center">注意</th>
+<th align="center">门票</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">解放碑（抗战胜利的纪念碑）</td>
+<td align="center">注意拍摄角度      带墨镜</td>
+<td align="center">免费</td>
 </tr>
 <tr>
-<td align="center">argv</td>
-<td align="center">参数数组，需要符合ros的特定格式</td>
+<td align="center">山城书店（爱心书店 ）</td>
+<td align="center">注意拍摄角度图</td>
+<td align="center">免费</td>
 </tr>
 <tr>
-<td align="center">name</td>
-<td align="center">节点名称，默认为argv[0]，不允许重复</td>
+<td align="center">八一好吃街（特色美食）</td>
+<td align="center">吃什么</td>
+<td align="center">自费的，</td>
 </tr>
 <tr>
-<td align="center">options</td>
-<td align="center">ROS中同一个节点不能重复启动，此时可以通过options选项来设置是否允许重复启动,原理是在节点名称后加上生成随机数字尾缀。使用方法：ros::init_options::AnonymousName</td>
+<td align="center">罗汉寺</td>
+<td align="center">拍照打卡点</td>
+<td align="center">20元</td>
+</tr>
+</tbody></table>
+<p><strong>day 2</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center">地点</th>
+<th align="center">注意</th>
+<th align="center">门票</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">白象居</td>
+<td align="center">可以拍长江索道</td>
+<td align="center"></td>
 </tr>
 <tr>
-<td align="center">使用细节</td>
+<td align="center">湖广会馆</td>
+<td align="center">拍照出片</td>
+<td align="center">（25元）</td>
+</tr>
+<tr>
+<td align="center">长江索道</td>
+<td align="center">（提前预约）</td>
+<td align="center">25-30元</td>
+</tr>
+<tr>
+<td align="center">十八梯</td>
+<td align="center">出片</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">南滨路</td>
+<td align="center">（夜景）</td>
 <td align="center"></td>
 </tr>
 </tbody></table>
-</li>
-<li><p>发布对象</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//使用示例</span></span><br><span class="line">ros::Publisher pub = nh.<span class="built_in">advertise</span>&lt;geometry_msgs::Twist&gt;(<span class="string">&quot;/turtle1/cmd_vel&quot;</span>,<span class="number">1000</span>);</span><br><span class="line"><span class="comment">//函数原型</span></span><br><span class="line"><span class="keyword">inline</span> ros::Publisher ros::NodeHandle::<span class="built_in">advertise</span>&lt;std_msgs::String&gt;(<span class="type">const</span> std::string &amp;topic, <span class="type">uint32_t</span> queue_size, <span class="type">bool</span> latch = <span class="literal">false</span>)</span><br></pre></td></tr></table></figure>
+<p><strong>day3</strong></p>
 <table>
 <thead>
 <tr>
-<th align="center">作用：</th>
-<th align="center">创建发布者对象</th>
+<th align="center">地点</th>
+<th align="center">攻略</th>
 </tr>
 </thead>
 <tbody><tr>
-<td align="center">模板</td>
-<td align="center">被发布者的消息类型</td>
+<td align="center">戴家巷</td>
+<td align="center">出片</td>
 </tr>
 <tr>
-<td align="center">topic</td>
-<td align="center">话题名称</td>
+<td align="center">来福士</td>
+<td align="center">大商场</td>
 </tr>
 <tr>
-<td align="center">queue_size</td>
-<td align="center">缓存消息个数，如果满了丢弃之前的</td>
+<td align="center">朝天门</td>
+<td align="center">（两江交汇）</td>
 </tr>
 <tr>
-<td align="center">latch</td>
-<td align="center">如果为ture,会保存发布方的最后一条消息，并且当新的订阅者连接到发布方时，发布方会将这条信息发送给订阅者。应用场景：静态地图</td>
+<td align="center">洪崖洞</td>
+<td align="center">夜景</td>
 </tr>
 <tr>
-<td align="center">使用细节</td>
+<td align="center">千厮门大桥</td>
+<td align="center">（拍洪崖洞全景）</td>
+</tr>
+</tbody></table>
+<p><strong>day4</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center">地点</th>
+<th align="center">注意</th>
+<th align="center">门票</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">开埠遗址公园</td>
+<td align="center">（重庆文化）</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">龙门浩老街</td>
+<td align="center">（爬坡，）</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">怀旧轮渡</td>
+<td align="center"></td>
+<td align="center">（15元）</td>
+</tr>
+<tr>
+<td align="center">弹子石老街</td>
+<td align="center">（中式庭院）</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">南山一颗树</td>
+<td align="center">（美景）</td>
 <td align="center"></td>
 </tr>
 </tbody></table>
-</li>
-<li><p>回旋函数<br>有回调就伴随着回旋</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">ros::spin</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">ros::spinOnce</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+<p><strong>day5</strong></p>
 <table>
 <thead>
 <tr>
-<th align="center">作用：</th>
-<th align="center">处理回调函数</th>
+<th align="center">地点</th>
+<th align="center">攻略</th>
 </tr>
 </thead>
 <tbody><tr>
-<td align="center">spin()</td>
-<td align="center">是进入了循环执行回调函数，进入循环后不会自己退出，在 ros::spin() 后的语句不会执行到</td>
+<td align="center">鹅岭二厂</td>
+<td align="center">（废弃共厂改造）</td>
 </tr>
 <tr>
-<td align="center">spinOnce()</td>
-<td align="center">只会执行一次回调函数(没有循环)，ros::spinOnce() 后的语句可以执行</td>
+<td align="center">鹅岭公园</td>
+<td align="center">（文艺照片）</td>
+</tr>
+<tr>
+<td align="center">李子坝</td>
+<td align="center">（轻轨）</td>
+</tr>
+<tr>
+<td align="center">北仓文创院</td>
+<td align="center">（文艺片）</td>
+</tr>
+<tr>
+<td align="center">观音桥</td>
+<td align="center">（地标）</td>
 </tr>
 </tbody></table>
-</li>
-<li><p>时刻<br>参考系1970年1月1日0时0分0秒</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ros::Time::<span class="built_in">now</span>()</span><br><span class="line"><span class="comment">//now() 返回一个ros::Time对象，表示当前时间</span></span><br><span class="line"><span class="comment">//ros::Time::now().toSec()</span></span><br><span class="line"><span class="comment">//ros::Time::now().sec</span></span><br></pre></td></tr></table></figure></li>
-<li><p>定时器</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ros::Timer timer = nh.<span class="built_in">createTimer</span>(ros::<span class="built_in">Duration</span>(<span class="number">0.5</span>),doSomeThing,<span class="literal">true</span>);<span class="comment">//只执行一次</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p><a target="_blank" rel="noopener" href="https://support.3dsystems.com/s/article/OpenHaptics-for-Linux-Developer-Edition-v34?language=en_US">https://support.3dsystems.com/s/article/OpenHaptics-for-Linux-Developer-Edition-v34?language=en_US</a></p>
-</li>
-</ol>
+<p><strong>day6</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center">地点</th>
+<th align="center">攻略</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">磁器口</td>
+<td align="center">（古镇）</td>
+</tr>
+<tr>
+<td align="center">白公馆</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">渣滓洞</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">罗中立美术馆</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">马房湾七彩巷</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<p><strong>day7</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center">地点</th>
+<th align="center">注意</th>
+<th align="center">门票</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">重庆动物园</td>
+<td align="center">（，四喜丸子）</td>
+<td align="center">25元</td>
+</tr>
+<tr>
+<td align="center">钟书阁</td>
+<td align="center">（ 哈利波特书屋）</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">涂鸦一条街</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">交通茶馆</td>
+<td align="center">王源同款茶</td>
+<td align="center">10</td>
+</tr>
+<tr>
+<td align="center">黄桷娅老街</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<p>安逸喔~</p>
+<img src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大白鹅喝酒.jpg" alt="大白鹅喝酒" style="zoom:25%;" />
+
+<hr>
+<p>接下来是要去预约的景点~</p>
+<table>
+<thead>
+<tr>
+<th align="center">需要预约的景点</th>
+<th align="center">放票时间</th>
+<th align="center">票价</th>
+<th align="center">特色</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">长江索道</td>
+<td align="center">每天7；15放票</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">罗中立美术馆（四川美院美术馆）</td>
+<td align="center">有名额限制</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">重庆三峡博物馆 （重庆中国山峡博物馆）</td>
+<td align="center">预约成功（周三）周一闭馆</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">南山一棵树：“重庆南山植物馆”</td>
+<td align="center"></td>
+<td align="center">门票30</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">湖广会馆</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">怀旧轮渡（重庆两江交运）</td>
+<td align="center"></td>
+<td align="center">15</td>
+<td align="center">（ 大美重庆 ）</td>
+</tr>
+<tr>
+<td align="center">人民大礼堂 “重庆市人民大礼堂”</td>
+<td align="center">一下可预约两天 周一闭关</td>
+<td align="center">8元</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<hr>
+<p>接下来是一些好吃的！</p>
+<img src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/唐僧喝酒.jpg" alt="唐僧喝酒" style="zoom:15%;" />
+
+<table>
+<thead>
+<tr>
+<th align="center">美食</th>
+<th align="center">特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">朝天门天桥滑肉</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">一只酸奶牛</td>
+<td align="center">（茶话弄）</td>
+</tr>
+<tr>
+<td align="center">歌乐山辣子鸡</td>
+<td align="center">看着特别辣，有百十块的</td>
+</tr>
+<tr>
+<td align="center">春红火锅</td>
+<td align="center">买券了150多</td>
+</tr>
+<tr>
+<td align="center">南山有烧烤</td>
+<td align="center">200多，贵在景色</td>
+</tr>
+</tbody></table>
+<p>都没听过呢~</p>
+<img src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/切尔斯.jpg" alt="切尔斯" style="zoom:28%;" />
+
+
+<p><strong>开始期待…</strong></p>
+<p>心情多云转晴了<br><img src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/%E9%95%BF%E5%9F%8E%E7%9A%84%E5%A4%A9.jpg" alt="长城的天"></p>
 
         </div>
 
@@ -324,7 +569,7 @@
                 
                     <p class="copyright-item">
                         <span>Permalink:</span>
-                        <span><a href="https://dkyou.github.io/2024/09/24/rosAPI/">https://dkyou.github.io/2024/09/24/rosAPI/</a></span>
+                        <span><a href="https://dkyou.github.io/2024/09/29/%E5%B0%8F%E6%9D%9C%E7%9A%84%E9%87%8D%E5%BA%86%E4%B9%8B%E8%A1%8C/">https://dkyou.github.io/2024/09/29/%E5%B0%8F%E6%9D%9C%E7%9A%84%E9%87%8D%E5%BA%86%E4%B9%8B%E8%A1%8C/</a></span>
                     </p>
                 
                 
@@ -348,9 +593,9 @@
                 <span class="tag">
                     
                     
-                        <a href="/tags/%E7%AC%94%E8%AE%B0/"># 笔记</a>
+                        <a href="/tags/%E9%87%8D%E5%BA%86/"># 重庆</a>
                     
-                        <a href="/tags/ros/"># ros</a>
+                        <a href="/tags/%E6%97%85%E8%A1%8C/"># 旅行</a>
                     
                         
                 </span>
@@ -363,10 +608,8 @@
         </section>
         <section class="post-nav">
             
-                <a class="prev" rel="prev" href="/2024/09/29/%E5%B0%8F%E6%9D%9C%E7%9A%84%E9%87%8D%E5%BA%86%E4%B9%8B%E8%A1%8C/">小杜的重庆之行</a>
             
-            
-            <a class="next" rel="next" href="/2024/09/24/gcc%E7%9A%84%E5%9B%9B%E4%B8%AA%E8%BF%87%E7%A8%8B/">gcc的四个过程</a>
+            <a class="next" rel="next" href="/2024/09/24/rosAPI/">rosAPI</a>
             
         </section>
 
