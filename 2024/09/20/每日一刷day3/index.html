@@ -13,7 +13,7 @@
 
 
 
-<title>ros常用命令 | 又是摸鱼的一天</title>
+<title>移除元素 | 又是摸鱼的一天</title>
 
 
 
@@ -196,7 +196,7 @@
     
     <article class="post-wrap">
         <header class="post-header">
-            <h1 class="post-title">ros常用命令</h1>
+            <h1 class="post-title">移除元素</h1>
             
                 <div class="post-meta">
                     
@@ -205,14 +205,14 @@
 
                     
                         <span class="post-time">
-                        Date: <a href="#">September 18, 2024&nbsp;&nbsp;13:39:11</a>
+                        Date: <a href="#">September 20, 2024&nbsp;&nbsp;20:00:00</a>
                         </span>
                     
                     
                         <span class="post-category">
                     Category:
                             
-                                <a href="/categories/ROS/">ROS</a>
+                                <a href="/categories/C-%E5%88%B7%E9%A2%98%E7%AC%94%E8%AE%B0/">C++刷题笔记</a>
                             
                         </span>
                     
@@ -221,30 +221,37 @@
         </header>
 
         <div class="post-content">
-            <h1 id="ROS文件系统"><a href="#ROS文件系统" class="headerlink" title="ROS文件系统"></a>ROS文件系统</h1><p><img src="/./images/ros%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84.png" alt="ros文件结构"></p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">WorkSpace --- 自定义的工作空间</span><br><span class="line"></span><br><span class="line">    |--- build:编译空间，用于存放CMake和catkin的缓存信息、配置信息和其他中间文件。</span><br><span class="line"></span><br><span class="line">    |--- devel:开发空间，用于存放编译后生成的目标文件，包括头文件、动态&amp;静态链接库、可执行文件等。</span><br><span class="line"></span><br><span class="line">    |--- src: 源码</span><br><span class="line"></span><br><span class="line">        |-- package：功能包(ROS基本单元)包含多个节点、库与配置文件，包名所有字母小写，只能由字母、数字与下划线组成</span><br><span class="line"></span><br><span class="line">            |-- CMakeLists.txt 配置编译规则，比如源文件、依赖项、目标文件</span><br><span class="line"></span><br><span class="line">            |-- package.xml 包信息，比如:包名、版本、作者、依赖项...(以前版本是 manifest.xml)</span><br><span class="line"></span><br><span class="line">            |-- scripts 存储python文件</span><br><span class="line"></span><br><span class="line">            |-- src 存储C++源文件</span><br><span class="line"></span><br><span class="line">            |-- include 头文件</span><br><span class="line"></span><br><span class="line">            |-- msg 消息通信格式文件</span><br><span class="line"></span><br><span class="line">            |-- srv 服务通信格式文件</span><br><span class="line"></span><br><span class="line">            |-- action 动作格式文件</span><br><span class="line"></span><br><span class="line">            |-- launch 可一次性运行多个节点 </span><br><span class="line"></span><br><span class="line">            |-- config 配置信息</span><br><span class="line"></span><br><span class="line">        |-- CMakeLists.txt: 编译的基本配置</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<h3 id="package-xml"><a href="#package-xml" class="headerlink" title="package.xml"></a>package.xml</h3><p>该文件定义有关软件包的属性，例如软件包名称，版本号，作者，维护者以及对其他catkin软件包的依赖性。请注意，该概念类似于旧版 rosbuild 构建系统中使用的manifest.xml文件。</p>
-<h3 id="CMakeLists-txt"><a href="#CMakeLists-txt" class="headerlink" title="CMakeLists.txt"></a>CMakeLists.txt</h3><p>文件<code>CMakeLists.txt</code>是CMake构建系统的输入，用于构建软件包。任何兼容CMake的软件包都包含一个或多个CMakeLists.txt文件，这些文件描述了如何构建代码以及将代码安装到何处。</p>
-<h2 id="ros文件系统相关命令"><a href="#ros文件系统相关命令" class="headerlink" title="ros文件系统相关命令"></a>ros文件系统相关命令</h2><ol>
-<li>增</li>
-<li>删</li>
-<li>改</li>
-<li>查</li>
-<li>启停</li>
+            <h1 id="移除元素"><a href="#移除元素" class="headerlink" title="移除元素"></a>移除元素</h1><h2 id="题目："><a href="#题目：" class="headerlink" title="题目："></a>题目：</h2><p>给你一个按<strong>非递减顺序</strong>排序的整数数组 nums，返回 每个数字的平方 组成的新数组，要求也按 <strong>非递减顺序</strong> 排序。<br>示例 1：<br>输入：nums &#x3D; [-4,-1,0,3,10]<br>输出：[0,1,9,16,100]<br>解释：平方后，数组变为 [16,1,0,9,100]，排序后，数组变为 [0,1,9,16,100]<br>示例 2：<br>输入：nums &#x3D; [-7,-3,2,3,11]<br>输出：[4,9,9,49,121]</p>
+<h2 id="解法1"><a href="#解法1" class="headerlink" title="解法1"></a>解法1</h2><p>思路：每个数平方之后，排个序</p>
+<ol>
+<li>过于简单</li>
+<li></li>
 <li></li>
 </ol>
-<h1 id="ros常用命令"><a href="#ros常用命令" class="headerlink" title="ros常用命令"></a>ros常用命令</h1><p>参考网址：<a target="_blank" rel="noopener" href="http://wiki.ros.org/ROS/CommandLineTools">ros命令</a></p>
+<p>复杂度：</p>
+<ul>
+<li>时间复杂度：O(n+nlogn)</li>
+<li>空间复杂度：</li>
+</ul>
+<p>代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">std::vector&lt;<span class="type">int</span>&gt; <span class="title">test::solution</span><span class="params">(std::vector&lt;<span class="type">int</span>&gt; &amp;nums)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function">std::vector&lt;<span class="type">int</span>&gt; <span class="title">result</span><span class="params">(nums.size())</span></span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; nums.<span class="built_in">size</span>(); i++)</span><br><span class="line">    &#123;</span><br><span class="line">        result[i] = nums[i]*nums[i];</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">sort</span>(result.<span class="built_in">begin</span>(),result.<span class="built_in">end</span>());</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="解法2–双指针法"><a href="#解法2–双指针法" class="headerlink" title="解法2–双指针法"></a>解法2–双指针法</h2><p>思路：本来就是有序的数组，由于负数平方之后可能会改变数组的顺序，所以重点关注<strong>负数</strong><br>数组平方的最大值出现在数组的两端，左或者右，不可能是中间。所以可以考虑双指针法，left和right</p>
 <ol>
-<li>rosnode ：操作节点</li>
-<li>rostopic ：操作话题</li>
-<li>rosservicea : 操作服务</li>
-<li>rosmsg : 操作msg消息</li>
-<li>rossrv : 操作srv服务</li>
-<li>rosparam : 操作参数</li>
+<li>定义新数组，用来存储结果，注意初始化大小，否则容易出现溢出错误</li>
+<li>判断<code>nums[left]*nums[left]</code>和<code>nums[right]*nums[right]</code>大小，以便赋值给<code>result[i]</code></li>
+<li>如果<code>nums[left]*nums[left] &gt;  nums[right]*nums[right]</code> 那么 <code>result[i] = nums[left]*nums[left]</code></li>
+<li>如果<code>nums[left]*nums[left] &lt;  nums[right]*nums[right]</code> 那么 <code>result[i] = nums[right]*nums[right]</code></li>
+<li>初始值<code>i = nums.size()-1</code>,方便从后往前填充</li>
 </ol>
-<p>新生成一个乌龟</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">rosservice call /spawn <span class="string">&quot;x: 0.0</span></span><br><span class="line"><span class="string">y: 0.0</span></span><br><span class="line"><span class="string">theta: 0.0</span></span><br><span class="line"><span class="string">name:</span></span><br></pre></td></tr></table></figure>
-<h1 id="常用API"><a href="#常用API" class="headerlink" title="常用API"></a>常用API</h1>
+<p>复杂度：</p>
+<ul>
+<li>时间复杂度：o(n)</li>
+<li>空间复杂度：</li>
+</ul>
+<p>代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">std::vector&lt;<span class="type">int</span>&gt; <span class="title">test::solution</span><span class="params">(std::vector&lt;<span class="type">int</span>&gt; &amp;nums)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function">std::vector&lt;<span class="type">int</span>&gt; <span class="title">result</span><span class="params">(nums.size())</span></span>;</span><br><span class="line">    <span class="type">int</span> left = <span class="number">0</span>,right = nums.<span class="built_in">size</span>()<span class="number">-1</span>;</span><br><span class="line">    <span class="comment">//从后往前填充</span></span><br><span class="line">    <span class="comment">//i&gt;=0</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i = nums.<span class="built_in">size</span>()<span class="number">-1</span>;i&gt;=<span class="number">0</span>;i--)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(nums[left]*nums[left] &gt;  nums[right]*nums[right])</span><br><span class="line">        &#123;</span><br><span class="line">            result[i] = nums[left]*nums[left];</span><br><span class="line">            left++;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span>&#123;</span><br><span class="line">            result[i] = nums[right]*nums[right];</span><br><span class="line">            right--;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
         </div>
 
         
@@ -258,7 +265,7 @@
                 
                     <p class="copyright-item">
                         <span>Permalink:</span>
-                        <span><a href="https://dkyou.github.io/2024/09/18/ros%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">https://dkyou.github.io/2024/09/18/ros%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</a></span>
+                        <span><a href="https://dkyou.github.io/2024/09/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day3/">https://dkyou.github.io/2024/09/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day3/</a></span>
                     </p>
                 
                 
@@ -282,9 +289,9 @@
                 <span class="tag">
                     
                     
-                        <a href="/tags/%E7%AC%94%E8%AE%B0/"># 笔记</a>
+                        <a href="/tags/c/"># c++</a>
                     
-                        <a href="/tags/ros/"># ros</a>
+                        <a href="/tags/%E5%88%B7%E9%A2%98day3/"># 刷题day3</a>
                     
                         
                 </span>
@@ -297,10 +304,10 @@
         </section>
         <section class="post-nav">
             
-                <a class="prev" rel="prev" href="/2024/09/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day4/">区间和--前缀和数组</a>
+                <a class="prev" rel="prev" href="/2024/09/20/%E5%8F%8C%E6%8C%87%E9%92%88%E6%B3%95%E5%90%88%E5%B9%B6%E9%A1%BA%E5%BA%8F%E8%A1%A8/">双指针法合并顺序表</a>
             
             
-            <a class="next" rel="next" href="/2024/09/18/Linux%E5%B5%8C%E5%85%A5%E5%BC%8F/">Linux嵌入式学习粗略笔记</a>
+            <a class="next" rel="next" href="/2024/09/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day4/">区间和--前缀和数组</a>
             
         </section>
 
