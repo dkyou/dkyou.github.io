@@ -13,7 +13,7 @@
 
 
 
-<title>Archives: 2024 | 又是摸鱼的一天</title>
+<title>短横杠-的含义 | 又是摸鱼的一天</title>
 
 
 
@@ -124,107 +124,174 @@
     }
 </script>
             <div class="main">
-                <div class="post-wrap archive">
+                <div class="container">
     
     
-        
-
-        
-            <h3>2024</h3>
-        
-
-        <article class="archive-item">
-            <a class="archive-item-link" href="/2024/09/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day1/">二分查找</a>
-            <span class="archive-item-date">September 20, 2024</span>
-        </article>
-    
-        
-
-        
-
-        <article class="archive-item">
-            <a class="archive-item-link" href="/2024/09/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day2/">移除元素</a>
-            <span class="archive-item-date">September 20, 2024</span>
-        </article>
-    
-        
-
-        
-
-        <article class="archive-item">
-            <a class="archive-item-link" href="/2024/09/20/%E5%8F%8C%E6%8C%87%E9%92%88%E6%B3%95%E5%90%88%E5%B9%B6%E9%A1%BA%E5%BA%8F%E8%A1%A8/">双指针法合并顺序表</a>
-            <span class="archive-item-date">September 20, 2024</span>
-        </article>
-    
-        
-
-        
-
-        <article class="archive-item">
-            <a class="archive-item-link" href="/2024/09/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day3/">移除元素</a>
-            <span class="archive-item-date">September 20, 2024</span>
-        </article>
-    
-        
-
-        
-
-        <article class="archive-item">
-            <a class="archive-item-link" href="/2024/09/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day4/">区间和--前缀和数组</a>
-            <span class="archive-item-date">September 20, 2024</span>
-        </article>
-    
-        
-
-        
-
-        <article class="archive-item">
-            <a class="archive-item-link" href="/2024/09/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day31/">字母异位词</a>
-            <span class="archive-item-date">September 20, 2024</span>
-        </article>
-    
-        
-
-        
-
-        <article class="archive-item">
-            <a class="archive-item-link" href="/2024/09/18/ros%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">ros常用命令</a>
-            <span class="archive-item-date">September 18, 2024</span>
-        </article>
-    
-        
-
-        
-
-        <article class="archive-item">
-            <a class="archive-item-link" href="/2024/09/18/Linux%E5%B5%8C%E5%85%A5%E5%BC%8F/">Linux嵌入式学习粗略笔记</a>
-            <span class="archive-item-date">September 18, 2024</span>
-        </article>
-    
-        
-
-        
-
-        <article class="archive-item">
-            <a class="archive-item-link" href="/2024/09/15/ubuntu+GRUB%E5%90%AF%E5%8A%A8%E9%A1%B9/">解决ubuntu 20.04 GRUB启动项顺序的问题</a>
-            <span class="archive-item-date">September 15, 2024</span>
-        </article>
-    
-        
-
-        
-
-        <article class="archive-item">
-            <a class="archive-item-link" href="/2024/09/15/ubuntu%E6%B2%A1%E6%9C%89%E5%A3%B0%E9%9F%B3/">解决unbuntu 20.04 主机没有声音的问题</a>
-            <span class="archive-item-date">September 15, 2024</span>
-        </article>
-    
-    
-    <nav class="pagination">
-        <a class="page-number" href="/archives/2024/">1</a><span class="page-number current">2</span><a class="page-number" href="/archives/2024/page/3/">3</a>
-    </nav>
-
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
 </div>
+
+<script>
+    var tocbot_timer;
+    var DEPTH_MAX = 6; // 为 6 时展开所有
+    var tocbot_default_config = {
+        tocSelector: '.tocbot-list',
+        contentSelector: '.post-content',
+        headingSelector: 'h1, h2, h3, h4, h5',
+        orderedList: false,
+        scrollSmooth: true,
+        onClick: extend_click,
+    };
+
+    function extend_click() {
+        clearTimeout(tocbot_timer);
+        tocbot_timer = setTimeout(function() {
+            tocbot.refresh(obj_merge(tocbot_default_config, {
+                hasInnerContainers: true
+            }));
+        }, 420); // 这个值是由 tocbot 源码里定义的 scrollSmoothDuration 得来的
+    }
+
+    document.ready(function() {
+        tocbot.init(obj_merge(tocbot_default_config, {
+            collapseDepth: 1
+        }));
+    });
+
+    function expand_toc() {
+        var b = document.querySelector('.tocbot-toc-expand');
+        var expanded = b.getAttribute('data-expanded');
+        expanded ? b.removeAttribute('data-expanded') : b.setAttribute('data-expanded', true);
+        tocbot.refresh(obj_merge(tocbot_default_config, {
+            collapseDepth: expanded ? 1 : DEPTH_MAX
+        }));
+        b.innerText = expanded ? 'Expand all' : 'Collapse all';
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function obj_merge(target, source) {
+        for (var item in source) {
+            if (source.hasOwnProperty(item)) {
+                target[item] = source[item];
+            }
+        }
+        return target;
+    }
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">短横杠-的含义</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">Dku</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">July 20, 2024&nbsp;&nbsp;20:00:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/C-%E7%AC%94%E8%AE%B0/">C++笔记</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="短横杠-的含义"><a href="#短横杠-的含义" class="headerlink" title="短横杠-的含义"></a>短横杠-的含义</h1><p>猛地看到<code>it - vec.begin()</code>竟看不懂这是什么，还以为是和<code>.</code>或者<code>-&gt;</code>一样新的运算符。故而总结：</p>
+<ol>
+<li>减法运算符</li>
+<li>取负运算符</li>
+<li>指针加减运算符<br>可以计算两个指针之间的距离<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> arr[] = &#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>&#125;;</span><br><span class="line"> <span class="type">int</span> *ptr1 = &amp;arr[<span class="number">0</span>];</span><br><span class="line"> <span class="type">int</span> *ptr2 = &amp;arr[<span class="number">2</span>];</span><br><span class="line"> <span class="type">int</span> distance = ptr2 - ptr1; <span class="comment">// 结果为 2</span></span><br></pre></td></tr></table></figure></li>
+<li>迭代器之间的差值<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">std::vector&lt;<span class="type">int</span>&gt; vec = &#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>&#125;;</span><br><span class="line"><span class="keyword">auto</span> it1 = vec.<span class="built_in">begin</span>();</span><br><span class="line"><span class="keyword">auto</span> it2 = vec.<span class="built_in">begin</span>() + <span class="number">2</span>;</span><br><span class="line"><span class="type">int</span> distance = it2 - it1; <span class="comment">// 结果为 2</span></span><br></pre></td></tr></table></figure>
+ 类似于指针的距离，因为<code>vec.begin()</code>可以认为是一个指针，指向第0元素的位置，即<code>*vec.begin()</code>&#x3D;&#x3D;1.<code>vec.end()</code>指向第5个元素的位置，即<code>*(vec.end()-1)</code>&#x3D;&#x3D;6</li>
+<li>可以重载自定义</li>
+</ol>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>Dku</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="https://dkyou.github.io/2024/07/20/%E7%9F%AD%E6%A8%AA%E6%9D%A0-%E7%9A%84%E5%90%AB%E4%B9%89/">https://dkyou.github.io/2024/07/20/%E7%9F%AD%E6%A8%AA%E6%9D%A0-%E7%9A%84%E5%90%AB%E4%B9%89/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/c/"># c++</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2024/09/15/ubuntu%E6%B2%A1%E6%9C%89%E5%A3%B0%E9%9F%B3/">解决unbuntu 20.04 主机没有声音的问题</a>
+            
+            
+            <a class="next" rel="next" href="/2024/07/20/%E8%99%9A%E5%87%BD%E6%95%B0/">虚函数</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
             </div>
             <footer id="footer" class="footer">
     <div class="copyright">

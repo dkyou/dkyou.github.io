@@ -13,7 +13,7 @@
 
 
 
-<title>解决unbuntu 20.04 主机没有声音的问题 | 又是摸鱼的一天</title>
+<title>字母异位词 | 又是摸鱼的一天</title>
 
 
 
@@ -196,7 +196,7 @@
     
     <article class="post-wrap">
         <header class="post-header">
-            <h1 class="post-title">解决unbuntu 20.04 主机没有声音的问题</h1>
+            <h1 class="post-title">字母异位词</h1>
             
                 <div class="post-meta">
                     
@@ -205,14 +205,14 @@
 
                     
                         <span class="post-time">
-                        Date: <a href="#">September 15, 2024&nbsp;&nbsp;13:39:11</a>
+                        Date: <a href="#">September 20, 2024&nbsp;&nbsp;20:00:00</a>
                         </span>
                     
                     
                         <span class="post-category">
                     Category:
                             
-                                <a href="/categories/UBUNTU/">UBUNTU</a>
+                                <a href="/categories/C-%E5%88%B7%E9%A2%98%E7%AC%94%E8%AE%B0/">C++刷题笔记</a>
                             
                         </span>
                     
@@ -221,12 +221,16 @@
         </header>
 
         <div class="post-content">
-            <h1 id="解决ubuntu-20-04-主机没有声音的问题"><a href="#解决ubuntu-20-04-主机没有声音的问题" class="headerlink" title="解决ubuntu 20.04 主机没有声音的问题"></a>解决ubuntu 20.04 主机没有声音的问题</h1><h2 id="安装pavucontrol："><a href="#安装pavucontrol：" class="headerlink" title="安装pavucontrol："></a>安装pavucontrol：</h2><p>输入安装命令：sudo apt install pavucontrol</p>
-<h2 id="终端启动：pavucontrol"><a href="#终端启动：pavucontrol" class="headerlink" title="终端启动：pavucontrol"></a>终端启动：pavucontrol</h2><h2 id="配置："><a href="#配置：" class="headerlink" title="配置："></a>配置：</h2><ol>
-<li>配置-&gt;HDA NVidia 选项关</li>
-<li>配置-&gt;内置音频 选择模拟立体声输出</li>
-<li>输出设备-&gt;内置音频 模拟立体声-&gt;模拟耳机<br>备注：只能插在主机上，插在显示器上还是没有声音</li>
-</ol>
+            <h1 id="字母异位词"><a href="#字母异位词" class="headerlink" title="字母异位词"></a>字母异位词</h1><h2 id="题目："><a href="#题目：" class="headerlink" title="题目："></a>题目：</h2><p>给定两个字符串<code>s</code>和<code>t</code>，编写一个函数来判断 <code>t</code> 是否是 <code>s</code> 的字母异位词。</p>
+<h2 id="解法-哈希表"><a href="#解法-哈希表" class="headerlink" title="解法-哈希表"></a>解法-哈希表</h2><p>思路：本能暴力循环，学习哈希表解决</p>
+<p>1.<br>2.<br>3. </p>
+<p>复杂度：</p>
+<ul>
+<li>时间复杂度：</li>
+<li>空间复杂度：</li>
+</ul>
+<p>代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="comment">//aee</span></span><br><span class="line">    <span class="comment">//eae</span></span><br><span class="line">    <span class="function"><span class="type">bool</span> <span class="title">isAnagram</span><span class="params">(string s, string t)</span> </span>&#123;</span><br><span class="line">        <span class="type">int</span> record[<span class="number">26</span>] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">        <span class="comment">//设定一个表，对应位置++</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; s.<span class="built_in">size</span>(); i++) &#123;</span><br><span class="line">            record[s[i] - <span class="string">&#x27;a&#x27;</span>]++;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//然后再在对应位置--</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; t.<span class="built_in">size</span>(); i++) &#123;</span><br><span class="line">            record[t[i] - <span class="string">&#x27;a&#x27;</span>]--;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">26</span>; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (record[i] != <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
         </div>
 
@@ -241,7 +245,7 @@
                 
                     <p class="copyright-item">
                         <span>Permalink:</span>
-                        <span><a href="https://dkyou.github.io/2024/09/15/ubuntu%E6%B2%A1%E6%9C%89%E5%A3%B0%E9%9F%B3/">https://dkyou.github.io/2024/09/15/ubuntu%E6%B2%A1%E6%9C%89%E5%A3%B0%E9%9F%B3/</a></span>
+                        <span><a href="https://dkyou.github.io/2024/09/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day31/">https://dkyou.github.io/2024/09/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day31/</a></span>
                     </p>
                 
                 
@@ -265,9 +269,11 @@
                 <span class="tag">
                     
                     
-                        <a href="/tags/ubuntu/"># ubuntu</a>
+                        <a href="/tags/c/"># c++</a>
                     
-                        <a href="/tags/%E7%AC%94%E8%AE%B0/"># 笔记</a>
+                        <a href="/tags/%E5%88%B7%E9%A2%98day31/"># 刷题day31</a>
+                    
+                        <a href="/tags/%E5%AD%97%E6%AF%8D%E5%BC%82%E4%BD%8D%E8%AF%8D/"># 字母异位词</a>
                     
                         
                 </span>
@@ -280,10 +286,10 @@
         </section>
         <section class="post-nav">
             
-                <a class="prev" rel="prev" href="/2024/09/15/ubuntu+GRUB%E5%90%AF%E5%8A%A8%E9%A1%B9/">解决ubuntu 20.04 GRUB启动项顺序的问题</a>
+                <a class="prev" rel="prev" href="/2024/09/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day4/">区间和--前缀和数组</a>
             
             
-            <a class="next" rel="next" href="/2024/07/20/%E7%9F%AD%E6%A8%AA%E6%9D%A0-%E7%9A%84%E5%90%AB%E4%B9%89/">短横杠-的含义</a>
+            <a class="next" rel="next" href="/2024/09/18/ros%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">ros常用命令</a>
             
         </section>
 

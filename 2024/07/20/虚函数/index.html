@@ -13,7 +13,7 @@
 
 
 
-<title>解决unbuntu 20.04 主机没有声音的问题 | 又是摸鱼的一天</title>
+<title>虚函数 | 又是摸鱼的一天</title>
 
 
 
@@ -196,7 +196,7 @@
     
     <article class="post-wrap">
         <header class="post-header">
-            <h1 class="post-title">解决unbuntu 20.04 主机没有声音的问题</h1>
+            <h1 class="post-title">虚函数</h1>
             
                 <div class="post-meta">
                     
@@ -205,14 +205,14 @@
 
                     
                         <span class="post-time">
-                        Date: <a href="#">September 15, 2024&nbsp;&nbsp;13:39:11</a>
+                        Date: <a href="#">July 20, 2024&nbsp;&nbsp;20:00:00</a>
                         </span>
                     
                     
                         <span class="post-category">
                     Category:
                             
-                                <a href="/categories/UBUNTU/">UBUNTU</a>
+                                <a href="/categories/C-%E7%AC%94%E8%AE%B0/">C++笔记</a>
                             
                         </span>
                     
@@ -221,13 +221,21 @@
         </header>
 
         <div class="post-content">
-            <h1 id="解决ubuntu-20-04-主机没有声音的问题"><a href="#解决ubuntu-20-04-主机没有声音的问题" class="headerlink" title="解决ubuntu 20.04 主机没有声音的问题"></a>解决ubuntu 20.04 主机没有声音的问题</h1><h2 id="安装pavucontrol："><a href="#安装pavucontrol：" class="headerlink" title="安装pavucontrol："></a>安装pavucontrol：</h2><p>输入安装命令：sudo apt install pavucontrol</p>
-<h2 id="终端启动：pavucontrol"><a href="#终端启动：pavucontrol" class="headerlink" title="终端启动：pavucontrol"></a>终端启动：pavucontrol</h2><h2 id="配置："><a href="#配置：" class="headerlink" title="配置："></a>配置：</h2><ol>
-<li>配置-&gt;HDA NVidia 选项关</li>
-<li>配置-&gt;内置音频 选择模拟立体声输出</li>
-<li>输出设备-&gt;内置音频 模拟立体声-&gt;模拟耳机<br>备注：只能插在主机上，插在显示器上还是没有声音</li>
-</ol>
-
+            <h1 id="虚函数"><a href="#虚函数" class="headerlink" title="虚函数"></a>虚函数</h1><ul>
+<li>虚函数是在基类中声明的成员函数，前面加上virtual关键字</li>
+<li>允许在派生类中重写这个函数，并且可以通过基类指针或者引用调用时，自动选择正确的函数版本<br>如果在派生类中不打算重写基类的虚函数，可以在声明时使用final防止重写<br>用处：<br>  需要通过继承来扩展功能并保持代码的可维护性和灵活性</li>
+</ul>
+<h1 id="纯虚函数"><a href="#纯虚函数" class="headerlink" title="纯虚函数"></a>纯虚函数</h1><ul>
+<li>是一种特殊的虚函数</li>
+<li>在基类中声明，但是没有实现</li>
+<li>纯虚函数使用&#x3D;0来声明，表示该函数必须在派生类中被重写</li>
+</ul>
+<p>抽象类：</p>
+<ul>
+<li>包含纯虚函数的类叫做抽象类</li>
+<li>抽象类不能实例化对象，只能作为其他类的基类<br>举例：<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//定义抽象类Base</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Base</span>&#123;</span><br><span class="line">    <span class="keyword">public</span>:</span><br><span class="line">    <span class="function">vitrual <span class="type">int</span> <span class="title">doSomething</span><span class="params">()</span> </span>= <span class="number">0</span>;<span class="comment">//纯虚函数，为抽象类</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Derived</span>: <span class="keyword">public</span> Base&#123;</span><br><span class="line">    <span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">int</span> <span class="title">doSomething</span><span class="params">()</span><span class="keyword">override</span></span>&#123;<span class="comment">/*具体实现*/</span><span class="keyword">return</span> <span class="number">0</span>;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    Base* pbase = <span class="keyword">new</span> <span class="built_in">Base</span>();<span class="comment">//错误</span></span><br><span class="line">    Base* pderived = <span class="keyword">new</span> <span class="built_in">Derived</span>();<span class="comment">//正确</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h1 id="举例"><a href="#举例" class="headerlink" title="举例"></a>举例</h1><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Shape</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="type">double</span> <span class="title">area</span><span class="params">()</span> <span class="type">const</span> </span>= <span class="number">0</span>; <span class="comment">// 纯虚函数</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Circle</span> : <span class="keyword">public</span> Shape &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="type">double</span> radius;</span><br><span class="line">    <span class="built_in">Circle</span>(<span class="type">double</span> r) : <span class="built_in">radius</span>(r) &#123;&#125;</span><br><span class="line">    <span class="function"><span class="type">double</span> <span class="title">area</span><span class="params">()</span> <span class="type">const</span> <span class="keyword">override</span> </span>&#123; <span class="keyword">return</span> <span class="number">3.14</span> * radius * radius; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Rectangle</span> : <span class="keyword">public</span> Shape &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="type">double</span> width, height;</span><br><span class="line">    <span class="built_in">Rectangle</span>(<span class="type">double</span> w, <span class="type">double</span> h) : <span class="built_in">width</span>(w), <span class="built_in">height</span>(h) &#123;&#125;</span><br><span class="line">    <span class="function"><span class="type">double</span> <span class="title">area</span><span class="params">()</span> <span class="type">const</span> <span class="keyword">override</span> </span>&#123; <span class="keyword">return</span> width * height; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    Shape* shapes[] = &#123;<span class="keyword">new</span> <span class="built_in">Circle</span>(<span class="number">5</span>), <span class="keyword">new</span> <span class="built_in">Rectangle</span>(<span class="number">4</span>, <span class="number">6</span>)&#125;;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span> shape : shapes) &#123;</span><br><span class="line">        std::cout &lt;&lt; <span class="string">&quot;Area: &quot;</span> &lt;&lt; shape-&gt;<span class="built_in">area</span>() &lt;&lt; std::endl;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span> shape : shapes) &#123;</span><br><span class="line">        <span class="keyword">delete</span> shape; <span class="comment">// 释放内存</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
         </div>
 
         
@@ -241,7 +249,7 @@
                 
                     <p class="copyright-item">
                         <span>Permalink:</span>
-                        <span><a href="https://dkyou.github.io/2024/09/15/ubuntu%E6%B2%A1%E6%9C%89%E5%A3%B0%E9%9F%B3/">https://dkyou.github.io/2024/09/15/ubuntu%E6%B2%A1%E6%9C%89%E5%A3%B0%E9%9F%B3/</a></span>
+                        <span><a href="https://dkyou.github.io/2024/07/20/%E8%99%9A%E5%87%BD%E6%95%B0/">https://dkyou.github.io/2024/07/20/%E8%99%9A%E5%87%BD%E6%95%B0/</a></span>
                     </p>
                 
                 
@@ -265,9 +273,7 @@
                 <span class="tag">
                     
                     
-                        <a href="/tags/ubuntu/"># ubuntu</a>
-                    
-                        <a href="/tags/%E7%AC%94%E8%AE%B0/"># 笔记</a>
+                        <a href="/tags/c/"># c++</a>
                     
                         
                 </span>
@@ -280,10 +286,10 @@
         </section>
         <section class="post-nav">
             
-                <a class="prev" rel="prev" href="/2024/09/15/ubuntu+GRUB%E5%90%AF%E5%8A%A8%E9%A1%B9/">解决ubuntu 20.04 GRUB启动项顺序的问题</a>
+                <a class="prev" rel="prev" href="/2024/07/20/%E7%9F%AD%E6%A8%AA%E6%9D%A0-%E7%9A%84%E5%90%AB%E4%B9%89/">短横杠-的含义</a>
             
             
-            <a class="next" rel="next" href="/2024/07/20/%E7%9F%AD%E6%A8%AA%E6%9D%A0-%E7%9A%84%E5%90%AB%E4%B9%89/">短横杠-的含义</a>
+            <a class="next" rel="next" href="/2024/05/20/ChessLearning/">车类残局定式</a>
             
         </section>
 
