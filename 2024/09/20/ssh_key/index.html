@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1" theme-name="Stellar" theme-version="1.29.1">
-  <meta name="robots" content="noindex,follow">
+  
   <meta name="generator" content="Hexo 7.3.0">
   <meta http-equiv='x-dns-prefetch-control' content='on' />
   
@@ -17,15 +17,21 @@
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
   <meta name="theme-color" content="#f9fafb">
   
-  <title>归档 - 又是摸鱼的一天</title>
+  <title>ssh_key简记 - 又是摸鱼的一天</title>
 
   
-    <meta property="og:type" content="website">
-<meta property="og:title" content="归档">
-<meta property="og:url" content="https://dkyou.github.io/archives/2024/07/index.html">
+    <meta name="description" content="摘要：本文是上篇《hexo+github搭建博客笔记》的一些补充。翻阅博客的时候，对本地博客怎么部署到github上，以及如何配置SSH密钥，以及如何将公钥添加到远程服务器上的原理有一些不清楚，于是作了一个笔记，记录下来。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ssh_key简记">
+<meta property="og:url" content="https://dkyou.github.io/2024/09/20/ssh_key/index.html">
 <meta property="og:site_name" content="又是摸鱼的一天">
+<meta property="og:description" content="摘要：本文是上篇《hexo+github搭建博客笔记》的一些补充。翻阅博客的时候，对本地博客怎么部署到github上，以及如何配置SSH密钥，以及如何将公钥添加到远程服务器上的原理有一些不清楚，于是作了一个笔记，记录下来。">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-09-20T12:13:20.000Z">
+<meta property="article:modified_time" content="2024-10-17T10:48:59.341Z">
 <meta property="article:author" content="Dku">
+<meta property="article:tag" content="hexo">
+<meta property="article:tag" content="搭建博客">
 <meta name="twitter:card" content="summary">
   
   
@@ -45,7 +51,7 @@
 </head>
 <body>
 
-<div class="l_body s:aa index tech" id="start" layout="undefined" ><aside class="l_left"><div class="leftbar-container">
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
 
 
 <header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大白鹅喝酒.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">👀瞅啥呢！👀</div><div class="sub normal cap">今天又是摸鱼的一天！</div><div class="sub hover cap" style="opacity:0">可不摸鱼又干什么呢？</div></a></div></header>
@@ -57,21 +63,139 @@
 <nav class="menu dis-select"></nav>
 </div>
 <div class="widgets">
+
+
 <widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2024/09/20/ssh_key/"><span class="title">ssh_key简记</span></a><a class="item title" href="/2024/09/20/hexo+github%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E7%AC%94%E8%AE%B0/"><span class="title">hexo+github搭建博客笔记</span></a><a class="item title" href="/2024/10/15/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day38(%E5%8F%88%E5%A5%BD%E4%BA%86%E5%8F%88)%20/"><span class="title">四数之和</span></a><a class="item title" href="/2023/01/01/myblogtemplate/"><span class="title">myblogtemplate</span></a><a class="item title" href="/2023/05/20/%E5%BC%95%E7%94%A8/"><span class="title">引用</span></a><a class="item title" href="/2023/05/20/c++primer%E7%AC%AC%E5%8D%81%E7%AB%A0%E7%BB%83%E4%B9%A0%E9%A2%98/"><span class="title">c++primer第十章练习题</span></a><a class="item title" href="/2023/05/20/C++%E5%87%BD%E6%95%B0%E5%BD%A2%E5%8F%82%E4%B8%BA%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B%E6%97%B6%EF%BC%8C%E4%BC%A0%E5%85%A5%E7%9A%84%E5%8F%82%E6%95%B0%E7%B1%BB%E5%9E%8B%E4%B8%BA%E4%BB%80%E4%B9%88%E7%94%A8%E5%BC%95%E7%94%A8%E5%AF%B9%E8%B1%A1%E7%9A%84%E7%B1%BB%E5%9E%8B%E5%92%8C%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B%E9%83%BD%E5%8F%AF%E4%BB%A5%EF%BC%9F/"><span class="title">C++函数形参为引用类型时，传入的参数类型为什么用引用对象的类型和引用类型都可以？</span></a><a class="item title" href="/2024/08/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day2/"><span class="title">移除元素</span></a><a class="item title" href="/2024/08/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day1/"><span class="title">二分查找</span></a><a class="item title" href="/2024/09/02/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day3/"><span class="title">平方新数组</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
 
-<header class="header mobile-only"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大白鹅喝酒.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">👀瞅啥呢！👀</div><div class="sub normal cap">今天又是摸鱼的一天！</div><div class="sub hover cap" style="opacity:0">可不摸鱼又干什么呢？</div></a></div></header>
-
- 
 
 
-<div class="navbar top"><nav class="post"><a href="/">近期发布</a><a href="/categories/">分类</a><a href="/tags/">标签</a><a class="active" href="/archives/">归档</a></nav></div><div class="post-list archives"><article class="" id="archive"><div class='archive-header h4'>2024</div><div class="archive-list"><a class='post fs14' href="/2024/10/15/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day38(%E5%8F%88%E5%A5%BD%E4%BA%86%E5%8F%88)%20/"><time>10-15</time><span>四数之和</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/10/15/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day37(%E6%A2%A6%E7%A0%B4%E7%A2%8E%E7%9A%84%E5%9C%B0%E6%96%B9)/"><time>10-15</time><span>三数之和</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/10/14/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day36/"><time>10-14</time><span>救赎金</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/10/14/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day39/"><time>10-14</time><span>反转字符串</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/10/14/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7%E4%B9%8B%E6%8A%B1%E6%80%A8/"><time>10-14</time><span>吐槽</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/10/12/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day33/"><time>10-12</time><span>快乐数</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/10/12/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day32/"><time>10-12</time><span>两个数组的交集</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/10/12/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day35/"><time>10-12</time><span>四数之和</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/10/12/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day34/"><time>10-12</time><span>两数之和</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/29/%E5%B0%8F%E6%9D%9C%E7%9A%84%E9%87%8D%E5%BA%86%E4%B9%8B%E8%A1%8C/"><time>09-29</time><span>小杜的重庆之行</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/24/gcc%E7%9A%84%E5%9B%9B%E4%B8%AA%E8%BF%87%E7%A8%8B/"><time>09-24</time><span>gcc的四个过程</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/24/rosAPI/"><time>09-24</time><span>rosAPI</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/22/%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E5%8F%82%E8%80%83%E8%BF%87%E7%9A%84%E9%93%BE%E6%8E%A5/"><time>09-22</time><span>搭建博客参考过的链接</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/21/hello-world/"><time>09-21</time><span>Hello World</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/20/%E5%9B%BE%E5%BA%8A%E9%93%BE%E6%8E%A5%E6%A0%BC%E5%BC%8F%E6%B5%8B%E8%AF%95/"><time>09-20</time><span>图床链接格式测试</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/20/%E6%90%AD%E5%BB%BA%E5%9B%BE%E5%BA%8A%E7%AC%94%E8%AE%B0/"><time>09-20</time><span>搭建图床笔记</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/20/%E7%BD%91%E4%B8%8A%E4%B8%80%E4%BA%9B%E4%B8%BB%E9%A2%98%E6%8E%A8%E8%8D%90/"><time>09-20</time><span>搭建博客</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/20/hexo+github%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E7%AC%94%E8%AE%B0/"><time>09-20</time><span>hexo+github搭建博客笔记</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/20/ssh_key/"><time>09-20</time><span>ssh_key简记</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/20/%E5%8F%8C%E6%8C%87%E9%92%88%E6%B3%95%E5%90%88%E5%B9%B6%E9%A1%BA%E5%BA%8F%E8%A1%A8/"><time>09-20</time><span>双指针法合并顺序表</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day31/"><time>09-20</time><span>字母异位词</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/18/Linux%E5%B5%8C%E5%85%A5%E5%BC%8F/"><time>09-18</time><span>Linux嵌入式学习粗略笔记</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/18/ros%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/"><time>09-18</time><span>ros常用命令</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/15/ubuntu+GRUB%E5%90%AF%E5%8A%A8%E9%A1%B9/"><time>09-15</time><span>解决ubuntu 20.04 GRUB启动项顺序的问题</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/15/ubuntu%E6%B2%A1%E6%9C%89%E5%A3%B0%E9%9F%B3/"><time>09-15</time><span>解决unbuntu 20.04 主机没有声音的问题</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/03/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day4/"><time>09-03</time><span>区间和--前缀和数组</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/09/02/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day3/"><time>09-02</time><span>平方新数组</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/08/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day2/"><time>08-20</time><span>移除元素</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/08/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day1/"><time>08-20</time><span>二分查找</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/07/20/%E7%9F%AD%E6%A8%AA%E6%9D%A0-%E7%9A%84%E5%90%AB%E4%B9%89/"><time>07-20</time><span>短横杠-的含义</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/07/20/%E8%99%9A%E5%87%BD%E6%95%B0/"><time>07-20</time><span>虚函数</span></a></div><div class="archive-list"><a class='post fs14' href="/2024/05/20/ChessLearning/"><time>05-20</time><span>车类残局定式</span></a></div></article><article class="" id="archive"><div class='archive-header h4'>2023</div><div class="archive-list"><a class='post fs14' href="/2023/09/20/const%E5%92%8C%E6%8C%87%E9%92%88/"><time>09-20</time><span>const和指针</span></a></div><div class="archive-list"><a class='post fs14' href="/2023/05/20/c++primer%E7%AC%AC%E5%8D%81%E7%AB%A0%E7%BB%83%E4%B9%A0%E9%A2%98/"><time>05-20</time><span>c++primer第十章练习题</span></a></div><div class="archive-list"><a class='post fs14' href="/2023/05/20/C++%E5%87%BD%E6%95%B0%E5%BD%A2%E5%8F%82%E4%B8%BA%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B%E6%97%B6%EF%BC%8C%E4%BC%A0%E5%85%A5%E7%9A%84%E5%8F%82%E6%95%B0%E7%B1%BB%E5%9E%8B%E4%B8%BA%E4%BB%80%E4%B9%88%E7%94%A8%E5%BC%95%E7%94%A8%E5%AF%B9%E8%B1%A1%E7%9A%84%E7%B1%BB%E5%9E%8B%E5%92%8C%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B%E9%83%BD%E5%8F%AF%E4%BB%A5%EF%BC%9F/"><time>05-20</time><span>C++函数形参为引用类型时，传入的参数类型为什么用引用对象的类型和引用类型都可以？</span></a></div><div class="archive-list"><a class='post fs14' href="/2023/05/20/ofstrem%E5%92%8Cistream%E7%9A%84%E5%8C%BA%E5%88%AB/"><time>05-20</time><span>ofstrem和istream的区别</span></a></div><div class="archive-list"><a class='post fs14' href="/2023/05/20/%E5%BC%95%E7%94%A8/"><time>05-20</time><span>引用</span></a></div><div class="archive-list"><a class='post fs14' href="/2023/01/01/myblogtemplate/"><time>01-01</time><span>myblogtemplate</span></a></div></article></div>
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/">搭建博客</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-09-20T12:13:20.000Z">2024-09-20</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-10-17T10:48:59.341Z">2024-10-17</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>ssh_key简记</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><p>摘要：<br>本文是上篇《hexo+github搭建博客笔记》的一些补充。<br>翻阅博客的时候，对本地博客怎么部署到github上，以及如何配置SSH密钥，以及如何将公钥添加到远程服务器上的原理有一些不清楚，于是作了一个笔记，记录下来。</p>
+<span id="more"></span>
+<h1 id="SSH-密钥"><a href="#SSH-密钥" class="headerlink" title="SSH 密钥"></a>SSH 密钥</h1><h2 id="生成SSH密钥"><a href="#生成SSH密钥" class="headerlink" title="生成SSH密钥"></a>生成SSH密钥</h2><p>SSH 密钥用于安全地连接到远程服务器，通常用于无密码登录和身份验证。以下是如何生成和使用 SSH 密钥的步骤：</p>
+<ol>
+<li>生成 SSH 密钥<br>打开终端：</li>
+</ol>
+<p>在 Linux ，打开终端。<br>在 Windows 上，使用 Git Bash。<br>生成 SSH 密钥对：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh-keygen -t rsa -b 4096 -C <span class="string">&quot;your_email@example.com&quot;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>-t rsa 指定密钥类型为 RSA。</li>
+<li>-b 4096 指定密钥长度为 4096 位。</li>
+<li>-C “<a href="mailto:&#x79;&#111;&#x75;&#114;&#95;&#101;&#109;&#97;&#x69;&#108;&#64;&#x65;&#120;&#97;&#x6d;&#112;&#108;&#x65;&#46;&#99;&#111;&#109;">&#x79;&#111;&#x75;&#114;&#95;&#101;&#109;&#97;&#x69;&#108;&#64;&#x65;&#120;&#97;&#x6d;&#112;&#108;&#x65;&#46;&#99;&#111;&#109;</a>“ 添加一个标签，通常是你的电子邮件地址。</li>
+</ul>
+<ol>
+<li>保存密钥：<br>按回车键接受默认文件位置（通常是 ~&#x2F;.ssh&#x2F;id_rsa）。<br>输入一个密码（可选）以增加安全性。<br>查看生成的密钥<br>生成的密钥对将保存在 ~&#x2F;.ssh 目录下：</li>
+</ol>
+<ul>
+<li>私钥：id_rsa</li>
+<li>公钥：id_rsa.pub</li>
+</ul>
+<p>公钥：</p>
+<ul>
+<li>加密：用于加密数据，只有对应的私钥才能解密。</li>
+<li>签名验证：用于验证使用私钥签名的数据的正确性和完整性。</li>
+<li>保密性：可以公开共享，通常用于添加到远程服务器的 ~&#x2F;.ssh&#x2F;authorized_keys 文件中，以便进行无密码登录。</li>
+</ul>
+<p>私钥：</p>
+<ul>
+<li>解密：用于解密使用公钥加密的数据。</li>
+<li>签名：用于对数据进行签名，以证明数据的来源和完整性。</li>
+<li>保密性：必须严格保密，不能公开。如果私钥泄露，攻击者可以冒充你进行身份验证或解密数据。</li>
+</ul>
+<p>总结两者之间的关系：</p>
+<ul>
+<li>公钥：添加到 GitHub 账户中，用于验证你的身份。</li>
+<li>私钥：保存在你的本地机器上，用于解密 GitHub 发送的挑战。</li>
+</ul>
+<h2 id="将公钥添加到GitHub上"><a href="#将公钥添加到GitHub上" class="headerlink" title="将公钥添加到GitHub上"></a>将公钥添加到GitHub上</h2><ol>
+<li>登录到你的 GitHub 账户。</li>
+</ol>
+<ul>
+<li>进入 Settings &gt; SSH and GPG keys。</li>
+<li>点击 New SSH key。</li>
+<li>在 Title 中输入一个描述性的名称，例如 “My Laptop”。</li>
+<li>在 Key 中粘贴你之前复制的公钥内容。</li>
+<li>点击 Add SSH key。</li>
+</ul>
+<ol start="2">
+<li>测试 SSH 连接：<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ssh -T git@github.com</span><br><span class="line">% -T 选项：禁用伪终端分配。这使得命令的输出更简洁，更适合脚本和自动化任务。</span><br><span class="line">% git@github.com：指定你要连接的 GitHub 服务器和用户（git 用户）。</span><br></pre></td></tr></table></figure>
+命令解释：<br>简单回答：ssh -T <a href="mailto:&#103;&#x69;&#x74;&#x40;&#103;&#105;&#x74;&#x68;&#117;&#98;&#x2e;&#x63;&#x6f;&#109;">&#103;&#x69;&#x74;&#x40;&#103;&#105;&#x74;&#x68;&#117;&#98;&#x2e;&#x63;&#x6f;&#109;</a> 是一个用于测试 SSH 连接到 GitHub 的命令。这个命令可以帮助你验证你的 SSH 密钥是否已经正确地添加到 GitHub 账户中，并且可以成功地进行身份验证。<br>详细回答：</li>
+</ol>
+<ul>
+<li>身份验证：当你运行 ssh -T <a href="mailto:&#103;&#105;&#x74;&#64;&#103;&#105;&#116;&#x68;&#117;&#x62;&#46;&#x63;&#x6f;&#109;">&#103;&#105;&#x74;&#64;&#103;&#105;&#116;&#x68;&#117;&#x62;&#46;&#x63;&#x6f;&#109;</a> 时，GitHub 服务器会使用你提供的公钥来验证你的身份。具体来说，GitHub 会使用你的公钥来解密一个挑战（challenge），如果你的私钥能够成功解密这个挑战，GitHub 会认为你是合法用户。</li>
+<li>公钥和私钥的关系：公钥和私钥是一对，公钥用于加密，私钥用于解密。当你在 GitHub 上添加公钥后，GitHub 会使用这个公钥来验证你提供的私钥是否匹配。</li>
+<li>通过 ssh -T <a href="mailto:&#x67;&#105;&#x74;&#x40;&#103;&#x69;&#116;&#x68;&#x75;&#x62;&#46;&#99;&#x6f;&#109;">&#x67;&#105;&#x74;&#x40;&#103;&#x69;&#116;&#x68;&#x75;&#x62;&#46;&#99;&#x6f;&#109;</a> 命令，你可以验证你的公钥是否已经正确添加到 GitHub 账户中，并且你的私钥是否能够成功进行身份验证</li>
+</ul>
+<ol start="3">
+<li>预期输出<br>首次连接： 如果这是你第一次连接到 GitHub，系统会提示你确认 GitHub 的主机密钥指纹：<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">The authenticity of host <span class="string">&#x27;github.com (IP_ADDRESS)&#x27;</span> can<span class="string">&#x27;t be established.</span></span><br><span class="line"><span class="string">RSA key fingerprint is SHA256:nThbg6kXUpJWGl7E1IGOCspRomTxdCARLviKw6E5SY8.</span></span><br><span class="line"><span class="string">Are you sure you want to continue connecting (yes/no/[fingerprint])?</span></span><br></pre></td></tr></table></figure>
+输入 yes 继续连接。<br>成功连接： 如果你的 SSH 密钥已正确添加到 GitHub 账户中，你会看到以下消息：<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Hi username! You<span class="string">&#x27;ve successfully authenticated, but GitHub does not provide shell access.</span></span><br></pre></td></tr></table></figure>
+其中 username 是你的 GitHub 用户名。</li>
+</ol>
+<h2 id="将公钥添加到远程服务器"><a href="#将公钥添加到远程服务器" class="headerlink" title="将公钥添加到远程服务器"></a>将公钥添加到远程服务器</h2><p>复制公钥：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> ~/.ssh/id_rsa.pub</span><br></pre></td></tr></table></figure>
+<p>复制输出的内容。<br>将公钥添加到远程服务器：<br>登录到远程服务器：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh user@remote_host</span><br></pre></td></tr></table></figure>
+<p>创建 .ssh 目录（如果不存在）：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p ~/.ssh</span><br></pre></td></tr></table></figure>
+<p>将公钥添加到 authorized_keys 文件：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&quot;your_public_key&quot;</span> &gt;&gt; ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
+<p>设置正确的权限：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chmod</span> 700 ~/.ssh</span><br><span class="line"><span class="built_in">chmod</span> 600 ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
+<p>测试 SSH 连接<br>退出远程服务器：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">exit</span></span><br></pre></td></tr></table></figure>
+<p>尝试无密码登录：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh user@remote_host</span><br></pre></td></tr></table></figure>
+<p>如果一切配置正确，你应该能够无密码登录到远程服务器。</p>
+<h2 id="常见问题"><a href="#常见问题" class="headerlink" title="常见问题"></a>常见问题</h2><ul>
+<li>权限问题：确保 .ssh 目录和 authorized_keys 文件的权限设置正确。</li>
+<li>密钥密码：如果你在生成密钥时设置了密码，每次使用 SSH 连接时都需要输入该密码。可以使用 ssh-agent 来管理密钥密码：<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">eval</span> <span class="string">&quot;<span class="subst">$(ssh-agent -s)</span>&quot;</span></span><br><span class="line">ssh-add ~/.ssh/id_rsa</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="完"><a href="#完" class="headerlink" title="完"></a>完</h2>
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2024/09/20/hexo+github%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E7%AC%94%E8%AE%B0/">hexo+github搭建博客笔记</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2024/09/20/%E5%8F%8C%E6%8C%87%E9%92%88%E6%B3%95%E5%90%88%E5%B9%B6%E9%A1%BA%E5%BA%8F%E8%A1%A8/">双指针法合并顺序表</a></div></section></div>
+
+
+
+
+
+
 <footer class="page-footer footnote"><hr><div class="sitemap"><div class="sitemap-group"><span class="fs15">社交</span><a target="_blank" rel="noopener" href="https://pfni.github.io/">友链</a></div></div><div class="text"><p>本站由 <a href="/">Dku</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
-</aside><div class='float-panel blur'>
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#SSH-%E5%AF%86%E9%92%A5"><span class="toc-text">SSH 密钥</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%94%9F%E6%88%90SSH%E5%AF%86%E9%92%A5"><span class="toc-text">生成SSH密钥</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%86%E5%85%AC%E9%92%A5%E6%B7%BB%E5%8A%A0%E5%88%B0GitHub%E4%B8%8A"><span class="toc-text">将公钥添加到GitHub上</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%86%E5%85%AC%E9%92%A5%E6%B7%BB%E5%8A%A0%E5%88%B0%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="toc-text">将公钥添加到远程服务器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98"><span class="toc-text">常见问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%8C"><span class="toc-text">完</span></a></li></ol></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
   <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
   </button>
