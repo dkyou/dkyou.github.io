@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1" theme-name="Stellar" theme-version="1.29.1">
-  
+  <meta name="robots" content="noindex,follow">
   <meta name="generator" content="Hexo 7.3.0">
   <meta http-equiv='x-dns-prefetch-control' content='on' />
   
@@ -17,21 +17,15 @@
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
   <meta name="theme-color" content="#f9fafb">
   
-  <title>两个数组的交集 - 又是摸鱼的一天</title>
+  <title>标签：四数之和2 - 又是摸鱼的一天</title>
 
   
-    <meta name="description" content="字母异位词题目：两个数组的交集 解法-哈希表思路：  将Num1存储在set容器nums_set中，可以去重 遍历num2,如果Nums_set中有num2，则将num2插入到result_set中   复杂度：  时间复杂度： 空间复杂度：  代码： 1234567891011121314151617181920212223#include&lt;iostream&gt;#include&lt;">
-<meta property="og:type" content="article">
-<meta property="og:title" content="两个数组的交集">
-<meta property="og:url" content="https://dkyou.github.io/2024/10/12/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day32/index.html">
+    <meta property="og:type" content="website">
+<meta property="og:title" content="又是摸鱼的一天">
+<meta property="og:url" content="https://dkyou.github.io/tags/%E5%9B%9B%E6%95%B0%E4%B9%8B%E5%92%8C2/index.html">
 <meta property="og:site_name" content="又是摸鱼的一天">
-<meta property="og:description" content="字母异位词题目：两个数组的交集 解法-哈希表思路：  将Num1存储在set容器nums_set中，可以去重 遍历num2,如果Nums_set中有num2，则将num2插入到result_set中   复杂度：  时间复杂度： 空间复杂度：  代码： 1234567891011121314151617181920212223#include&lt;iostream&gt;#include&lt;">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2024-10-12T12:00:00.000Z">
-<meta property="article:modified_time" content="2024-10-12T16:01:48.589Z">
 <meta property="article:author" content="Dku">
-<meta property="article:tag" content="c++">
-<meta property="article:tag" content="两个数组的交集">
 <meta name="twitter:card" content="summary">
   
   
@@ -51,7 +45,7 @@
 </head>
 <body>
 
-<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+<div class="l_body s:aa index tech" id="start" layout="undefined" ><aside class="l_left"><div class="leftbar-container">
 
 
 <header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大白鹅喝酒.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">👀瞅啥呢！👀</div><div class="sub normal cap">今天又是摸鱼的一天！</div><div class="sub hover cap" style="opacity:0">可不摸鱼又干什么呢？</div></a></div></header>
@@ -63,103 +57,29 @@
 <nav class="menu dis-select"></nav>
 </div>
 <div class="widgets">
-
-
 <widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2024/10/12/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day38(%E5%8F%88%E5%A5%BD%E4%BA%86%E5%8F%88)%20/"><span class="title">四数之和2</span></a><a class="item title" href="/2024/09/20/hexo+github%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E7%AC%94%E8%AE%B0/"><span class="title">hexo+github搭建博客笔记</span></a><a class="item title" href="/2024/09/20/ssh_key/"><span class="title">ssh_key简记</span></a><a class="item title" href="/2023/01/01/myblogtemplate/"><span class="title">myblogtemplate</span></a><a class="item title" href="/2023/05/20/%E5%BC%95%E7%94%A8/"><span class="title">引用</span></a><a class="item title" href="/2023/05/20/C++%E5%87%BD%E6%95%B0%E5%BD%A2%E5%8F%82%E4%B8%BA%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B%E6%97%B6%EF%BC%8C%E4%BC%A0%E5%85%A5%E7%9A%84%E5%8F%82%E6%95%B0%E7%B1%BB%E5%9E%8B%E4%B8%BA%E4%BB%80%E4%B9%88%E7%94%A8%E5%BC%95%E7%94%A8%E5%AF%B9%E8%B1%A1%E7%9A%84%E7%B1%BB%E5%9E%8B%E5%92%8C%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B%E9%83%BD%E5%8F%AF%E4%BB%A5%EF%BC%9F/"><span class="title">C++函数形参为引用类型时，传入的参数类型为什么用引用对象的类型和引用类型都可以？</span></a><a class="item title" href="/2023/05/20/c++primer%E7%AC%AC%E5%8D%81%E7%AB%A0%E7%BB%83%E4%B9%A0%E9%A2%98/"><span class="title">c++primer第十章练习题</span></a><a class="item title" href="/2024/08/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day2/"><span class="title">移除元素</span></a><a class="item title" href="/2024/08/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day1/"><span class="title">二分查找</span></a><a class="item title" href="/2024/09/02/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day3/"><span class="title">平方新数组</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
 
+<header class="header mobile-only"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大白鹅喝酒.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">👀瞅啥呢！👀</div><div class="sub normal cap">今天又是摸鱼的一天！</div><div class="sub hover cap" style="opacity:0">可不摸鱼又干什么呢？</div></a></div></header>
+
+ 
 
 
 
 
-<div class="article banner top">
-  <div class="content">
-    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
-<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/C-%E5%88%B7%E9%A2%98%E7%AC%94%E8%AE%B0/">C++刷题笔记</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-10-12T12:00:00.000Z">2024-10-12</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-10-12T16:01:48.589Z">2024-10-13</time></span></div></div></div>
-    
-    <div class="bottom only-title">
-      
-      <div class="text-area">
-        <h1 class="text title"><span>两个数组的交集</span></h1>
-        
-      </div>
-    </div>
-    
-  </div>
-  </div><article class="md-text content"><h1 id="字母异位词"><a href="#字母异位词" class="headerlink" title="字母异位词"></a>字母异位词</h1><h2 id="题目："><a href="#题目：" class="headerlink" title="题目："></a>题目：</h2><p>两个数组的交集</p>
-<h2 id="解法-哈希表"><a href="#解法-哈希表" class="headerlink" title="解法-哈希表"></a>解法-哈希表</h2><p>思路：</p>
-<ol>
-<li>将Num1存储在set容器nums_set中，可以去重</li>
-<li>遍历num2,如果Nums_set中有num2，则将num2插入到result_set中</li>
-<li></li>
-</ol>
-<p>复杂度：</p>
-<ul>
-<li>时间复杂度：</li>
-<li>空间复杂度：</li>
-</ul>
-<p>代码：</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;vector&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;unordered_set&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function">vector&lt;<span class="type">int</span>&gt; <span class="title">intersection</span><span class="params">(vector&lt;<span class="type">int</span>&gt;&amp; nums1, vector&lt;<span class="type">int</span>&gt;&amp; nums2)</span> </span>&#123;</span><br><span class="line">        unordered_set&lt;<span class="type">int</span>&gt; result_set; <span class="comment">// 存放结果，之所以用set是为了给结果集去重</span></span><br><span class="line">        <span class="comment">//通过传递 nums1.begin() 和 nums1.end()，</span></span><br><span class="line">        <span class="comment">//可以将 nums1 中的所有元素一次性插入到 unordered_set 中，从而快速构建集合。</span></span><br><span class="line">        <span class="comment">//unordered_set 自动去除重复元素，因此可以确保最终集合中没有重复项。</span></span><br><span class="line">        <span class="function">unordered_set&lt;<span class="type">int</span>&gt; <span class="title">nums_set</span><span class="params">(nums<span class="number">1.</span>begin(), nums<span class="number">1.</span>end())</span></span>;</span><br><span class="line">        <span class="comment">// 遍历nums2</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> num : nums2) &#123;</span><br><span class="line">            <span class="comment">// 发现nums2的元素 在nums_set里又出现过</span></span><br><span class="line">            <span class="keyword">if</span> (nums_set.<span class="built_in">find</span>(num) != nums_set.<span class="built_in">end</span>()) &#123;</span><br><span class="line">                result_set.<span class="built_in">insert</span>(num);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">vector</span>&lt;<span class="type">int</span>&gt;(result_set.<span class="built_in">begin</span>(), result_set.<span class="built_in">end</span>());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>语法小点：</p>
-<ol>
-<li>unordered_set<ul>
-<li>数据结构：基于哈希表</li>
-<li>无序存储</li>
-<li>去重</li>
-</ul>
-</li>
-<li>set(ordered_set)<ul>
-<li>数据结构：基于红黑树</li>
-<li>有序存储：元素按照升序排序</li>
-<li>去重</li>
-</ul>
-</li>
-<li>解释：<code>unordered_set&lt;int&gt; nums_set(nums1.begin(), nums1.end());</code><ul>
-<li>nums1.begin()：返回指向nums1向量中第一个元素的迭代器</li>
-<li>nums1.end()：返回指向nums1向量中最后一个元素下一个位置的迭代器</li>
-<li>将nums1向量中的所有元素插入到一个无序集合nums_set中，用于去除重复元素并提供快速查找。</li>
-</ul>
-</li>
-<li>解释：<code> for (int num : nums2)</code><ul>
-<li>for循环用于遍历名为nums2的容器中的每个元素。循环变量num依次取nums2中的每一个值。通常用于对nums2中的每个元素执行相同的操作。</li>
-</ul>
-</li>
-<li>解释： <code>if (nums_set.find(num) != nums_set.end()) &#123;          result_set.insert(num);      &#125;</code><ul>
-<li>nums_set.find(num):这个方法会在 nums_set 中查找是否存在值为 num 的元素。查找成功会返回一个指向该元素的迭代器；查找失败会返回 nums_set.end()，表示查找未找到该元素。</li>
-<li>nums_set.find(num) !&#x3D; nums_set.end()：这个条件判断返回的迭代器是否等于 nums_set.end()。<br> 如果不等于nums_set.end()，说明找到了 num，即 nums_set 中存在 num。<br> 如果等于 nums_set.end()，说明没有找到 num，即 nums_set 中不存在 num。</li>
-</ul>
-</li>
-</ol>
-
-<div class="article-footer fs14">
-    <section id="license">
-      <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
-</div>
-    </section>
-    </div>
-</article>
-<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2024/10/14/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7%E4%B9%8B%E6%8A%B1%E6%80%A8/">吐槽</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2024/10/12/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day35/">四数之和</a></div></section></div>
-
-
-
-
+<div class="navbar top"><nav class="post"><a href="/">近期发布</a><a href="/categories/">分类</a><a class="active" href="/tags/">标签：四数之和2</a><a href="/archives/">归档</a></nav></div>
+<div class="post-list post"><a class="post-card post" href="/2024/10/12/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day38(%E5%8F%88%E5%A5%BD%E4%BA%86%E5%8F%88)%20/">
+<article class="md-text"><h2 class="post-title">四数之和2</h2><div class="excerpt"><p>四数之和2三数之和给我写崩溃了都，不过最后还是理解了双指针法。四数之和跟三数之和用的方法是一样的，基本可以完全照着抄。又可以继续重拳出击了！👊
+题目：四数之和2给你一个由 n 个整数组成的数组 nums ，和一个目标值 target 。请你找出并返...</p></div><div class="meta cap"><span class="cap" id="post-meta"><svg style="margin-bottom:2px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M6.94 2c.416 0 .753.324.753.724v1.46c.668-.012 1.417-.012 2.26-.012h4.015c.842 0 1.591 0 2.259.013v-1.46c0-.4.337-.725.753-.725s.753.324.753.724V4.25c1.445.111 2.394.384 3.09 1.055c.698.67.982 1.582 1.097 2.972L22 9H2v-.724c.116-1.39.4-2.302 1.097-2.972c.697-.67 1.645-.944 3.09-1.055V2.724c0-.4.337-.724.753-.724"/><path fill="currentColor" d="M22 14v-2c0-.839-.004-2.335-.017-3H2.01c-.013.665-.01 2.161-.01 3v2c0 3.771 0 5.657 1.172 6.828C4.343 22 6.228 22 10 22h4c3.77 0 5.656 0 6.828-1.172C22 19.658 22 17.772 22 14" opacity=".5"/><path fill="currentColor" d="M18 17a1 1 0 1 1-2 0a1 1 0 0 1 2 0m0-4a1 1 0 1 1-2 0a1 1 0 0 1 2 0m-5 4a1 1 0 1 1-2 0a1 1 0 0 1 2 0m0-4a1 1 0 1 1-2 0a1 1 0 0 1 2 0m-5 4a1 1 0 1 1-2 0a1 1 0 0 1 2 0m0-4a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><time datetime="2024-10-12T12:00:00.000Z">2024-10-12</time></span><span class="cap breadcrumb"><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg><span>C++刷题笔记</span></span></div></article>
+</a></div>
 
 
 <footer class="page-footer footnote"><hr><div class="sitemap"><div class="sitemap-group"><span class="fs15">社交</span><a target="_blank" rel="noopener" href="https://pfni.github.io/">友链</a></div></div><div class="text"><p>本站由 <a href="/">Dku</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
-<div class="widgets">
-
-
-
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AD%97%E6%AF%8D%E5%BC%82%E4%BD%8D%E8%AF%8D"><span class="toc-text">字母异位词</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A2%98%E7%9B%AE%EF%BC%9A"><span class="toc-text">题目：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%A3%E6%B3%95-%E5%93%88%E5%B8%8C%E8%A1%A8"><span class="toc-text">解法-哈希表</span></a></li></ol></li></ol></div><div class="widget-footer">
-
-<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
-</div></aside><div class='float-panel blur'>
+</aside><div class='float-panel blur'>
   <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
   </button>
