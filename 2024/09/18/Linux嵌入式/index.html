@@ -1,0 +1,977 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1" theme-name="Stellar" theme-version="1.29.1">
+  
+  <meta name="generator" content="Hexo 7.3.0">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  
+  <title>Linux嵌入式学习粗略笔记 - 又是摸鱼的一天</title>
+
+  
+    <meta name="description" content="🐧🐧🐧🐧🐧🐧🐧🐧🐧🐧🐧 一些缩写.elf 文件：Executable and Linkable Format，可执行连接格式编译(compilation)指令：gcc -S hello.c -o hello.s汇编(assembly)指令：gcc -c hello.s -o hello.o信号量：semaphoremisc:文件位于drivers\char\misc.c ms">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux嵌入式学习粗略笔记">
+<meta property="og:url" content="https://dkyou.github.io/2024/09/18/Linux%E5%B5%8C%E5%85%A5%E5%BC%8F/index.html">
+<meta property="og:site_name" content="又是摸鱼的一天">
+<meta property="og:description" content="🐧🐧🐧🐧🐧🐧🐧🐧🐧🐧🐧 一些缩写.elf 文件：Executable and Linkable Format，可执行连接格式编译(compilation)指令：gcc -S hello.c -o hello.s汇编(assembly)指令：gcc -c hello.s -o hello.o信号量：semaphoremisc:文件位于drivers\char\misc.c ms">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/linuximages/%E6%A0%87%E5%87%86io%E5%92%8C%E7%B3%BB%E7%BB%9Fio.png">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/linuximages/poll%E6%A3%80%E6%B5%8B%E4%BA%8B%E4%BB%B6.png">
+<meta property="article:published_time" content="2024-09-18T05:39:11.000Z">
+<meta property="article:modified_time" content="2024-09-22T03:54:51.644Z">
+<meta property="article:author" content="Dku">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="imx6ull">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://sk473ajar.sabkt.gdipper.com/linuximages/%E6%A0%87%E5%87%86io%E5%92%8C%E7%B3%BB%E7%BB%9Fio.png">
+  
+  
+  
+  <meta name="keywords" content="linux,嵌入式,imx6ull">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.29.1">
+
+  
+
+  
+
+  
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大白鹅喝酒.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">👀瞅啥呢！👀</div><div class="sub normal cap">今天又是摸鱼的一天！</div><div class="sub hover cap" style="opacity:0">可不摸鱼又干什么呢？</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2024/10/31/catkin_make%E7%BC%96%E8%AF%91%E5%87%BA%E9%94%99/"><span class="title">catkin_make 编译出错</span></a><a class="item title" href="/2024/10/30/Cmake%E6%9E%84%E5%BB%BA%E8%87%AA%E5%8A%A8%E5%8C%96%E7%BC%96%E8%AF%91%E7%8E%AF%E5%A2%83/"><span class="title">Cmake构建自动化编译环境</span></a><a class="item title" href="/2024/09/01/matlab%E9%9D%9E%E7%BA%BF%E6%80%A7%E6%96%B9%E7%A8%8B%E6%B1%82%E8%A7%A3fsolve/"><span class="title">matlab非线性方程求解fsolve</span></a><a class="item title" href="/2024/10/31/%E8%BF%90%E7%AE%97%E7%AC%A6%E9%87%8D%E8%BD%BD%E5%B0%8F%E7%9F%A5%E8%AF%86%E7%82%B9%20/"><span class="title">运算符重载小知识点</span></a><a class="item title" href="/2024/10/31/vscode%E4%B8%AD%E6%89%BE%E4%B8%8D%E5%88%B0ros%E4%B8%AD%E7%9A%84%E4%B8%80%E4%BA%9B%E5%A4%B4%E6%96%87%E4%BB%B6/"><span class="title">vscode中找不到ros中的一些头文件</span></a><a class="item title" href="/2024/10/31/roslaunch%E5%87%BA%E9%94%99/"><span class="title">catkin_make 编译出错</span></a><a class="item title" href="/2024/09/20/Linux%E6%B1%87%E7%BC%96%E5%9F%BA%E7%A1%80/"><span class="title">Linux汇编基础</span></a><a class="item title" href="/2024/10/15/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day40%E7%BF%BB%E8%BD%AC%E5%AD%97%E7%AC%A6%E4%B8%B2%E9%87%8C%E7%9A%84%E5%8D%95%E8%AF%8D/"><span class="title">翻转字符串里的单词</span></a><a class="item title" href="/2024/10/15/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day38%E5%9B%9B%E6%95%B0%E4%B9%8B%E5%92%8C/"><span class="title">四数之和之2</span></a><a class="item title" href="/2024/09/20/%E5%8F%8B%E9%93%BE/"><span class="title">友链</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/LINUX/">LINUX</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-09-18T05:39:11.000Z">2024-09-18</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-09-22T03:54:51.644Z">2024-09-22</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>Linux嵌入式学习粗略笔记</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><p>🐧🐧🐧🐧🐧🐧🐧🐧🐧🐧🐧</p>
+<h1 id="一些缩写"><a href="#一些缩写" class="headerlink" title="一些缩写"></a>一些缩写</h1><p>.elf 文件：Executable and Linkable Format，可执行连接格式<br>编译(compilation)指令：<br>gcc -S hello.c -o hello.s<br>汇编(assembly)指令：<br>gcc -c hello.s -o hello.o<br>信号量：semaphore<br>misc:文件位于drivers\char\misc.c msic意思是杂项。<br>因此 MISC 驱动也叫做杂项驱动，也就是当我们板子上的某些外设无法进行分类的时候就可以使用 MISC 驱动。 MISC 驱动其实就是最简单的字符设备驱动，通常嵌套在 platform 总线驱动中，实现复杂的驱动，<br>所有的 MISC 设备驱动的主设备号都为 10，不同的设备使用不同的从设备号。随着 Linux字符设备驱动的不断增加，设备号变得越来越紧张，尤其是主设备号， MISC 设备驱动就用于解决此问题。 MISC 设备会自动创建 cdev，不需要像我们以前那样手动创建，因此采用 MISC 设备驱动可以简化字符设备驱动的编写。<br>IOMUX是“Input&#x2F;Output Multiplexer and Unifier”的缩写，中文可以翻译为“输入&#x2F;输出多路复用器和统一器”。它是一种电子设备或电路，用于在多个信号源和目标之间进行选择和转换。<br>在具体应用中，IOMUX通常用于处理电子设备中的信号输入和输出。它可以将多个信号源（如不同的传感器或数据源）与多个目标（如不同的处理器或输出设备）进行连接和分配，从而实现信号的复用和转换。<br>关键词解释：</p>
+<ol>
+<li>Input&#x2F;Output（输入&#x2F;输出）：指设备或系统接收和发送数据的接口。</li>
+<li>Multiplexer（多路复用器）：一种设备或技术，可以将多个信号或数据流合并为一个信号流进行传输或处理。</li>
+<li>Unifier（统一器）：用于将不同来源或格式的数据、信号等统一处理或输出的设备或技术。<br>IOMUX在许多电子设备和系统中都有应用，如嵌入式系统、微控制器、FPGA等，它可以帮助提高系统的效率和性能，同时减少硬件的复杂性和成本。</li>
+</ol>
+<h1 id="一些C语法"><a href="#一些C语法" class="headerlink" title="一些C语法"></a>一些C语法</h1><h2 id="c语言中将int变量转换为void-指针或int-指针"><a href="#c语言中将int变量转换为void-指针或int-指针" class="headerlink" title="c语言中将int变量转换为void *指针或int *指针"></a>c语言中将int变量转换为void *指针或int *指针</h2><p>在C语言中，将一个整型变量强制转换为void *指针类型通常是为了将整数值作为一个通用指针传递给函数，或者在特定的上下文中使用这个整数的值作为内存地址。进行这样的转换可以用类型转换运算符 (void *)。以下是一个简单的示例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> integerValue = <span class="number">12345</span>;</span><br><span class="line"><span class="type">void</span> *pointerValue = (<span class="type">void</span> *)(<span class="type">intptr_t</span>)integerValue;</span><br></pre></td></tr></table></figure>
+<p>在这个例子中，整型变量integerValue的值被转换为一个intptr_t类型，然后再转换为void *类型。intptr_t是一种整数类型，它的大小足够存放指针，这保证了转换过程中不会丢失信息。这种转换方法是可移植性较好的，因为它考虑到了不同平台上指针和整数大小可能不一致的情况。</p>
+<p>需要注意的是，这样的转换并不意味着整数真的变成了一个有效的内存地址。如果你打算通过这样的指针去访问内存，必须非常小心，确保这个整数值确实对应于一个合法且可访问的内存地址，否则会导致未定义行为，比如程序崩溃或者数据损坏。在多线程和异步编程中，将整数简单地作为数据通过指针传递给线程函数是一种常见且安全的用途。<br><em>于是想到是否解引用pointerValue的值，发现是不可以的。目前暂时不知道将int 变量转换为void指针的目的是什么</em></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> integerValue = <span class="number">12345</span>;</span><br><span class="line">    <span class="type">int</span> * pointerValue = (<span class="type">int</span> *)integerValue;</span><br><span class="line">	<span class="comment">//int * pointerValue = (int *)(long)integerValue;</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;* pointerValue2 = %d&quot;</span>,*pointerValue);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这一部分问题在于：</p>
+<p>将一个整数直接转换为指针并解引用该指针，这通常会导致未定义行为（undefined behavior）。因为在现代操作系统中，这样的指针几乎不可能指向合法的内存位置，因此解引用它的结果是不可预测的，可能会导致程序崩溃、数据损坏或安全漏洞。<br>正确的做法是确保指针总是指向有效的、已分配的内存位置。对于测试的目的，我们应该构造一个安全的环境来模拟和验证逻辑，而不是直接执行可能导致未定义行为的操作。</p>
+<h1 id="一些有用的命令"><a href="#一些有用的命令" class="headerlink" title="一些有用的命令"></a>一些有用的命令</h1><p>查看工具链中头文件和库文件的路径<br><code>echo &#39;main()&#123;&#125;&#39;| arm-linux-gnueabihf-gcc -E -v -</code><br>搜索某一个字符<br><code>grep &quot;prefix&quot; * -nwr</code></p>
+<h1 id="Makefile"><a href="#Makefile" class="headerlink" title="Makefile"></a>Makefile</h1><h1 id="Makefile的引入及规则"><a href="#Makefile的引入及规则" class="headerlink" title="Makefile的引入及规则"></a>Makefile的引入及规则</h1><p>使用keil, mdk,avr等工具开发程序时点击鼠标就可以编译了，它的内部机制是什么？它怎么组织管理程序？怎么决定编译哪一个文件？</p>
+<p>答：实际上windows工具管理程序的内部机制，也是Makefile，我们在linux下来开发裸板程序的时候，使用Makefile组织管理这些程序，本节我们来讲解Makefile最基本的规则。Makefile要做什么事情呢？<br>组织管理程序，组织管理文件，我们写一个程序来实验一下：</p>
+<p>文件a.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">02</span>	<span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="number">03</span></span><br><span class="line"><span class="number">04</span>	<span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">05	&#123;</span><br><span class="line"><span class="number">06</span>	func_b();</span><br><span class="line"><span class="number">07</span>	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"><span class="number">08</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>文件b.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">2</span>	<span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="number">3</span></span><br><span class="line"><span class="number">4</span>	<span class="type">void</span> <span class="title function_">func_b</span><span class="params">()</span></span><br><span class="line">5	&#123;</span><br><span class="line"><span class="number">6</span>		<span class="built_in">printf</span>(<span class="string">&quot;This is B\n&quot;</span>);</span><br><span class="line"><span class="number">7</span>	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -o test a.c b.c</span><br></pre></td></tr></table></figure>
+
+<p>运行：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./test</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">This is B</span><br></pre></td></tr></table></figure>
+
+<p><strong>gcc -o test a.c b.c</strong>  这条命令虽然简单，但是它完成的功能不简单。</p>
+<p>我们来看看它做了哪些事情，</p>
+<p>我们知道.c程序 &#x3D;&#x3D;》 得到可执行程序它们之间要经过四个步骤：</p>
+<ul>
+<li>1.预处理</li>
+<li>2.编译</li>
+<li>3.汇编</li>
+<li>4.链接</li>
+</ul>
+<p>我们经常把前三个步骤统称为编译了。我们具体分析：gcc -o test a.c b.c这条命令<br>它们要经过下面几个步骤：</p>
+<ul>
+<li>1）对于<strong>a.c</strong>：执行：预处理 编译 汇编 的过程，<strong>a.c &#x3D;&#x3D;&gt;xxx.s &#x3D;&#x3D;&gt;xxx.o</strong> 文件。</li>
+<li>2）对于<strong>b.c</strong>：执行：预处理 编译 汇编 的过程，<strong>b.c &#x3D;&#x3D;&gt;yyy.s &#x3D;&#x3D;&gt;yyy.o</strong> 文件。</li>
+<li>3）最后：<strong>xxx.o</strong>和<strong>yyy.o</strong>链接在一起得到一个<strong>test</strong>应用程序。</li>
+</ul>
+<p>提示：<strong>gcc -o test a.c b.c -v</strong> ：加上一个<strong>‘-v’</strong>选项可以看到它们的处理过程，</p>
+<p>第一次编译 a.c 得到 xxx.o 文件，这是很合乎情理的， 执行完第一次之后，如果修改 a.c 又再次执行：<strong>gcc -o test a.c b.c</strong>，对于 a.c 应该重新生成 xxx.o，但是对于 b.c 又会重新编译一次，这完全没有必要，b.c 根本没有修改，直接使用第一次生成的 yyy.o 文件就可以了。</p>
+<p>缺点：对所有的文件都会再处理一次，即使 b.c 没有经过修改，b.c 也会重新编译一次，当文件比较少时，这没有没有什么问题，当文件非常多的时候，就会带来非常多的效率问题如果文件非常多的时候，我们，只是修改了一个文件，所用的文件就会重新处理一次，编译的时候就会等待很长时间。</p>
+<p>对于这些源文件，我们应该分别处理，执行：预处理 编译 汇编，先分别编译它们，最后再把它们链接在一次，比如：</p>
+<p>编译：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gcc -o a.o a.c</span><br><span class="line">gcc -o b.o b.c</span><br></pre></td></tr></table></figure>
+
+<p>链接：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -o <span class="built_in">test</span> a.o b.o</span><br></pre></td></tr></table></figure>
+
+<p>比如：上面的例子，当我们修改a.c之后,a.c会重现编译然后再把它们链接在一起就可以了。b.c<br>就不需要重新编译。</p>
+<p>那么问题又来了，怎么知道哪些文件被更新了&#x2F;被修改了？</p>
+<p>比较时间：比较 a.o 和 a.c 的时间，如果a.c的时间比 a.o 的时间更加新的话，就表明 a.c 被修改了，同理b.o和b.c也会进行同样的比较。比较test和 a.o,b.o 的时间，如果a.o或者b.o的时间比test更加新的话，就表明应该重新生成test。Makefile<br>就是这样做的。我们现在来写出一个简单的Makefile:</p>
+<p>makefie最基本的语法是规则，规则：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">目标 : 依赖1 依赖2 ...</span><br><span class="line">[TAB]命令</span><br></pre></td></tr></table></figure>
+
+<p>当“依赖”比“目标”新，执行它们下面的命令。我们要把上面三个命令写成makefile规则，如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">test</span> ：a.o b.o  //test是目标，它依赖于a.o b.o文件，一旦a.o或者b.o比<span class="built_in">test</span>新的时候，</span><br><span class="line">就需要执行下面的命令，重新生成<span class="built_in">test</span>可执行程序。</span><br><span class="line">gcc -o <span class="built_in">test</span> a.o b.o</span><br><span class="line">a.o : a.c  //a.o依赖于a.c，当a.c更加新的话，执行下面的命令来生成a.o</span><br><span class="line">gcc -c -o a.o a.c</span><br><span class="line">b.o : b.c  //b.o依赖于b.c,当b.c更加新的话，执行下面的命令，来生成b.o</span><br><span class="line">gcc -c -o b.o b.c</span><br></pre></td></tr></table></figure>
+
+<p>我们来作一下实验：</p>
+<p>在改目录下我们写一个Makefile文件：</p>
+<p>文件：Makefile</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">1	test:a.o b.o</span><br><span class="line">2		gcc -o test a.o b.o</span><br><span class="line">3	</span><br><span class="line">4	a.o : a.c</span><br><span class="line">5		gcc -c -o a.o a.c</span><br><span class="line">6</span><br><span class="line">7	b.o : b.c</span><br><span class="line">8		gcc -c -o b.o b.c</span><br></pre></td></tr></table></figure>
+
+<p>上面是makefile中的三条规则。makefile,就是名字为“makefile”的文件。当我们想编译程序时，直接执行make命令就可以了，一执行make命令它想生成第一个目标test可执行程序,<br>如果发现a.o 或者b.o没有，就要先生成a.o或者b.o，发现a.o依赖a.c，有a.c但是没有a.o,他就会认为a.c比a.o新，就会执行它们下面的命令来生成a.o，同理b.o和b.c的处理关系也是这样的。</p>
+<p>如果修改a.c ，我们再次执行make，它的本意是想生成第一个目标test应用程序,它需要先生成a.o,发现a.o依赖a.c(执行我们修改了a.c)发现a.c比a.o更加新，就会执行gcc -c -o a.o<br>a.c命令来生成a.o文件。b.o依赖b.c，发现b.c并没有修改，就不会执行gcc -c -o b.o<br>b.c来重新生成b.o文件。现在a.o b.o都有了，其中的a.o比test更加新，就会执行 gcc -o<br>test a.ob.o来重新链接得到test可执行程序。所以当执行make命令时候就会执行下面两条执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gcc -c -o a.o a.c</span><br><span class="line">gcc -o <span class="built_in">test</span> a.o b.o</span><br></pre></td></tr></table></figure>
+
+<p>我们第一次执行make的时候，会执行下面三条命令(三条命令都执行)：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">gcc -c -o a.o a.c</span><br><span class="line">gcc -c -o b.o b.c</span><br><span class="line">gcc -o <span class="built_in">test</span> a.o b.o</span><br></pre></td></tr></table></figure>
+
+<p>再次执行make 就会显示下面的提示：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make: `<span class="built_in">test</span><span class="string">&#x27; is up to date.</span></span><br></pre></td></tr></table></figure>
+
+<p>我们再次执行make就会判断Makefile文件中的依赖，发现依赖没有更新，所以目标文件就不会重现生成，就会有上面的提示。当我们修改a.c后，重新执行make,</p>
+<p>就会执行下面两条指令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gcc -c -o a.o a.c</span><br><span class="line">gcc -o <span class="built_in">test</span> a.o b.o</span><br></pre></td></tr></table></figure>
+
+<p>我们同时修改a.c b.c，执行make就会执行下面三条指令。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">gcc -c -o a.o a.c</span><br><span class="line">gcc -c -o b.o b.c</span><br><span class="line">gcc -o <span class="built_in">test</span> a.o b.o</span><br></pre></td></tr></table></figure>
+
+<p>a.c文件修改了，重新编译生成a.o, b.c修改了重新编译生成b.o，a.o,b.o都更新了重新链接生成test可执行程序，makefile的规则其实还是比较简单的。规则是Makefie的核心，</p>
+<p>执行make命令的时候，就会在当前目录下面找到名字为：Makefile的文件，根据里面的内容来执行里面的判断&#x2F;命令。</p>
+<h2 id="shell-pwd-和PWD的区别"><a href="#shell-pwd-和PWD的区别" class="headerlink" title="shell pwd 和PWD的区别"></a>shell pwd 和PWD的区别</h2><p>pwd:是一条命令，可以在makefile文件中引用(shel pwd)来获取当前目录<br>PWD:是一个变量，可以直接echo $PWD来获取当前目录<br>经过测试echo <code>pwd</code>和echo $PWD结果是一样的，推测可以在makefile文件中替换使用<code>pwd</code> $PWD $(shell pwd)<br>一个shell pwd的例子，这样的例子很常见</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">INCDIR    := $(shell <span class="built_in">pwd</span>)       //将shell <span class="built_in">pwd</span>作为变量，通过 $(shell <span class="built_in">pwd</span>)形式引用这个变量</span><br><span class="line">// C预处理器的flag，flag就是编译器可选的选项</span><br><span class="line">CPPFLAGS    := -nostdlib -nostdinc -I$(INCDIR)/include   //-nostdlib表示不使用标准库</span><br><span class="line">                                                         //-nostdinc表示不使用标准头文件</span><br><span class="line">//-I是用来指定相对路径的，这里表示我们需要预处理的文件所在的路径是相对路径下的include文件夹</span><br></pre></td></tr></table></figure>
+<h1 id="文件IO"><a href="#文件IO" class="headerlink" title="文件IO"></a>文件IO</h1><p>标准io和系统io的区别在于标准io引入了一个用户buffer，系统io没有。<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="http://sk473ajar.sabkt.gdipper.com/linuximages/%E6%A0%87%E5%87%86io%E5%92%8C%E7%B3%BB%E7%BB%9Fio.png" alt="alt text"></p>
+<h2 id="系统io"><a href="#系统io" class="headerlink" title="系统io"></a>系统io</h2><p>文件句柄：fd &#x3D; 0 1 2 3<br>文件句柄如何和具体文件挂钩？<br> 0 -&gt; &#x2F;dev&#x2F;pts&#x2F;0 代表标准输入<br> 1 -&gt; &#x2F;dev&#x2F;pts&#x2F;0 代表标准输出<br> 2 -&gt; &#x2F;dev&#x2F;pts&#x2F;0 代表标准错误<br> 3 -&gt; &#x2F;home&#x2F;book&#x2F;01_all_series_quickstart&#x2F;04_嵌入式Linux应用开发基础知识&#x2F;source&#x2F;06_fileio&#x2F;01_open&#x2F;1.txt<br>                代表自己打开的文件</p>
+<h3 id="open-函数"><a href="#open-函数" class="headerlink" title="open 函数"></a>open 函数</h3><p>errno: 错误码，可以配合strerror(errno)来打印错误信息，效果同perror<br>perror(“open error”)&#x2F;&#x2F;用来打印错误信息</p>
+<p>O_RDONLY: 以只读方式打开文件。<br>O_WRONLY: 以只写方式打开文件。<br>O_RDWR: 以读写方式打开文件。<br>O_CREAT: 如果文件不存在，则创建之。以默认权限创建，最终的权限由mode和umask决定。<br>O_EXCL: 当与O_CREAT一起使用时，如果文件已存在则打开失败。<br>O_TRUNC: 打开文件后将其长度截断为0。<br>O_APPEND: 写入时，数据将被追加到文件末尾。<br> int open(const char *pathname, int flags);<br> 1)使用open创建一个不存在的文件<br> <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fd =open(argv[<span class="number">1</span>],O_CREAT|O_RDWR)</span><br></pre></td></tr></table></figure><br>ssize_t write(int fd, const void *buf, size_t count);<br>ssize_t read(int fd, void *buf, size_t count);</p>
+<h1 id="交叉编译-freetype"><a href="#交叉编译-freetype" class="headerlink" title="交叉编译 freetype"></a>交叉编译 freetype</h1><p>1.编译程序时去哪找头文件<br>    1）系统目录：交叉编译工具链的某个include 目录<br>    2）自行指定：使用 -I dir 来指定<br>2.链接时去哪找库文件<br>    1）系统目录：交叉编译工具链的某个lib 目录<br>    2）自行指定：使用 -L dir 来指定<br>3.运行时去哪找库文件<br>    1）系统目录：板子上的&#x2F;lib &#x2F;usr&#x2F;lib 目录<br>    2）自行指定：使用 LD_LIBRARY_PATH 来指定<br>4.运行时不需要头文件<br> &#x2F;home&#x2F;book&#x2F;100ask_imx6ull-sdk&#x2F;ToolChain&#x2F;arm-buildroot-linux-gnueabihf_sdk-buildroot&#x2F;arm-buildroot-linux-gnueabihf&#x2F;sysroot&#x2F;usr&#x2F;include</p>
+<h2 id="LIBRARY-PATH-home-book-100ask-imx6ull-sdk-ToolChain-arm-buildroot-linux-gnueabihf-sdk-buildroot-arm-buildroot-linux-gnueabihf-sysroot-usr-lib"><a href="#LIBRARY-PATH-home-book-100ask-imx6ull-sdk-ToolChain-arm-buildroot-linux-gnueabihf-sdk-buildroot-arm-buildroot-linux-gnueabihf-sysroot-usr-lib" class="headerlink" title="LIBRARY_PATH&#x3D;&#x2F;home&#x2F;book&#x2F;100ask_imx6ull-sdk&#x2F;ToolChain&#x2F;arm-buildroot-linux-gnueabihf_sdk-buildroot&#x2F;arm-buildroot-linux-gnueabihf&#x2F;sysroot&#x2F;usr&#x2F;lib&#x2F;
+ "></a>LIBRARY_PATH&#x3D;&#x2F;home&#x2F;book&#x2F;100ask_imx6ull-sdk&#x2F;ToolChain&#x2F;arm-buildroot-linux-gnueabihf_sdk-buildroot&#x2F;arm-buildroot-linux-gnueabihf&#x2F;sysroot&#x2F;usr&#x2F;lib&#x2F;
+ </h2><h1 id="输入设备"><a href="#输入设备" class="headerlink" title="输入设备"></a>输入设备</h1><p>内核中使用input_dev结构体来描述一个输入设备。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//D:\Linux-4.9.88\include\linux\input.h</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">input_dev</span> &#123;</span></span><br><span class="line">	<span class="type">const</span> <span class="type">char</span> *name;</span><br><span class="line">	<span class="type">const</span> <span class="type">char</span> *phys;</span><br><span class="line">	<span class="type">const</span> <span class="type">char</span> *uniq;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">input_id</span> <span class="title">id</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> propbit[BITS_TO_LONGS(INPUT_PROP_CNT)];</span><br><span class="line"></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> evbit[BITS_TO_LONGS(EV_CNT)];</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> keybit[BITS_TO_LONGS(KEY_CNT)];</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> relbit[BITS_TO_LONGS(REL_CNT)];</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> absbit[BITS_TO_LONGS(ABS_CNT)];</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> mscbit[BITS_TO_LONGS(MSC_CNT)];</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> ledbit[BITS_TO_LONGS(LED_CNT)];</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> sndbit[BITS_TO_LONGS(SND_CNT)];</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> ffbit[BITS_TO_LONGS(FF_CNT)];</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> swbit[BITS_TO_LONGS(SW_CNT)];</span><br><span class="line"></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> hint_events_per_packet;</span><br><span class="line"></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> keycodemax;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> keycodesize;</span><br><span class="line">	<span class="type">void</span> *keycode;</span><br><span class="line"></span><br><span class="line">	<span class="type">int</span> (*setkeycode)(<span class="keyword">struct</span> input_dev *dev,</span><br><span class="line">			  <span class="type">const</span> <span class="keyword">struct</span> input_keymap_entry *ke,</span><br><span class="line">			  <span class="type">unsigned</span> <span class="type">int</span> *old_keycode);</span><br><span class="line">	<span class="type">int</span> (*getkeycode)(<span class="keyword">struct</span> input_dev *dev,</span><br><span class="line">			  <span class="keyword">struct</span> input_keymap_entry *ke);</span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">ff_device</span> *<span class="title">ff</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> repeat_key;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">timer_list</span> <span class="title">timer</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="type">int</span> rep[REP_CNT];</span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">input_mt</span> *<span class="title">mt</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">input_absinfo</span> *<span class="title">absinfo</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> key[BITS_TO_LONGS(KEY_CNT)];</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> led[BITS_TO_LONGS(LED_CNT)];</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> snd[BITS_TO_LONGS(SND_CNT)];</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> sw[BITS_TO_LONGS(SW_CNT)];</span><br><span class="line"></span><br><span class="line">	<span class="type">int</span> (*open)(<span class="keyword">struct</span> input_dev *dev);</span><br><span class="line">	<span class="type">void</span> (*close)(<span class="keyword">struct</span> input_dev *dev);</span><br><span class="line">	<span class="type">int</span> (*flush)(<span class="keyword">struct</span> input_dev *dev, <span class="keyword">struct</span> file *file);</span><br><span class="line">	<span class="type">int</span> (*event)(<span class="keyword">struct</span> input_dev *dev, <span class="type">unsigned</span> <span class="type">int</span> type, <span class="type">unsigned</span> <span class="type">int</span> code, <span class="type">int</span> value);</span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">input_handle</span> __<span class="title">rcu</span> *<span class="title">grab</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="type">spinlock_t</span> event_lock;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">mutex</span> <span class="title">mutex</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> users;</span><br><span class="line">	<span class="type">bool</span> going_away;</span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">device</span> <span class="title">dev</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>	<span class="title">h_list</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>	<span class="title">node</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> num_vals;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> max_vals;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">input_value</span> *<span class="title">vals</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="type">bool</span> devres_managed;</span><br><span class="line">&#125;;</span><br><span class="line">设备ID结构体为</span><br><span class="line">```C </span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">input_id</span> &#123;</span></span><br><span class="line">	__u16 bustype;</span><br><span class="line">	__u16 vendor;</span><br><span class="line">	__u16 product;</span><br><span class="line">	__u16 version;</span><br><span class="line">&#125;;</span><br><span class="line">__u16 bustype;<span class="comment">//枚举类型，如usb,pci等等</span></span><br><span class="line">取值为：</span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_PCI			0x01</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_ISAPNP		0x02</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_USB			0x03</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_HIL			0x04</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_BLUETOOTH		0x05</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_VIRTUAL		0x06</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_ISA			0x10</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_I8042		0x11</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_XTKBD		0x12</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_RS232		0x13</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_GAMEPORT		0x14</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_PARPORT		0x15</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_AMIGA		0x16</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_ADB			0x17</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_I2C			0x18</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_HOST		0x19</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_GSC			0x1A</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_ATARI		0x1B</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_SPI			0x1C</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_RMI			0x1D</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_CEC			0x1E</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUS_INTEL_ISHTP		0x1F</span></span><br><span class="line">__u16 vendor;__u16 product;__u16 version;厂商号，产品号，版本号</span><br></pre></td></tr></table></figure>
+<p>内核使用input_event结构体来描述“输入事件”</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//include\uapi\linux\input.h</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">input_event</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">timeval</span> <span class="title">time</span>;</span></span><br><span class="line">	__u16 type;</span><br><span class="line">	__u16 code;</span><br><span class="line">	__s32 value;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">timeval</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	<span class="type">long</span> tv_sec;</span><br><span class="line">	<span class="type">long</span> tv_usec;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">timeval</span> <span class="title">time</span>;</span>记录了input_event时间发生的时间，这个包括秒和微秒，时间起点是系统启动的时刻。</span><br><span class="line">__u16 type;记录了哪一类事件</span><br><span class="line">在include\uapi\linux\input-event-codes.h中，详细定义了事件类型</span><br><span class="line"> <span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Event types</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EV_SYN			0x00<span class="comment">//表示设备支持所有的事件?</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EV_KEY			0x01<span class="comment">//键盘或者按键</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EV_REL			0x02<span class="comment">//relative,鼠标或者相对坐标位置</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EV_ABS			0x03<span class="comment">//absolute，手写板的值，绝对整数值</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EV_MSC			0x04<span class="comment">//其他类型事件</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EV_SW			0x05</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EV_LED			0x11<span class="comment">//LED设备事件</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EV_SND			0x12<span class="comment">//蜂鸣器事件</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EV_REP			0x14<span class="comment">//重复按键类型事件</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EV_FF			0x15</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EV_PWR			0x16<span class="comment">//电源管理事件</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EV_FF_STATUS		0x17</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EV_MAX			0x1f</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EV_CNT			(EV_MAX+1)</span></span><br><span class="line"></span><br><span class="line">__u16 code;记录了哪一个事件</span><br><span class="line">code 根据type的不同而有不同的含义</span><br><span class="line">例如：type = EV_KEY<span class="comment">//按键事件，code表示键盘code或鼠标button值</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_X			0x00</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_Y			0x01</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_Z			0x02</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_RX			0x03</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_RY			0x04</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_RZ			0x05</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ...</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> KEY_MAX			0x2ff</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> KEY_CNT			(KEY_MAX+1)</span></span><br><span class="line">例如：</span><br><span class="line">	type = EV_REL时，code表示操作的是哪个坐标轴，如REL_X,REL_Y</span><br><span class="line"> <span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Relative axes</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_X			0x00</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_Y			0x01</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_Z			0x02</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_RX			0x03</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_RY			0x04</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_RZ			0x05</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_HWHEEL		0x06</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_DIAL		0x07</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_WHEEL		0x08</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_MISC		0x09</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_MAX			0x0f</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> REL_CNT			(REL_MAX+1)</span></span><br><span class="line"></span><br><span class="line">例如：type = EV_ABS时，code表示绝对坐标轴的值</span><br><span class="line"> <span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Absolute axes</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_X			0x00</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_Y			0x01</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_Z			0x02</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_RX			0x03</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_RY			0x04</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_RZ			0x05</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ...</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//表示正在修改的多点触控槽位，用于跟踪多个接触点。</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_MT_SLOT		0x2f	<span class="comment">/* MT slot being modified */</span></span></span><br><span class="line"><span class="comment">//触摸椭圆的主要轴长，表示接触区域的最大尺寸。</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_MT_TOUCH_MAJOR	0x30	<span class="comment">/* Major axis of touching ellipse */</span></span></span><br><span class="line"><span class="comment">//触摸椭圆的次要轴长，如果接触区域是圆形，则忽略此值</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_MT_TOUCH_MINOR	0x31	<span class="comment">/* Minor axis (omit if circular) */</span></span></span><br><span class="line"><span class="comment">//接近椭圆的主要轴长，可能比实际接触区域更大。</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_MT_WIDTH_MAJOR	0x32	<span class="comment">/* Major axis of approaching ellipse */</span></span></span><br><span class="line"><span class="comment">//接近椭圆的次要轴长，如果接近区域是圆形，则忽略此值</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_MT_WIDTH_MINOR	0x33	<span class="comment">/* Minor axis (omit if circular) */</span></span></span><br><span class="line"><span class="comment">//椭圆的方向，用于描述接触点的倾斜角度。</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_MT_ORIENTATION	0x34	<span class="comment">/* Ellipse orientation */</span></span></span><br><span class="line"><span class="comment">// 触摸中心的X坐标位置。</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_MT_POSITION_X	0x35	<span class="comment">/* Center X touch position */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_MT_POSITION_Y	0x36	<span class="comment">/* Center Y touch position */</span></span></span><br><span class="line"><span class="comment">//触摸设备的类型，如手指、笔等。</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_MT_TOOL_TYPE	0x37	<span class="comment">/* Type of touching device */</span></span></span><br><span class="line"><span class="comment">//将一组数据包分组为一个“blob”（数据块），用于关联相关的触摸事件。</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_MT_BLOB_ID		0x38	<span class="comment">/* Group a set of packets as a blob */</span></span></span><br><span class="line"><span class="comment">//跟踪接触的唯一ID，用于识别特定的触摸接触。或许应该翻译成初始触摸点唯一id？</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_MT_TRACKING_ID	0x39	<span class="comment">/* Unique ID of initiated contact */</span></span></span><br><span class="line"><span class="comment">//在接触区域上的压力大小。</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_MT_PRESSURE		0x3a	<span class="comment">/* Pressure on contact area */</span></span></span><br><span class="line"><span class="comment">//接触点悬停时的距离，用于检测未实际接触但靠近传感器的情况。</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_MT_DISTANCE		0x3b	<span class="comment">/* Contact hover distance */</span></span></span><br><span class="line"><span class="comment">//工具中心的X坐标位置，可能与ABS_MT_POSITION_X不同，例如对于笔或其他工具。</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_MT_TOOL_X		0x3c	<span class="comment">/* Center X tool position */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_MT_TOOL_Y		0x3d	<span class="comment">/* Center Y tool position */</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_MAX			0x3f</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ABS_CNT			(ABS_MAX+1)</span></span><br><span class="line">__s32 value;记录了事件的值</span><br><span class="line">同样的value也会根据type的值不同而有不同的含义</span><br><span class="line">例如：type = EV_KEY时，value表示按键的值，<span class="number">0</span>表示按键没有按下，<span class="number">1</span>表示按键按下<span class="comment">//这里没有找到定义，网上查的</span></span><br><span class="line">type = EV_REL时，value表示移动的值和方向（正负）</span><br><span class="line">type = EV_ABS时，value表示移动的绝对坐标</span><br></pre></td></tr></table></figure>
+<p>当一个事件上传完之后，会上报一个“同步事件”，表示数据上传完毕。同步事件也是一个input_event结构体，type &#x3D; EV_SYN，code &#x3D; SYN_REPORT，value &#x3D; 0.即0 0 0</p>
+<p>查看有哪些输入设备：<br> <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">ls /dev/input<span class="comment">/* -l</span></span><br><span class="line"><span class="comment">crw-rw----    1 root     input      13,  64 Jan  1 00:00 /dev/input/event0</span></span><br><span class="line"><span class="comment">crw-rw----    1 root     input      13,  65 Jan  1 00:00 /dev/input/event1</span></span><br><span class="line"><span class="comment">crw-rw----    1 root     input      13,  66 Jan  1 00:00 /dev/input/event2</span></span><br><span class="line"><span class="comment">crw-rw----    1 root     input      13,  63 Jan  1 00:00 /dev/input/mice//鼠标</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">/dev/input/by-path:</span></span><br><span class="line"><span class="comment">total 0</span></span><br><span class="line"><span class="comment">lrwxrwxrwx    1 root     root             9 Jan  1 00:00 platform-20cc000.snvs:snvs-powerkey-event -&gt; ../event0</span></span><br><span class="line"><span class="comment">lrwxrwxrwx    1 root     root             9 Jan  1 00:00 platform-gpio-keys-event -&gt; ../event2</span></span><br><span class="line"><span class="comment"></span></span><br></pre></td></tr></table></figure><br>获取与 event 对应的相关设备信息</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /proc/bus/input/devices</span><br><span class="line"></span><br><span class="line">I: Bus=0019 Vendor=0000 Product=0000 Version=0000//I 设备ID</span><br><span class="line">N: Name=<span class="string">&quot;20cc000.snvs:snvs-powerkey&quot;</span>//Name </span><br><span class="line">P: Phys=snvs-pwrkey/input0//物理路径</span><br><span class="line">S: Sysfs=/devices/soc0/soc/2000000.aips-bus/20cc000.snvs/20cc000.snvs:snvs-powerkey/input/input0//位于 sys 文件系统的路径</span><br><span class="line">U: Uniq=//唯一标识符</span><br><span class="line">H: Handlers=kbd event0 evbug//输入句柄Handler</span><br><span class="line">B: PROP=0//B位图</span><br><span class="line">B: EV=3</span><br><span class="line">B: KEY=100000 0 0 0</span><br><span class="line">   //与04_嵌入式Linux应用开发基础知识\<span class="built_in">source</span>\11_input\01_app_demo\01_get_input_info.c结果相同</span><br><span class="line">I: Bus=0018 Vendor=dead Product=beef Version=28bb</span><br><span class="line">N: Name=<span class="string">&quot;goodix-ts&quot;</span>//触摸屏即#define BUS_I2C			0x18</span><br><span class="line">P: Phys=input/ts</span><br><span class="line">S: Sysfs=/devices/virtual/input/input1</span><br><span class="line">U: Uniq=</span><br><span class="line">H: Handlers=event1 evbug</span><br><span class="line">B: PROP=2</span><br><span class="line">B: EV=b</span><br><span class="line">B: KEY=1c00 0 0 0 0 0 0 0 0 0 0</span><br><span class="line">B: ABS=6e18000 0</span><br><span class="line"></span><br><span class="line">I: Bus=0019 Vendor=0001 Product=0001 Version=0100</span><br><span class="line">N: Name=<span class="string">&quot;gpio-keys&quot;</span></span><br><span class="line">P: Phys=gpio-keys/input0</span><br><span class="line">S: Sysfs=/devices/soc0/gpio-keys/input/input2</span><br><span class="line">U: Uniq=</span><br><span class="line">H: Handlers=kbd event2 evbug</span><br><span class="line">B: PROP=0</span><br><span class="line">B: EV=3</span><br><span class="line">B: KEY=c</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="获取设备信息"><a href="#获取设备信息" class="headerlink" title="获取设备信息"></a>获取设备信息</h2><p>使用<code>hexdump</code>命令<code>hexdump /dev/input/event1</code>来获取设备信息</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//下表中与值相对应的事件类型type</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EV_ABS			0x03<span class="comment">//绝对坐标事件</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EV_KEY			0x01<span class="comment">//键盘或者按键事件</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EV_SYN			0x00</span></span><br><span class="line"><span class="comment">//下表中与值相对应的事件code</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BTN_TOUCH		0x14a</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>下表为使用一个手指点击触摸屏返回的数据</p>
+<table>
+<thead>
+<tr>
+<th align="center">序号</th>
+<th align="center">秒</th>
+<th align="center">微秒</th>
+<th align="center">type</th>
+<th align="center">code</th>
+<th align="center">value</th>
+<th align="left">type code value数值代表的详细信息</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">0000000</td>
+<td align="center">7180 0000</td>
+<td align="center">57bc 0006</td>
+<td align="center">0003</td>
+<td align="center">0039</td>
+<td align="center">0014 0000</td>
+<td align="left">EV_ABS ABS_MT_TRACKING_ID 14</td>
+</tr>
+<tr>
+<td align="center">0000010</td>
+<td align="center">7180 0000</td>
+<td align="center">57bc 0006</td>
+<td align="center">0003</td>
+<td align="center">0035</td>
+<td align="center">006f 0000</td>
+<td align="left">EV_ABS ABS_MT_POSITION_X</td>
+</tr>
+<tr>
+<td align="center">0000020</td>
+<td align="center">7180 0000</td>
+<td align="center">57bc 0006</td>
+<td align="center">0003</td>
+<td align="center">0036</td>
+<td align="center">013a 0000</td>
+<td align="left">EV_ABS ABS_MT_POSITION_Y</td>
+</tr>
+<tr>
+<td align="center">0000030</td>
+<td align="center">7180 0000</td>
+<td align="center">57bc 0006</td>
+<td align="center">0003</td>
+<td align="center">0030</td>
+<td align="center">001e 0000</td>
+<td align="left">EV_ABS ABS_MT_TOUCH_MAJOR</td>
+</tr>
+<tr>
+<td align="center">0000040</td>
+<td align="center">7180 0000</td>
+<td align="center">57bc 0006</td>
+<td align="center">0003</td>
+<td align="center">003a</td>
+<td align="center">001e 0000</td>
+<td align="left">EV_ABS ABS_MT_PRESSURE</td>
+</tr>
+<tr>
+<td align="center">0000050</td>
+<td align="center">7180 0000</td>
+<td align="center">57bc 0006</td>
+<td align="center">0001</td>
+<td align="center">014a</td>
+<td align="center">0001 0000</td>
+<td align="left">EV_KEY BTN_TOUCH</td>
+</tr>
+<tr>
+<td align="center">0000060</td>
+<td align="center">7180 0000</td>
+<td align="center">57bc 0006</td>
+<td align="center">0000</td>
+<td align="center">0000</td>
+<td align="center">0000 0000</td>
+<td align="left">EV_SYN</td>
+</tr>
+<tr>
+<td align="center">0000070</td>
+<td align="center">7180 0000</td>
+<td align="center">27c5 0007</td>
+<td align="center">0003</td>
+<td align="center">0039</td>
+<td align="center">ffff ffff</td>
+<td align="left">ABS_MT_TRACKING_ID -1</td>
+</tr>
+<tr>
+<td align="center">0000080</td>
+<td align="center">7180 0000</td>
+<td align="center">27c5 0007</td>
+<td align="center">0001</td>
+<td align="center">014a</td>
+<td align="center">0000 0000</td>
+<td align="left">EV_KEY BTN_TOUCH</td>
+</tr>
+<tr>
+<td align="center">0000090</td>
+<td align="center">7180 0000</td>
+<td align="center">27c5 0007</td>
+<td align="center">0000</td>
+<td align="center">0000</td>
+<td align="center">0000 0000</td>
+<td align="left">EV_SYN</td>
+</tr>
+</tbody></table>
+<p>对于多点触摸会上传ABS_MT_SLOT,数据更加复杂一些，但是原理是差不多的，会看信息表即可</p>
+<h2 id="获取设备信息-1"><a href="#获取设备信息-1" class="headerlink" title="获取设备信息"></a>获取设备信息</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">ioctl</span><span class="params">(<span class="type">int</span> fd, <span class="type">unsigned</span> <span class="type">long</span> request, ...)</span></span><br><span class="line"><span class="comment">//输入格式request要求：</span></span><br><span class="line"><span class="comment">//include\uapi\asm-generic\ioctl.h</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IOC(dir,type,nr,size) \</span></span><br><span class="line"><span class="meta">	(((dir)  &lt;&lt; _IOC_DIRSHIFT) | \</span></span><br><span class="line"><span class="meta">	 ((type) &lt;&lt; _IOC_TYPESHIFT) | \</span></span><br><span class="line"><span class="meta">	 ((nr)   &lt;&lt; _IOC_NRSHIFT) | \</span></span><br><span class="line"><span class="meta">	 ((size) &lt;&lt; _IOC_SIZESHIFT))</span></span><br><span class="line">dir:_IOC_READ 读数据 _IOC_WRITE 写数据</span><br><span class="line">size:ioctl传输的字节数</span><br><span class="line">type:</span><br><span class="line">nr:</span><br></pre></td></tr></table></figure>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/u010245383/article/details/29391805">_IOC_NR _IOC_TYPE _IOC_SIZE _IOC_DIR可以参考这篇博客</a></p>
+<p>requret可以取以下值：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//include\uapi\linux\input.h</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EVIOCGVERSION		_IOR(<span class="string">&#x27;E&#x27;</span>, 0x01, int)			<span class="comment">/* get driver version */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EVIOCGID		_IOR(<span class="string">&#x27;E&#x27;</span>, 0x02, struct input_id)	<span class="comment">/* get device ID */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EVIOCGREP		_IOR(<span class="string">&#x27;E&#x27;</span>, 0x03, unsigned int[2])	<span class="comment">/* get repeat settings */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EVIOCSREP		_IOW(<span class="string">&#x27;E&#x27;</span>, 0x03, unsigned int[2])	<span class="comment">/* set repeat settings */</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EVIOCGKEYCODE		_IOR(<span class="string">&#x27;E&#x27;</span>, 0x04, unsigned int[2])        <span class="comment">/* get keycode */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EVIOCGKEYCODE_V2	_IOR(<span class="string">&#x27;E&#x27;</span>, 0x04, struct input_keymap_entry)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EVIOCSKEYCODE		_IOW(<span class="string">&#x27;E&#x27;</span>, 0x04, unsigned int[2])        <span class="comment">/* set keycode */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EVIOCSKEYCODE_V2	_IOW(<span class="string">&#x27;E&#x27;</span>, 0x04, struct input_keymap_entry)</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EVIOCGNAME(len)		_IOC(_IOC_READ, <span class="string">&#x27;E&#x27;</span>, 0x06, len)		<span class="comment">/* get device name */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EVIOCGPHYS(len)		_IOC(_IOC_READ, <span class="string">&#x27;E&#x27;</span>, 0x07, len)		<span class="comment">/* get physical location */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EVIOCGUNIQ(len)		_IOC(_IOC_READ, <span class="string">&#x27;E&#x27;</span>, 0x08, len)		<span class="comment">/* get unique identifier */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EVIOCGPROP(len)		_IOC(_IOC_READ, <span class="string">&#x27;E&#x27;</span>, 0x09, len)		<span class="comment">/* get device properties */</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EVIOCGBIT(ev,len)	_IOC(_IOC_READ, <span class="string">&#x27;E&#x27;</span>, 0x20 + (ev), len)	<span class="comment">/* get event bits */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EVIOCGABS(abs)		_IOR(<span class="string">&#x27;E&#x27;</span>, 0x40 + (abs), struct input_absinfo)	<span class="comment">/* get abs value/limits */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EVIOCSABS(abs)		_IOW(<span class="string">&#x27;E&#x27;</span>, 0xc0 + (abs), struct input_absinfo)	<span class="comment">/* set abs value/limits */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ...</span></span><br></pre></td></tr></table></figure>
+<h2 id="软件访问硬件的几种方式"><a href="#软件访问硬件的几种方式" class="headerlink" title="软件访问硬件的几种方式"></a>软件访问硬件的几种方式</h2><h3 id="1-查询方式"><a href="#1-查询方式" class="headerlink" title="1.查询方式"></a>1.查询方式</h3><p>示例：软件调用open函数，传入非阻塞参数<em>O_NONBLOCK</em>,如果驱动程序中有数据则立刻返回数据，否则返回错误</p>
+<h3 id="2-休眠唤醒方式"><a href="#2-休眠唤醒方式" class="headerlink" title="2.休眠唤醒方式"></a>2.休眠唤醒方式</h3><p>示例：软件调用open函数，不传入非阻塞参数<strong>O_NONBLOCK</strong>，如果驱动程序中有数据，则返回数据；否则驱动程序休眠，<em><strong>直到有数据唤醒</strong></em>。</p>
+<h3 id="3-poll-select方式"><a href="#3-poll-select方式" class="headerlink" title="3.poll&#x2F;select方式"></a>3.poll&#x2F;select方式</h3><p>在poll&#x2F;select中传入超时参数，比如ret &#x3D; poll(fds, nfds, 5000);，则在有数据可读或者有空间可写时，返回数据；否则等到超时时间5s后，返回错误。<br>poll&#x2F;select可以检测多个文件，多个事件；<br>poll&#x2F;select的缺点：<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="http://sk473ajar.sabkt.gdipper.com/linuximages/poll%E6%A3%80%E6%B5%8B%E4%BA%8B%E4%BB%B6.png" alt="pic/poll检测事件"></p>
+<h3 id="4-异步通知方式"><a href="#4-异步通知方式" class="headerlink" title="4.异步通知方式"></a>4.异步通知方式</h3><p>暂时没写</p>
+<h1 id="多线程编程"><a href="#多线程编程" class="headerlink" title="多线程编程"></a>多线程编程</h1><h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><p>使用<code>top</code>命令查看系统占用的资源，查看线程数，查看进程数。<br>线程：thread<br>进程：process<br>调度是以线程为单位的，即系统调度的最小单位是线程。进程是线程的集合，资源分配以进程为基本单位。</p>
+<p>互斥量：mutex<br>共享资源：在进程中出现的全局变量，线程都可以访问<br>唯一标识：进程号：PID 线程号：TID,pthread_t类型<br>编译时候需要指明库 gcc xxx.c -lpthread</p>
+<h2 id="常用函数"><a href="#常用函数" class="headerlink" title="常用函数"></a>常用函数</h2><ol>
+<li><p>查看线程id：<code>pthread_t pthread_self(void);</code>返回值为pthread_t，一个长整型</p>
+</li>
+<li><p>创建线程：<code>int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine) (void *), void *arg)</code><br>重要参数解释：</p>
+<ol>
+<li><p><code>pthread_t *thread</code>：如果成功创建线程，则返回线程标识符，保存在thread中</p>
+</li>
+<li><p><code>const pthread_attr_t *attr</code>：线程属性（栈大小，优先级等），默认为NULL</p>
+</li>
+<li><p><code>void *(*start_routine)(void *)</code>:c函数指针，声明了一个名为start_routine的函数指针，该函数指针具有以下特性：</p>
+</li>
+<li><p>函数接收一个参数，且参数为<code>void *</code></p>
+</li>
+<li><p>函数返回一个<code>void *</code>指针</p>
+</li>
+<li><p>函数名为<code>start_routine,start_routine</code>可以被替换为任意字符</p>
+</li>
+<li><p><code>void *arg</code>:传递给<code>start_routine</code>的参数，可以设置为<code>NULL</code>。一般情况下，需要指向<code>arg</code>指向一个全局&#x2F;堆变量</p>
+</li>
+<li><p>返回值：成功返回0，失败返回错误码</p>
+</li>
+</ol>
+</li>
+<li><p>线程退出</p>
+<ol>
+<li>start_routine函数执行return</li>
+<li>线程调用prhread_exit(void <em>retval)函数<br> pthread_exit 函数为线程退出函数，在退出时候可以传递一个 void</em>类型的数据带给主线程，若选择不传出数据，可将参数填充为 NULL。函数原型为<code>void pthread_exit(void *retval);</code></li>
+<li>调用pthread_cancel(pthread_t thread)函数<br>函数原型为：<code>int pthread_cancel(pthread_t thread);</code>传入一个tid，则会强制退出该tid对应的线程。成功返回0</li>
+<li>需要注意：如果进程中任意线程调用exit(),_exit(),_Exit()函数，则进程退出，所有线程退出。</li>
+</ol>
+</li>
+<li><p>回收线程</p>
+<ol>
+<li>int pthread_join(pthread_t thread, void **retval);<br>阻塞状态，直到成功回收线程后才返回，第一个参数为要回收线程的 tid 号，第二个参数为线程回收后接受线程传<br>出的数据。</li>
+<li>int pthread_tryjoin_np(pthread_t thread, void **retval);<br>非阻塞模式回收函数，通过返回值判断是否回收掉线程，成功回收则返回 0，其余参数与 pthread_join 一致</li>
+</ol>
+</li>
+<li><p>线程控制-互斥锁</p>
+<ol>
+<li><p>互斥锁<br>解决临界资源访问冲突问题。通过对临界资源加锁来保护资源只被单个线程操作，待操作结束后解锁，其余线程才可获得操作权。<br>例如：对某个全局变量进行访问时，通过互斥锁保证同一时间只能被一个线程访问<br>互斥锁实现的过程可以如下：</p>
+</li>
+<li><p>创建互斥锁<br>函数原型为：<code>int pthread_mutex_init(phtread_mutex_t *mutex,const pthread_mutexattr_t *restrict attr);</code>其中：<code>mutex (pthread_mutex_t *)</code>:  互斥量指针。指向未初始化的互斥锁对象的指针。成功初始化后，这个互斥锁可用于线程间的同步。	参数：<code>attr (const pthread_mutexattr_t *restrict)</code>: 指向互斥锁属性对象的指针，该对象指定了互斥锁的特性。如果设为<code>NULL</code>，则使用默认属性。<code>restrict</code>关键字表明在函数执行期间，<code>attr</code>指针不与其他访问的内存别名，这允许编译器进行潜在的优化。<br>返回值	0: 成功，表示互斥锁已成功初始化。errno (错误码): 失败时，返回一个错误编号以指示遇到的错误类型（例如，如果内存不足无法初始化互斥锁，则返回ENOMEM）。函数应在互斥锁首次使用前被调用.一旦初始化，线程可以使用如<code>pthread_mutex_lock</code>、<code>pthread_mutex_trylock</code>和<code>pthread_mutex_unlock</code>等函数来管理对共享资源的访问</p>
+</li>
+<li><p>加锁&#x2F;去锁(阻塞)<br> 当某一个线程获得了执行权后，执行 lock 函数，一旦加锁成功后，其余线程遇到 lock 函数时候会发生阻塞，直至获取资源的线程执行 unlock 函数后。unlock 函数会唤醒其他正在等待互斥量的线程。<br> 加锁函数原型为：<code>int pthread_mutex_lock(pthread_mutex_t *mutex);</code>成功后会返回 0<br> 去锁函数原型为：<code>int pthread_mutex_unlock(pthread_mutex_t *mutex);</code><br> 特别注意的是，当获取 <code>lock</code> 之后，必须在逻辑处理结束后执行 <code>unlock</code>，否则会发生死锁现象！导致其余线程一直处于阻塞状态，无法执行下去。在使用互斥量的时候，尤其要注意使用 <code>pthread_cancel</code> 函数，防止发生死锁现象！</p>
+</li>
+<li><p>加锁(非阻塞模式)<br>函数原型：<code>int pthread_mutex_trylock(pthread_mutex_t *mutex);</code>该函数是非阻塞模式通过返回值来判断是否加锁成功，用法与上述阻塞加锁函数一致</p>
+</li>
+<li><p>销毁互斥量(非阻塞)<br>函数原型：<code>int pthread_mutex_destory(pthread_mutex_t *mutex);</code>，传入互斥量的指针，就可以完成互斥量的销毁，成功返回 0。</p>
+</li>
+</ol>
+</li>
+<li><p>线程控制-信号量<br>互斥量：防止多个线程同时访问同一个临界资源冲突问题<br>信号量：通知</p>
+<ol>
+<li>创建信号量<code>int sem_init(sem_t *sem,int pshared,unsigned int value);</code></li>
+</ol>
+<ul>
+<li><code>sem_t *sem</code>：指向信号量结构体的指针，这个结构体需要在调用<code>sem_init</code>前由用户分配空间。函数会初始化这个信号量。</li>
+</ul>
+</li>
+</ol>
+<ul>
+<li><code>int pshared</code>：指定信号量是否可以在进程间共享。<ul>
+<li>如果<code>pshared</code>为0，表示信号量仅在当前进程中有效，不能被其他进程访问。</li>
+<li>如果<code>pshared</code>为非0值（通常为1），则信号量可以在多个进程间共享，要求sem位于共享内存中。</li>
+</ul>
+</li>
+<li><code>unsigned int value</code>：初始化信号量的值，即信号量计数器的初始值。表示最初可以同时访问共享资源的线程或进程的数量。</li>
+</ul>
+<ol start="2">
+<li>信号量操作   <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">sem_wait</span><span class="params">(<span class="type">sem_t</span> *sem)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">sem_post</span><span class="params">(<span class="type">sem_t</span> *sem)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">sem_trywait</span><span class="params">(<span class="type">sem_t</span> *sem)</span>;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<ul>
+<li><code>sem_wait</code>:函数作用为检测指定信号量是否有资源可用，若无资源可用会阻塞等待，若有资源可用会自动的执行“sem-1”的操作。所谓的“sem-1”是与上述初始化函数中第三个参数值一致，成功执行会返回 0。</li>
+<li><code>sem_post</code>： 函数会释放指定信号量的资源，执行“sem+1”操作。</li>
+<li><code>sem_trywait</code>：非阻塞方式</li>
+</ul>
+<ol start="3">
+<li>信号量销毁<code>int sem_destory(sem_t *sem);</code></li>
+</ol>
+<h1 id="Linux串口"><a href="#Linux串口" class="headerlink" title="Linux串口"></a>Linux串口</h1><h2 id="数据成员"><a href="#数据成员" class="headerlink" title="数据成员"></a>数据成员</h2><p>ermios 函数族提供了一个常规的终端接口，用于控制非同步通信端口。 这个结构包含了至少下列成员： </p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">termios</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">short</span> c_iflag;   <span class="comment">/* 输入模式标志*/</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">short</span> c_oflag;   <span class="comment">/* 输出模式标志*/</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">short</span> c_cflag;   <span class="comment">/* 控制模式标志*/</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">short</span> c_lflag; <span class="comment">/*区域模式标志或本地模式标志或局部模式*/</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span> c_line;   <span class="comment">/*行控制line discipline */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span> c_cc[NCC]; <span class="comment">/* 控制字符特性*/</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="常用函数-1"><a href="#常用函数-1" class="headerlink" title="常用函数"></a>常用函数</h2><p>tc:terminao control cd control flag</p>
+<table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>int tcgetattr(int fd, struct termios *termios_p);</td>
+<td>获取终端属性</td>
+</tr>
+<tr>
+<td>int tcsetattr(int fd, int optional_actions, const struct termios *termios_p);</td>
+<td>设置终端属性</td>
+</tr>
+<tr>
+<td>int tcflush(int fd, int queue_selector);</td>
+<td>清除终端缓冲区</td>
+</tr>
+<tr>
+<td>int tcflow(int fd, int action);</td>
+<td>控制终端的输入输出流</td>
+</tr>
+<tr>
+<td>int tcdrain(int fd);</td>
+<td>等待输出缓冲区中的所有字符被发送</td>
+</tr>
+<tr>
+<td>int tcsendbreak(int fd, int duration);</td>
+<td>发送一个持续duration的BREAK信号</td>
+</tr>
+<tr>
+<td>int cfsetospeed(struct termios *termios_p, speed_t speed);</td>
+<td>设置输出波特率</td>
+</tr>
+<tr>
+<td>int cfsetispeed(struct termios *termios_p, speed_t speed);</td>
+<td>设置输入波特率</td>
+</tr>
+<tr>
+<td>speed_t cfgetospeed(const struct termios *termios_p);</td>
+<td>获取输出波特率</td>
+</tr>
+<tr>
+<td>speed_t cfgetispeed(const struct termios *termios_p);</td>
+<td>获取输入波特率</td>
+</tr>
+<tr>
+<td>int cfsetspeed(struct termios *termios_p, speed_t speed);</td>
+<td>设置波特率</td>
+</tr>
+</tbody></table>
+<h2 id="驱动"><a href="#驱动" class="headerlink" title="驱动"></a>驱动</h2><hr>
+<h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><h2 id="编译驱动程序之前需要先编译内核，内核的配置文件在arch-arm-configs-目录下，内核编译过程为-生成arch-arm-boot-zImage和arch-arm-boot-dts-100ask-imx6ull-14x14-dtb文件-将这两个文件复制到-home-book-nfs-rootfs目录下备用进入内核源码目录，编译内核模块安装内核模块到-home-book-nfs-rootfs安装内核和模块到开发板上，先执行挂在命令，再执行以下命令完成以上配置"><a href="#编译驱动程序之前需要先编译内核，内核的配置文件在arch-arm-configs-目录下，内核编译过程为-生成arch-arm-boot-zImage和arch-arm-boot-dts-100ask-imx6ull-14x14-dtb文件-将这两个文件复制到-home-book-nfs-rootfs目录下备用进入内核源码目录，编译内核模块安装内核模块到-home-book-nfs-rootfs安装内核和模块到开发板上，先执行挂在命令，再执行以下命令完成以上配置" class="headerlink" title="编译驱动程序之前需要先编译内核，内核的配置文件在arch/arm/configs/目录下，内核编译过程为:生成arch/arm/boot/zImage和arch/arm/boot/dts/100ask_imx6ull-14x14.dtb文件,将这两个文件复制到&#x2F;home&#x2F;book&#x2F;nfs_rootfs目录下备用进入内核源码目录，编译内核模块安装内核模块到/home/book/nfs_rootfs安装内核和模块到开发板上，先执行挂在命令，再执行以下命令完成以上配置"></a>编译驱动程序之前需要先<strong>编译内核</strong>，内核的配置文件在<code>arch/arm/configs/</code>目录下，内核编译过程为:<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">make mrproper</span><br><span class="line">make 100_ask_imx6ull_defconfig</span><br><span class="line">make zImage -j4</span><br><span class="line">make dtbs</span><br></pre></td></tr></table></figure><br>生成<code>arch/arm/boot/zImage</code>和<code>arch/arm/boot/dts/100ask_imx6ull-14x14.dtb</code>文件,将这两个文件复制到&#x2F;home&#x2F;book&#x2F;nfs_rootfs目录下备用<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cp</span> <span class="built_in">arch</span>/arm/boot/zImage ~/nfs_rootfs</span><br><span class="line"><span class="built_in">cp</span> <span class="built_in">arch</span>/arm/boot/dts/100ask_imx6ull-14x14.dtb ~/nfs_rootfs</span><br></pre></td></tr></table></figure><br>进入内核源码目录，编译内核模块<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /home/book/100ask_imx6ull-sdk/Linux-4.9.88/</span><br><span class="line">make modules</span><br></pre></td></tr></table></figure><br>安装内核模块到<code>/home/book/nfs_rootfs</code><br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make ARCH=arm INSTALL_MOD_PATH=/home/book/nfs_rootfs modules_install</span><br></pre></td></tr></table></figure><br>安装内核和模块到开发板上，先执行挂在命令，再执行以下命令<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cp</span> /mnt/zImage /boot</span><br><span class="line"><span class="built_in">cp</span> /mnt/100ask_imx6ull-14x14.dtb /boot</span><br><span class="line"><span class="built_in">cp</span> /mnt/lib/modules /lib -rfd</span><br><span class="line"><span class="built_in">sync</span></span><br></pre></td></tr></table></figure><br>完成以上配置</h2><p>驱动程序流程：</p>
+<ol>
+<li>确定主设备号，也可以让内核分配</li>
+<li>定义自己的file_operations结构体</li>
+<li>实现对应的drv_open&#x2F;drv_read&#x2F;drv_wtire等函数，填入file_operations结构体</li>
+<li>把file_operations结构体注册到内核中:register_chrdev(主设备号，设备名，file_operations结构体指针)?</li>
+<li>入口函数：安装驱动程序时，就会调用此入口函数</li>
+<li>出口函数：卸载驱动程序，出口函数调用unregister_chrdev(主设备号，设备名)?</li>
+<li>提供设备信息，自动创建设备节点：class_create,device_create</li>
+</ol>
+<p>重要的类<code>class</code>解释<br>参考博客：<a target="_blank" rel="noopener" href="https://blog.csdn.net/Qidi_Huang/article/details/51278001">Linux内核中的 struct class 简介</a><br>代码中出现的 class 指的是 设备类（device classes），是对于设备的高级抽象。但 实际上 class 也是一个结构体，只不过 class 结构体在声明时是按照类的思想来组织其成员的。<br>运用 class，可以让用户空间的程序根据自己要处理的事情来调用设备，而不是根据设备被接入到系统的方式或设备的工作原理来调用。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//include\linux\device.h</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="keyword">class</span> &#123;</span></span><br><span class="line">        <span class="type">const</span> <span class="type">char</span>              *name;     <span class="comment">// 类名称</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">module</span>           *<span class="title">owner</span>;</span>    <span class="comment">// 类所属的模块，比如 usb模块、led模块等</span></span><br><span class="line"> </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">class_attribute</span>          *<span class="title">class_attrs</span>;</span>      <span class="comment">// 类所添加的属性</span></span><br><span class="line">        <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">attribute_group</span>    **<span class="title">dev_groups</span>;</span>      <span class="comment">// 类所包含的设备所添加的属性</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">kobject</span>                  *<span class="title">dev_kobj</span>;</span>         <span class="comment">// 用于标识 类所包含的设备属于块设备还是字符设备</span></span><br><span class="line"> </span><br><span class="line">        <span class="type">int</span> (*dev_uevent)(<span class="keyword">struct</span> device *dev, <span class="keyword">struct</span> kobj_uevent_env *env);    <span class="comment">// 用于在设备发出 uevent 消息时添加环境变量</span></span><br><span class="line">        <span class="type">char</span> *(*devnode)(<span class="keyword">struct</span> device *dev, <span class="type">umode_t</span> *mode);    <span class="comment">// 设备节点的相对路径名</span></span><br><span class="line"> </span><br><span class="line">        <span class="type">void</span> (*class_release)(<span class="keyword">struct</span> class *class);    <span class="comment">// 类被释放时调用的函数</span></span><br><span class="line">        <span class="type">void</span> (*dev_release)(<span class="keyword">struct</span> device *dev);       <span class="comment">// 设备被释放时调用的函数</span></span><br><span class="line"> </span><br><span class="line">        <span class="type">int</span> (*suspend)(<span class="keyword">struct</span> device *dev, <span class="type">pm_message_t</span> state);    <span class="comment">// 设备休眠时调用的函数</span></span><br><span class="line">        <span class="type">int</span> (*resume)(<span class="keyword">struct</span> device *dev);    <span class="comment">// 设备被唤醒时调用的函数</span></span><br><span class="line"> </span><br><span class="line">        <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">kobj_ns_type_operations</span> *<span class="title">ns_type</span>;</span></span><br><span class="line">        <span class="type">const</span> <span class="type">void</span> *(*namespace)(<span class="keyword">struct</span> device *dev);</span><br><span class="line"> </span><br><span class="line">        <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">dev_pm_ops</span> *<span class="title">pm</span>;</span>    <span class="comment">// 用于电源管理的函数</span></span><br><span class="line"> </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">subsys_private</span> *<span class="title">p</span>;</span>     <span class="comment">// 指向 class_private 结构的指针</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>重要的类file_operations结构体，参考博客：<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_45003868/article/details/130465624">Linux 字符设备驱动结构（四）—— file_operations 结构体知识解析</a></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//include\linux\fs.h</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> &#123;</span> </span><br><span class="line"> </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">module</span> *<span class="title">owner</span>;</span><span class="comment">//拥有该结构的模块的指针，一般为THIS_MODULES </span></span><br><span class="line"> </span><br><span class="line">    <span class="type">loff_t</span> (*llseek) (<span class="keyword">struct</span> file *, <span class="type">loff_t</span>, <span class="type">int</span>);<span class="comment">//用来修改文件当前的读写位置 </span></span><br><span class="line"> </span><br><span class="line">    <span class="type">ssize_t</span> (*read) (<span class="keyword">struct</span> file *, <span class="type">char</span> __user *, <span class="type">size_t</span>, <span class="type">loff_t</span> *);<span class="comment">//从设备中同步读取数据 </span></span><br><span class="line"> </span><br><span class="line">    <span class="type">ssize_t</span> (*write) (<span class="keyword">struct</span> file *, <span class="type">const</span> <span class="type">char</span> __user *, <span class="type">size_t</span>, <span class="type">loff_t</span> *);<span class="comment">//向设备发送数据</span></span><br><span class="line"> </span><br><span class="line">    <span class="type">ssize_t</span> (*aio_read) (<span class="keyword">struct</span> kiocb *, <span class="type">const</span> <span class="keyword">struct</span> iovec *, <span class="type">unsigned</span> <span class="type">long</span>, <span class="type">loff_t</span>);<span class="comment">//初始化一个异步的读取操作 </span></span><br><span class="line"> </span><br><span class="line">    <span class="type">ssize_t</span> (*aio_write) (<span class="keyword">struct</span> kiocb *, <span class="type">const</span> <span class="keyword">struct</span> iovec *, <span class="type">unsigned</span> <span class="type">long</span>, <span class="type">loff_t</span>);<span class="comment">//初始化一个异步的写入操作 </span></span><br><span class="line"> </span><br><span class="line">    <span class="type">int</span> (*readdir) (<span class="keyword">struct</span> file *, <span class="type">void</span> *, <span class="type">filldir_t</span>);<span class="comment">//仅用于读取目录，对于设备文件，该字段为NULL </span></span><br><span class="line"> </span><br><span class="line">    <span class="type">unsigned</span> <span class="title function_">int</span> <span class="params">(*poll)</span> <span class="params">(<span class="keyword">struct</span> file *, <span class="keyword">struct</span> poll_table_struct *)</span>; <span class="comment">//轮询函数，判断目前是否可以进行非阻塞的读写或写入 </span></span><br><span class="line"> </span><br><span class="line">    <span class="type">int</span> (*ioctl) (<span class="keyword">struct</span> inode *, <span class="keyword">struct</span> file *, <span class="type">unsigned</span> <span class="type">int</span>, <span class="type">unsigned</span> <span class="type">long</span>); <span class="comment">//执行设备I/O控制命令 </span></span><br><span class="line"> </span><br><span class="line">    <span class="type">long</span> (*unlocked_ioctl) (<span class="keyword">struct</span> file *, <span class="type">unsigned</span> <span class="type">int</span>, <span class="type">unsigned</span> <span class="type">long</span>); <span class="comment">//不使用BLK文件系统，将使用此种函数指针代替ioctl </span></span><br><span class="line"> </span><br><span class="line">    <span class="type">long</span> (*compat_ioctl) (<span class="keyword">struct</span> file *, <span class="type">unsigned</span> <span class="type">int</span>, <span class="type">unsigned</span> <span class="type">long</span>); <span class="comment">//在64位系统上，32位的ioctl调用将使用此函数指针代替 </span></span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">    <span class="type">int</span> (*mmap) (<span class="keyword">struct</span> file *, <span class="keyword">struct</span> vm_area_struct *); <span class="comment">//用于请求将设备内存映射到进程地址空间</span></span><br><span class="line"> </span><br><span class="line">    <span class="type">int</span> (*open) (<span class="keyword">struct</span> inode *, <span class="keyword">struct</span> file *); <span class="comment">//打开 </span></span><br><span class="line"> </span><br><span class="line">    <span class="type">int</span> (*flush) (<span class="keyword">struct</span> file *, <span class="type">fl_owner_t</span> id); </span><br><span class="line"> </span><br><span class="line">    <span class="type">int</span> (*release) (<span class="keyword">struct</span> inode *, <span class="keyword">struct</span> file *); <span class="comment">//关闭 </span></span><br><span class="line"> </span><br><span class="line">    <span class="type">int</span> (*fsync) (<span class="keyword">struct</span> file *, <span class="keyword">struct</span> dentry *, <span class="type">int</span> datasync); <span class="comment">//刷新待处理的数据 </span></span><br><span class="line"> </span><br><span class="line">    <span class="type">int</span> (*aio_fsync) (<span class="keyword">struct</span> kiocb *, <span class="type">int</span> datasync); <span class="comment">//异步刷新待处理的数据 </span></span><br><span class="line"> </span><br><span class="line">    <span class="type">int</span> (*fasync) (<span class="type">int</span>, <span class="keyword">struct</span> file *, <span class="type">int</span>); <span class="comment">//通知设备FASYNC标志发生变化 </span></span><br><span class="line"> </span><br><span class="line">    <span class="type">int</span> (*lock) (<span class="keyword">struct</span> file *, <span class="type">int</span>, <span class="keyword">struct</span> file_lock *); </span><br><span class="line"> </span><br><span class="line">    <span class="type">ssize_t</span> (*sendpage) (<span class="keyword">struct</span> file *, <span class="keyword">struct</span> page *, <span class="type">int</span>, <span class="type">size_t</span>, <span class="type">loff_t</span> *, <span class="type">int</span>); </span><br><span class="line"> </span><br><span class="line">    <span class="type">unsigned</span> <span class="title function_">long</span> <span class="params">(*get_unmapped_area)</span><span class="params">(<span class="keyword">struct</span> file *, <span class="type">unsigned</span> <span class="type">long</span>, <span class="type">unsigned</span> <span class="type">long</span>, <span class="type">unsigned</span> <span class="type">long</span>, <span class="type">unsigned</span> <span class="type">long</span>)</span>; </span><br><span class="line"> </span><br><span class="line">    <span class="type">int</span> (*check_flags)(<span class="type">int</span>); </span><br><span class="line"> </span><br><span class="line">    <span class="type">int</span> (*flock) (<span class="keyword">struct</span> file *, <span class="type">int</span>, <span class="keyword">struct</span> file_lock *);</span><br><span class="line"> </span><br><span class="line">    <span class="type">ssize_t</span> (*splice_write)(<span class="keyword">struct</span> pipe_inode_info *, <span class="keyword">struct</span> file *, <span class="type">loff_t</span> *, <span class="type">size_t</span>, <span class="type">unsigned</span> <span class="type">int</span>);</span><br><span class="line"> </span><br><span class="line">    <span class="type">ssize_t</span> (*splice_read)(<span class="keyword">struct</span> file *, <span class="type">loff_t</span> *, <span class="keyword">struct</span> pipe_inode_info *, <span class="type">size_t</span>, <span class="type">unsigned</span> <span class="type">int</span>); </span><br><span class="line"> </span><br><span class="line">    <span class="type">int</span> (*setlease)(<span class="keyword">struct</span> file *, <span class="type">long</span>, <span class="keyword">struct</span> file_lock **); </span><br><span class="line"> </span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="常用函数-2"><a href="#常用函数-2" class="headerlink" title="常用函数"></a>常用函数</h2><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>unsigned long copy_to_user(void *to, const void *from, unsigned long n);</td>
+<td>这个函数的作用是将内核空间的数据复制到用户空间 to：目标地址（用户空间） from：源地址（内核空间） n：将要拷贝数据的字节数 返回：成功返回0，失败返回没有拷贝成功的数据字节数</td>
+</tr>
+<tr>
+<td>unsigned long copy_from_user(void *to, const void *from, unsigned long n);</td>
+<td>这个函数的作用是将用户空间的数据复制到内核空间 to：目标地址（内核空间）from：源地址（用户空间）n：将要拷贝数据的字节数返回：成功返回0，失败返回没有拷贝成功的数据字节数</td>
+</tr>
+</tbody></table>
+<h2 id="led驱动"><a href="#led驱动" class="headerlink" title="led驱动"></a>led驱动</h2><p>static inline int register_chrdev(unsigned int major, const char *name,<br>                  const struct file_operations *fops)</p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2024/09/20/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day31/">字母异位词</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2024/09/18/ros%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">ros常用命令</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="sitemap"><div class="sitemap-group"><span class="fs15">社交</span><a target="_blank" rel="noopener" href="https://pfni.github.io/">pfni</a><a href="https://dkyou.github.io/">dkyou</a></div></div><div class="text"><p>本站由 <a href="/">Dku</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%80%E4%BA%9B%E7%BC%A9%E5%86%99"><span class="toc-text">一些缩写</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%80%E4%BA%9BC%E8%AF%AD%E6%B3%95"><span class="toc-text">一些C语法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#c%E8%AF%AD%E8%A8%80%E4%B8%AD%E5%B0%86int%E5%8F%98%E9%87%8F%E8%BD%AC%E6%8D%A2%E4%B8%BAvoid-%E6%8C%87%E9%92%88%E6%88%96int-%E6%8C%87%E9%92%88"><span class="toc-text">c语言中将int变量转换为void *指针或int *指针</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%80%E4%BA%9B%E6%9C%89%E7%94%A8%E7%9A%84%E5%91%BD%E4%BB%A4"><span class="toc-text">一些有用的命令</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Makefile"><span class="toc-text">Makefile</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Makefile%E7%9A%84%E5%BC%95%E5%85%A5%E5%8F%8A%E8%A7%84%E5%88%99"><span class="toc-text">Makefile的引入及规则</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#shell-pwd-%E5%92%8CPWD%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-text">shell pwd 和PWD的区别</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%96%87%E4%BB%B6IO"><span class="toc-text">文件IO</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%B3%BB%E7%BB%9Fio"><span class="toc-text">系统io</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#open-%E5%87%BD%E6%95%B0"><span class="toc-text">open 函数</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91-freetype"><span class="toc-text">交叉编译 freetype</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#LIBRARY-PATH-home-book-100ask-imx6ull-sdk-ToolChain-arm-buildroot-linux-gnueabihf-sdk-buildroot-arm-buildroot-linux-gnueabihf-sysroot-usr-lib"><span class="toc-text">LIBRARY_PATH&#x3D;&#x2F;home&#x2F;book&#x2F;100ask_imx6ull-sdk&#x2F;ToolChain&#x2F;arm-buildroot-linux-gnueabihf_sdk-buildroot&#x2F;arm-buildroot-linux-gnueabihf&#x2F;sysroot&#x2F;usr&#x2F;lib&#x2F;
+ </span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BE%93%E5%85%A5%E8%AE%BE%E5%A4%87"><span class="toc-text">输入设备</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96%E8%AE%BE%E5%A4%87%E4%BF%A1%E6%81%AF"><span class="toc-text">获取设备信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96%E8%AE%BE%E5%A4%87%E4%BF%A1%E6%81%AF-1"><span class="toc-text">获取设备信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BD%AF%E4%BB%B6%E8%AE%BF%E9%97%AE%E7%A1%AC%E4%BB%B6%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F"><span class="toc-text">软件访问硬件的几种方式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F"><span class="toc-text">1.查询方式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E4%BC%91%E7%9C%A0%E5%94%A4%E9%86%92%E6%96%B9%E5%BC%8F"><span class="toc-text">2.休眠唤醒方式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-poll-select%E6%96%B9%E5%BC%8F"><span class="toc-text">3.poll&#x2F;select方式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5%E6%96%B9%E5%BC%8F"><span class="toc-text">4.异步通知方式</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%BC%96%E7%A8%8B"><span class="toc-text">多线程编程</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="toc-text">基本概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E5%87%BD%E6%95%B0"><span class="toc-text">常用函数</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Linux%E4%B8%B2%E5%8F%A3"><span class="toc-text">Linux串口</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E6%88%90%E5%91%98"><span class="toc-text">数据成员</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E5%87%BD%E6%95%B0-1"><span class="toc-text">常用函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A9%B1%E5%8A%A8"><span class="toc-text">驱动</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C"><span class="toc-text">准备工作</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BC%96%E8%AF%91%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E4%B9%8B%E5%89%8D%E9%9C%80%E8%A6%81%E5%85%88%E7%BC%96%E8%AF%91%E5%86%85%E6%A0%B8%EF%BC%8C%E5%86%85%E6%A0%B8%E7%9A%84%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E5%9C%A8arch-arm-configs-%E7%9B%AE%E5%BD%95%E4%B8%8B%EF%BC%8C%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B%E4%B8%BA-%E7%94%9F%E6%88%90arch-arm-boot-zImage%E5%92%8Carch-arm-boot-dts-100ask-imx6ull-14x14-dtb%E6%96%87%E4%BB%B6-%E5%B0%86%E8%BF%99%E4%B8%A4%E4%B8%AA%E6%96%87%E4%BB%B6%E5%A4%8D%E5%88%B6%E5%88%B0-home-book-nfs-rootfs%E7%9B%AE%E5%BD%95%E4%B8%8B%E5%A4%87%E7%94%A8%E8%BF%9B%E5%85%A5%E5%86%85%E6%A0%B8%E6%BA%90%E7%A0%81%E7%9B%AE%E5%BD%95%EF%BC%8C%E7%BC%96%E8%AF%91%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97%E5%AE%89%E8%A3%85%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97%E5%88%B0-home-book-nfs-rootfs%E5%AE%89%E8%A3%85%E5%86%85%E6%A0%B8%E5%92%8C%E6%A8%A1%E5%9D%97%E5%88%B0%E5%BC%80%E5%8F%91%E6%9D%BF%E4%B8%8A%EF%BC%8C%E5%85%88%E6%89%A7%E8%A1%8C%E6%8C%82%E5%9C%A8%E5%91%BD%E4%BB%A4%EF%BC%8C%E5%86%8D%E6%89%A7%E8%A1%8C%E4%BB%A5%E4%B8%8B%E5%91%BD%E4%BB%A4%E5%AE%8C%E6%88%90%E4%BB%A5%E4%B8%8A%E9%85%8D%E7%BD%AE"><span class="toc-text">编译驱动程序之前需要先编译内核，内核的配置文件在arch&#x2F;arm&#x2F;configs&#x2F;目录下，内核编译过程为:1234make mrpropermake 100_ask_imx6ull_defconfigmake zImage -j4make dtbs生成arch&#x2F;arm&#x2F;boot&#x2F;zImage和arch&#x2F;arm&#x2F;boot&#x2F;dts&#x2F;100ask_imx6ull-14x14.dtb文件,将这两个文件复制到&#x2F;home&#x2F;book&#x2F;nfs_rootfs目录下备用12cp arch&#x2F;arm&#x2F;boot&#x2F;zImage ~&#x2F;nfs_rootfscp arch&#x2F;arm&#x2F;boot&#x2F;dts&#x2F;100ask_imx6ull-14x14.dtb ~&#x2F;nfs_rootfs进入内核源码目录，编译内核模块12cd &#x2F;home&#x2F;book&#x2F;100ask_imx6ull-sdk&#x2F;Linux-4.9.88&#x2F;make modules安装内核模块到&#x2F;home&#x2F;book&#x2F;nfs_rootfs1make ARCH&#x3D;arm INSTALL_MOD_PATH&#x3D;&#x2F;home&#x2F;book&#x2F;nfs_rootfs modules_install安装内核和模块到开发板上，先执行挂在命令，再执行以下命令1234cp &#x2F;mnt&#x2F;zImage &#x2F;bootcp &#x2F;mnt&#x2F;100ask_imx6ull-14x14.dtb &#x2F;bootcp &#x2F;mnt&#x2F;lib&#x2F;modules &#x2F;lib -rfdsync完成以上配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E5%87%BD%E6%95%B0-2"><span class="toc-text">常用函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#led%E9%A9%B1%E5%8A%A8"><span class="toc-text">led驱动</span></a></li></ol></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js`,
+    marked: `https://cdn.jsdelivr.net/npm/marked@13.0.1/lib/marked.umd.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+
+<!-- required -->
+<script src="/js/main.js?v=1.29.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    applyThemeToGiscus(theme)
+  }
+
+  const applyThemeToGiscus = (theme) => {
+    theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    }
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
