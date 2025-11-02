@@ -17,24 +17,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
   <meta name="theme-color" content="#f9fafb">
-  <title>又是摸鱼的一天</title>
+  <title>typedef总结 - 又是摸鱼的一天</title>
 
   
-    <meta name="description" content="title: typedef总结date: 2024-10-18 10:00:00tags: [linux,typedef]categories: c typedef总结C&#x2F;C++ typedef用法详解（真的很详细）-CSDN博客 以下是3中常见的通过typedef定义重命名结构体的形式： 匿名方式定义结构体 123456typedef struct &#123;    int a;">
+    <meta name="description" content="typedef总结C&#x2F;C++ typedef用法详解（真的很详细）-CSDN博客 以下是3中常见的通过typedef定义重命名结构体的形式： 匿名方式定义结构体 123456typedef struct &#123;    int a;    char b;&#125; mystruct;&#x2F;&#x2F;使用mystruct s1;  命名方式定义结构体(用的最多) 123456typedef st">
 <meta property="og:type" content="article">
-<meta property="og:title" content="又是摸鱼的一天">
-<meta property="og:url" content="https://dkyou.github.io/2025/11/02/typedef%E6%80%BB%E7%BB%93/">
+<meta property="og:title" content="typedef总结">
+<meta property="og:url" content="https://dkyou.github.io/2024/10/18/typedef%E6%80%BB%E7%BB%93/">
 <meta property="og:site_name" content="又是摸鱼的一天">
-<meta property="og:description" content="title: typedef总结date: 2024-10-18 10:00:00tags: [linux,typedef]categories: c typedef总结C&#x2F;C++ typedef用法详解（真的很详细）-CSDN博客 以下是3中常见的通过typedef定义重命名结构体的形式： 匿名方式定义结构体 123456typedef struct &#123;    int a;">
+<meta property="og:description" content="typedef总结C&#x2F;C++ typedef用法详解（真的很详细）-CSDN博客 以下是3中常见的通过typedef定义重命名结构体的形式： 匿名方式定义结构体 123456typedef struct &#123;    int a;    char b;&#125; mystruct;&#x2F;&#x2F;使用mystruct s1;  命名方式定义结构体(用的最多) 123456typedef st">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2025-11-02T14:10:27.614Z">
-<meta property="article:modified_time" content="2025-03-06T09:29:16.522Z">
+<meta property="article:published_time" content="2024-10-18T02:00:00.000Z">
+<meta property="article:modified_time" content="2025-11-02T14:12:21.067Z">
 <meta property="article:author" content="Dku">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="typedef">
 <meta name="twitter:card" content="summary">
   
   
   
-  
+  <meta name="keywords" content="linux,typedef">
 
   <!-- feed -->
   
@@ -46,7 +48,7 @@
 
   
 
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dku","sameAs":[]},"dateCreated":"2025-11-02T22:10:27+08:00","dateModified":"2025-03-06T17:29:16+08:00","datePublished":"2025-11-02T22:10:27+08:00","description":"","headline":"","mainEntityOfPage":{"@type":"WebPage","@id":"https://dkyou.github.io/2025/11/02/typedef%E6%80%BB%E7%BB%93/"},"publisher":{"@type":"Organization","name":"Dku","sameAs":[]},"url":"https://dkyou.github.io/2025/11/02/typedef%E6%80%BB%E7%BB%93/","image":[]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dku","sameAs":[]},"dateCreated":"2024-10-18T10:00:00+08:00","dateModified":"2025-11-02T22:12:21+08:00","datePublished":"2024-10-18T10:00:00+08:00","description":"","headline":"typedef总结","mainEntityOfPage":{"@type":"WebPage","@id":"https://dkyou.github.io/2024/10/18/typedef%E6%80%BB%E7%BB%93/"},"publisher":{"@type":"Organization","name":"Dku","sameAs":[]},"url":"https://dkyou.github.io/2024/10/18/typedef%E6%80%BB%E7%BB%93/","keywords":"linux, typedef","image":[]}</script>
   
 </head>
 <body>
@@ -65,7 +67,7 @@
 
 
 
-<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2024/09/20/%E5%8F%8B%E9%93%BE/"><span class="title">友链</span></a><a class="item title" href="/2025/11/01/%E7%BC%96%E8%AF%91Buildroot_2020.02%E6%97%B6%E9%81%87%E5%88%B0IndexErrorlist%20index%20out%20of%20range%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/"><span class="title">编译Buildroot_2020.02时遇到IndexError:list index out of range问题解决</span></a><a class="item title" href="/2024/10/18/Makefile%E6%80%BB%E7%BB%93%E5%8F%8A%E9%80%9A%E7%94%A8%E6%A8%A1%E6%9D%BF%E4%BD%BF%E7%94%A8/"><span class="title">Makefile总结及通用模板使用</span></a><a class="item title" href="/2024/12/15/%E7%A7%BB%E9%99%A4%E5%8F%8A%E6%81%A2%E5%A4%8D%E5%8E%9F%E6%9C%89UI/"><span class="title">IMX6ULL移除及恢复原有UI</span></a><a class="item title" href="/2024/12/20/LVGL%E7%A7%BB%E6%A4%8D%E5%88%B0IMX6ULL/"><span class="title">LVGL移植到IMX6ULL笔记</span></a><a class="item title" href="/2024/09/30/poll%E7%AC%94%E8%AE%B0%E6%B7%B1%E5%85%A5/"><span class="title">poll笔记深入</span></a><a class="item title" href="/2024/09/20/%E7%BD%91%E4%B8%8A%E4%B8%80%E4%BA%9B%E4%B8%BB%E9%A2%98%E6%8E%A8%E8%8D%90/"><span class="title">搭建博客</span></a><a class="item title" href="/2024/10/31/roslaunch%E5%87%BA%E9%94%99/"><span class="title">roslaunch 出错</span></a><a class="item title" href="/2024/10/14/stack%E5%AE%9E%E7%8E%B0queue/"><span class="title">stack实现queue</span></a><a class="item title" href="/2024/09/20/LVGL/"><span class="title">LVGL</span></a></div></widget>
+<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2024/10/18/typedef%E6%80%BB%E7%BB%93/"><span class="title">typedef总结</span></a><a class="item title" href="/2024/09/20/%E5%8F%8B%E9%93%BE/"><span class="title">友链</span></a><a class="item title" href="/2025/11/01/%E7%BC%96%E8%AF%91Buildroot_2020.02%E6%97%B6%E9%81%87%E5%88%B0IndexErrorlist%20index%20out%20of%20range%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/"><span class="title">编译Buildroot_2020.02时遇到IndexError:list index out of range问题解决</span></a><a class="item title" href="/2024/10/18/Makefile%E6%80%BB%E7%BB%93%E5%8F%8A%E9%80%9A%E7%94%A8%E6%A8%A1%E6%9D%BF%E4%BD%BF%E7%94%A8/"><span class="title">Makefile总结及通用模板使用</span></a><a class="item title" href="/2024/12/15/%E7%A7%BB%E9%99%A4%E5%8F%8A%E6%81%A2%E5%A4%8D%E5%8E%9F%E6%9C%89UI/"><span class="title">IMX6ULL移除及恢复原有UI</span></a><a class="item title" href="/2024/12/20/LVGL%E7%A7%BB%E6%A4%8D%E5%88%B0IMX6ULL/"><span class="title">LVGL移植到IMX6ULL笔记</span></a><a class="item title" href="/2024/09/30/poll%E7%AC%94%E8%AE%B0%E6%B7%B1%E5%85%A5/"><span class="title">poll笔记深入</span></a><a class="item title" href="/2024/09/20/%E7%BD%91%E4%B8%8A%E4%B8%80%E4%BA%9B%E4%B8%BB%E9%A2%98%E6%8E%A8%E8%8D%90/"><span class="title">搭建博客</span></a><a class="item title" href="/2024/10/31/roslaunch%E5%87%BA%E9%94%99/"><span class="title">roslaunch 出错</span></a><a class="item title" href="/2024/10/14/stack%E5%AE%9E%E7%8E%B0queue/"><span class="title">stack实现queue</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -77,12 +79,19 @@
 <div class="article banner top">
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
-<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-11-02T14:10:27.614Z">2025-11-02</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-03-06T09:29:16.522Z">2025-03-06</time></span></div></div></div>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/c/">c</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-10-18T02:00:00.000Z">2024-10-18</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-11-02T14:12:21.067Z">2025-11-02</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>typedef总结</span></h1>
+        
+      </div>
+    </div>
     
   </div>
-  </div><article class="md-text content"><p>title: typedef总结<br>date: 2024-10-18 10:00:00<br>tags: [linux,typedef]<br>categories: c</p>
-<h1 id="typedef总结"><a href="#typedef总结" class="headerlink" title="typedef总结"></a>typedef总结</h1><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/Andrewniu/article/details/80566324">C&#x2F;C++ typedef用法详解（真的很详细）-CSDN博客</a></p>
+  </div><article class="md-text content"><h1 id="typedef总结"><a href="#typedef总结" class="headerlink" title="typedef总结"></a>typedef总结</h1><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/Andrewniu/article/details/80566324">C&#x2F;C++ typedef用法详解（真的很详细）-CSDN博客</a></p>
 <p>以下是3中常见的通过typedef定义重命名结构体的形式：</p>
 <p>匿名方式定义结构体</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    <span class="type">int</span> a;</span><br><span class="line">    <span class="type">char</span> b;</span><br><span class="line">&#125; mystruct;</span><br><span class="line"><span class="comment">//使用</span></span><br><span class="line">mystruct s1;</span><br></pre></td></tr></table></figure>
@@ -111,7 +120,7 @@
 
 </div>
 
-<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/11/02/hello-world/">Hello World</a></div></section></div>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2024/10/18/Makefile%E6%80%BB%E7%BB%93%E5%8F%8A%E9%80%9A%E7%94%A8%E6%A8%A1%E6%9D%BF%E4%BD%BF%E7%94%A8/">Makefile总结及通用模板使用</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2024/10/15/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%88%B7day37(%E6%A2%A6%E7%A0%B4%E7%A2%8E%E7%9A%84%E5%9C%B0%E6%96%B9)/">三数之和</a></div></section></div>
 
 
 
