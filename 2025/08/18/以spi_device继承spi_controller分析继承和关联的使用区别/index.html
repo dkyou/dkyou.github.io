@@ -1,0 +1,950 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.33.1" theme-name="Stellar" theme-version="1.33.1">
+  
+  
+  <meta name="generator" content="Hexo 8.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  <title>以spi_device继承spi_controller分析继承和关联的使用区别 - 又是摸鱼的一天</title>
+
+  
+    <meta name="description" content="以spi_device继承spi_controller分析继承和关联的使用区别区分 “继承” 和 “从属关联”要清晰区分 “继承” 和 “从属关联”，需从 核心定义、内存结构、逻辑关系、代码表现 四个维度切入 —— 这两个概念的本质差异，是 “是否存在层级归属与属性复用”，而非简单的 “引用关系”。 一、核心定义：本质差异   概念 核心逻辑 通俗类比    继承（Inheritance） 子类（">
+<meta property="og:type" content="article">
+<meta property="og:title" content="以spi_device继承spi_controller分析继承和关联的使用区别">
+<meta property="og:url" content="https://dkyou.github.io/2025/08/18/%E4%BB%A5spi_device%E7%BB%A7%E6%89%BFspi_controller%E5%88%86%E6%9E%90%E7%BB%A7%E6%89%BF%E5%92%8C%E5%85%B3%E8%81%94%E7%9A%84%E4%BD%BF%E7%94%A8%E5%8C%BA%E5%88%AB/">
+<meta property="og:site_name" content="又是摸鱼的一天">
+<meta property="og:description" content="以spi_device继承spi_controller分析继承和关联的使用区别区分 “继承” 和 “从属关联”要清晰区分 “继承” 和 “从属关联”，需从 核心定义、内存结构、逻辑关系、代码表现 四个维度切入 —— 这两个概念的本质差异，是 “是否存在层级归属与属性复用”，而非简单的 “引用关系”。 一、核心定义：本质差异   概念 核心逻辑 通俗类比    继承（Inheritance） 子类（">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-08-17T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-11-02T15:13:43.714Z">
+<meta property="article:author" content="Dku">
+<meta property="article:tag" content="SPI">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="platform">
+<meta name="twitter:card" content="summary">
+  
+  
+  
+  <meta name="keywords" content="linux,SPI,platform">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.33.1">
+
+
+  
+
+  
+
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dku","sameAs":[]},"dateCreated":"2025-08-18T00:00:00+08:00","dateModified":"2025-11-02T23:13:43+08:00","datePublished":"2025-08-18T00:00:00+08:00","description":"","headline":"以spi_device继承spi_controller分析继承和关联的使用区别","mainEntityOfPage":{"@type":"WebPage","@id":"https://dkyou.github.io/2025/08/18/%E4%BB%A5spi_device%E7%BB%A7%E6%89%BFspi_controller%E5%88%86%E6%9E%90%E7%BB%A7%E6%89%BF%E5%92%8C%E5%85%B3%E8%81%94%E7%9A%84%E4%BD%BF%E7%94%A8%E5%8C%BA%E5%88%AB/"},"publisher":{"@type":"Organization","name":"Dku","sameAs":[]},"url":"https://dkyou.github.io/2025/08/18/%E4%BB%A5spi_device%E7%BB%A7%E6%89%BFspi_controller%E5%88%86%E6%9E%90%E7%BB%A7%E6%89%BF%E5%92%8C%E5%85%B3%E8%81%94%E7%9A%84%E4%BD%BF%E7%94%A8%E5%8C%BA%E5%88%AB/","keywords":"linux, SPI, platform","image":[]}</script>
+  
+</head>
+<body>
+
+<div class="l_body content" id="start" layout="post" type="tech" ><aside class="l_left"><div class="sidebg"></div><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大白鹅喝酒.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main">👀瞅啥呢！👀</div><div class="sub normal cap">今天又是摸鱼的一天！</div><div class="sub hover cap" style="opacity:0">可不摸鱼又干什么呢？</div></a></div></header>
+
+<div class="nav-area">
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+
+<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/18/git%20ssh%E5%A4%B1%E8%B4%A5/"><span class="title">git ssh失败</span></a><a class="item title" href="/2025/08/18/sys%20class/"><span class="title">Linux sys 虚拟文件系统分析</span></a><a class="item title" href="/2025/08/18/spi%E5%AD%90%E7%B3%BB%E7%BB%9Fdw%E6%8E%A7%E5%88%B6%E5%99%A8probe%E8%BF%87%E7%A8%8B/"><span class="title">dw-spi-mmio控制器驱动</span></a><a class="item title" href="/2025/08/18/SPI%E6%97%B6%E5%BA%8F%E7%90%86%E8%A7%A3/"><span class="title">SPI时序理解</span></a><a class="item title" href="/2025/08/18/platformbus%E5%8F%8A%E5%85%B6%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90/"><span class="title">platformbus及其初始化过程分析</span></a><a class="item title" href="/2025/08/18/platform%E6%80%BB%E7%BA%BF%E5%8C%B9%E9%85%8D%E6%96%B9%E5%BC%8F/"><span class="title">platform总线匹配方式</span></a><a class="item title" href="/2025/08/18/platform%E7%9A%84LED%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86(%E6%9C%AA%E5%AE%8C%E6%88%90)/"><span class="title">通过platform实现LED设备驱动一些基础知识</span></a><a class="item title" href="/2025/08/18/platform_device%E7%9A%84%E4%B8%80%E7%AF%87%E7%9F%A5%E4%B9%8E%E8%A7%A3%E6%9E%90/"><span class="title">platform_device的一篇知乎解析</span></a><a class="item title" href="/2025/08/18/linuxmain/"><span class="title">Linux启动分析</span></a><a class="item title" href="/2025/08/18/imx6ull%E5%90%AF%E5%8A%A8%E6%97%A5%E5%BF%97/"><span class="title">imx6ull启动日志分析</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E9%A9%B1%E5%8A%A8/">驱动</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-08-17T16:00:00.000Z">2025-08-18</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-11-02T15:13:43.714Z">2025-11-02</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>以spi_device继承spi_controller分析继承和关联的使用区别</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h1 id="以spi-device继承spi-controller分析继承和关联的使用区别"><a href="#以spi-device继承spi-controller分析继承和关联的使用区别" class="headerlink" title="以spi_device继承spi_controller分析继承和关联的使用区别"></a>以spi_device继承spi_controller分析继承和关联的使用区别</h1><h2 id="区分-“继承”-和-“从属关联”"><a href="#区分-“继承”-和-“从属关联”" class="headerlink" title="区分 “继承” 和 “从属关联”"></a>区分 “继承” 和 “从属关联”</h2><p>要清晰区分 “继承” 和 “从属关联”，需从 <strong>核心定义、内存结构、逻辑关系、代码表现</strong> 四个维度切入 —— 这两个概念的本质差异，是 “是否存在层级归属与属性复用”，而非简单的 “引用关系”。</p>
+<h2 id="一、核心定义：本质差异"><a href="#一、核心定义：本质差异" class="headerlink" title="一、核心定义：本质差异"></a>一、核心定义：本质差异</h2><table>
+<thead>
+<tr>
+<th>概念</th>
+<th>核心逻辑</th>
+<th>通俗类比</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>继承（Inheritance）</strong></td>
+<td>子类（派生类）<strong>“is a”</strong>（是一种）父类（基类），继承父类的所有属性和行为，同时可扩展自身特性。 核心是 “<strong>层级归属 + 属性复用</strong>”。</td>
+<td>猫（子类）是一种动物（父类），继承 “呼吸、进食” 等动物的通用行为，同时有 “抓老鼠” 的特有行为。</td>
+</tr>
+<tr>
+<td><strong>从属关联（Dependency&#x2F;Association）</strong></td>
+<td>A 对象 <strong>“depends on”</strong>（依赖 &#x2F; 从属）B 对象，A 需借助 B 的能力完成工作，但 A 不继承 B 的属性或行为，两者是独立的个体。 核心是 “<strong>功能依赖 + 独立存在</strong>”。</td>
+<td>学生（A）从属班级（B）：学生需要班级提供的 “上课、考勤” 功能，但学生不继承班级的 “班级编号、班主任” 等属性，学生和班级是独立的实体。</td>
+</tr>
+</tbody></table>
+<h2 id="二、四个关键区分维度"><a href="#二、四个关键区分维度" class="headerlink" title="二、四个关键区分维度"></a>二、四个关键区分维度</h2><h3 id="1-内存结构：“包含”-vs-“引用”"><a href="#1-内存结构：“包含”-vs-“引用”" class="headerlink" title="1. 内存结构：“包含” vs “引用”"></a>1. 内存结构：“包含” vs “引用”</h3><p>继承和从属关联在代码的内存布局上有本质不同，这是最硬核的区分依据：</p>
+<h4 id="（1）继承：子类内存包含父类成员"><a href="#（1）继承：子类内存包含父类成员" class="headerlink" title="（1）继承：子类内存包含父类成员"></a>（1）继承：子类内存包含父类成员</h4><p>在 C 语言（内核常用）中，继承通过 “结构体嵌套” 实现 ——<strong>父类结构体作为子类结构体的第一个成员</strong>，子类内存中会完整包含父类的所有成员，可直接访问父类属性。<br>示例（内核设备模型的继承）：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 父类：通用设备基类</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">device</span> &#123;</span></span><br><span class="line">    <span class="type">const</span> <span class="type">char</span> *name;    <span class="comment">// 通用属性：设备名</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">device</span> *<span class="title">parent</span>;</span> <span class="comment">// 通用属性：父设备</span></span><br><span class="line">    <span class="comment">// 其他通用成员...</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 子类：SPI从设备（继承 struct device）</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">spi_device</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">device</span> <span class="title">dev</span>;</span>   <span class="comment">// 第一个成员 = 父类，内存上包含父类所有成员</span></span><br><span class="line">    u32 max_speed_hz;    <span class="comment">// 子类特有属性：最大速率</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">spi_controller</span> *<span class="title">controller</span>;</span> <span class="comment">// 关联控制器（非继承）</span></span><br><span class="line">    <span class="comment">// 其他子类特有成员...</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li>内存布局：<code>spi_device</code> 的内存起始地址 &#x3D; 其内部 <code>dev</code> 的地址，可通过 <code>spi_device</code> 指针直接访问 <code>dev</code> 的成员（如 <code>spi_dev-&gt;dev.name</code>）。</li>
+<li>内核宏 <code>to_spi_device(dev)</code> 本质：将 <code>struct device *</code> 指针强制转换为 <code>struct spi_device *</code>，依赖 “父类是子类第一个成员” 的内存布局 —— 这是继承的典型特征。</li>
+</ul>
+<h4 id="（2）从属关联：仅通过指针-“引用”，不包含对方成员"><a href="#（2）从属关联：仅通过指针-“引用”，不包含对方成员" class="headerlink" title="（2）从属关联：仅通过指针 “引用”，不包含对方成员"></a>（2）从属关联：仅通过指针 “引用”，不包含对方成员</h4><p>从属关联中，A 对象仅持有 B 对象的<strong>指针 &#x2F; 句柄</strong>，内存上不包含 B 的任何成员，无法直接访问 B 的属性（需通过指针间接访问）。<br>示例（spi_device 与 spi_controller 的关联）：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">spi_device</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">device</span> <span class="title">dev</span>;</span>   <span class="comment">// 继承的父类</span></span><br><span class="line">    <span class="comment">// 仅持有控制器的指针，不包含 spi_controller 的任何成员</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">spi_controller</span> *<span class="title">controller</span>;</span> </span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">spi_controller</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">device</span> <span class="title">dev</span>;</span>   <span class="comment">// 自身继承的父类</span></span><br><span class="line">    u16 num_chipselect;  <span class="comment">// 控制器特有属性：片选数量</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li>内存布局：<code>spi_device</code> 的 <code>controller</code> 指针仅存储 <code>spi_controller</code> 的内存地址，<code>spi_device</code> 内存中没有 <code>num_chipselect</code> 等控制器成员。</li>
+<li>访问控制器属性：必须通过指针间接访问（如 <code>spi_dev-&gt;controller-&gt;num_chipselect</code>），而非直接访问 —— 这是关联的典型特征。</li>
+</ul>
+<h3 id="2-逻辑关系：“是一种”-vs-“依赖一种”"><a href="#2-逻辑关系：“是一种”-vs-“依赖一种”" class="headerlink" title="2. 逻辑关系：“是一种” vs “依赖一种”"></a>2. 逻辑关系：“是一种” vs “依赖一种”</h3><h4 id="（1）继承：“是一种”（is-a）"><a href="#（1）继承：“是一种”（is-a）" class="headerlink" title="（1）继承：“是一种”（is a）"></a>（1）继承：“是一种”（is a）</h4><p>子类是父类的 “特殊化”，具备父类的所有本质特征，同时增加特有特征。</p>
+<ul>
+<li>例 1：<code>spi_device</code> 是一种 <code>struct device</code>（符合设备模型的通用设备），<code>spi_controller</code> 也是一种 <code>struct device</code>。</li>
+<li>例 2：“哈士奇” 是一种 “狗”，“狗” 是一种 “动物”—— 层级归属明确。</li>
+</ul>
+<h4 id="（2）从属关联：“依赖一种”（depends-on）"><a href="#（2）从属关联：“依赖一种”（depends-on）" class="headerlink" title="（2）从属关联：“依赖一种”（depends on）"></a>（2）从属关联：“依赖一种”（depends on）</h4><p>A 对象需要 B 对象的能力才能工作，但 A 不是 B 的 “特殊化”，两者是独立的逻辑实体。</p>
+<ul>
+<li>例 1：<code>spi_device</code> 依赖 <code>spi_controller</code> 的 “传输数据” 能力，但 <code>spi_device</code> 不是 “一种”<code>spi_controller</code>（从设备是被管理者，控制器是管理者，角色完全不同）。</li>
+<li>例 2：“手机” 依赖 “基站” 的 “信号传输” 能力，但手机不是 “一种” 基站。</li>
+</ul>
+<h3 id="3-属性与行为：“复用”-vs-“隔离”"><a href="#3-属性与行为：“复用”-vs-“隔离”" class="headerlink" title="3. 属性与行为：“复用” vs “隔离”"></a>3. 属性与行为：“复用” vs “隔离”</h3><h4 id="（1）继承：子类复用父类的属性和行为"><a href="#（1）继承：子类复用父类的属性和行为" class="headerlink" title="（1）继承：子类复用父类的属性和行为"></a>（1）继承：子类复用父类的属性和行为</h4><p>父类的属性（如 <code>struct device</code> 的 <code>name</code>）和行为（如内核提供的 <code>device_add</code> 注册函数），子类可直接复用，无需重复定义。</p>
+<ul>
+<li>例：<code>spi_device</code> 和 <code>spi_controller</code> 都无需自己实现 “设备注册” 逻辑，直接复用 <code>device_add</code> 函数（通过 <code>dev</code> 成员）。</li>
+</ul>
+<h4 id="（2）从属关联：属性和行为完全隔离"><a href="#（2）从属关联：属性和行为完全隔离" class="headerlink" title="（2）从属关联：属性和行为完全隔离"></a>（2）从属关联：属性和行为完全隔离</h4><p>A 对象和 B 对象的属性、行为互不复用，各自有独立的定义。</p>
+<ul>
+<li>例：<code>spi_device</code> 的 <code>max_speed_hz</code>（从设备速率）与 <code>spi_controller</code> 的 <code>max_speed_hz</code>（控制器最大速率）是完全独立的属性，前者受后者约束，但不复用后者的值。</li>
+<li>例：<code>spi_controller</code> 的 <code>transfer_one</code>（传输函数）是控制器的行为，<code>spi_device</code> 无法复用，只能通过 <code>controller-&gt;transfer_one</code> 调用该行为。</li>
+</ul>
+<h3 id="4-生命周期：“绑定”-vs-“独立”"><a href="#4-生命周期：“绑定”-vs-“独立”" class="headerlink" title="4. 生命周期：“绑定” vs “独立”"></a>4. 生命周期：“绑定” vs “独立”</h3><h4 id="（1）继承：子类与父类生命周期绑定"><a href="#（1）继承：子类与父类生命周期绑定" class="headerlink" title="（1）继承：子类与父类生命周期绑定"></a>（1）继承：子类与父类生命周期绑定</h4><p>子类的生命周期与父类完全一致 —— 创建子类时，父类成员会同时初始化；销毁子类时，父类成员也会同时释放。</p>
+<ul>
+<li>例：创建 <code>spi_device</code> 时，其内部的 <code>struct device dev</code> 会被一起初始化；销毁 <code>spi_device</code> 时，<code>dev</code> 也会被 <code>device_del</code> 清理。</li>
+</ul>
+<h4 id="（2）从属关联：生命周期独立"><a href="#（2）从属关联：生命周期独立" class="headerlink" title="（2）从属关联：生命周期独立"></a>（2）从属关联：生命周期独立</h4><p>A 对象和 B 对象的生命周期可独立存在，互不影响。</p>
+<ul>
+<li>例 1：<code>spi_controller</code> 先注册（生命周期开始），之后 <code>spi_device</code> 再注册（依赖已存在的控制器）；<code>spi_device</code> 可先注销（生命周期结束），控制器仍可继续管理其他从设备。</li>
+<li>例 2：“学生” 毕业（生命周期结束），“班级” 仍可存在（继续招收新学生）。</li>
+</ul>
+<h2 id="三、总结：一句话区分"><a href="#三、总结：一句话区分" class="headerlink" title="三、总结：一句话区分"></a>三、总结：一句话区分</h2><ul>
+<li><strong>继承</strong>：子类是父类的 “一种”，内存包含父类成员，复用父类属性和行为，生命周期绑定（如 <code>spi_device</code> ← <code>struct device</code>）。</li>
+<li><strong>从属关联</strong>：A 依赖 B 的能力，内存仅持有 B 的指针，属性行为完全隔离，生命周期独立（如 <code>spi_device</code> → <code>spi_controller</code>）。</li>
+</ul>
+<p>回到你最初的疑问：<code>spi_device</code> 没有继承 <code>spi_controller</code>，而是通过指针 “从属关联” 到 <code>spi_controller</code>；两者真正的继承关系，是都继承自内核的 <code>struct device</code>（通用设备基类）。</p>
+<h2 id="在实际编程中，如何判断应该使用继承还是从属关联？"><a href="#在实际编程中，如何判断应该使用继承还是从属关联？" class="headerlink" title="在实际编程中，如何判断应该使用继承还是从属关联？"></a>在实际编程中，如何判断应该使用继承还是从属关联？</h2><p>在实际编程（尤其是驱动开发、框架设计等场景）中，判断使用<strong>继承</strong>还是<strong>从属关联</strong>，核心是围绕 <strong>“逻辑关系”“复用需求”“生命周期”“耦合度”</strong> 四个维度做决策，可按以下步骤逐步判断，结合具体场景落地。</p>
+<h2 id="一、第一步：先判断核心逻辑关系-——“is-a”-还是-“has-a-depends-on”"><a href="#一、第一步：先判断核心逻辑关系-——“is-a”-还是-“has-a-depends-on”" class="headerlink" title="一、第一步：先判断核心逻辑关系 ——“is a” 还是 “has a&#x2F;depends on”"></a>一、第一步：先判断核心逻辑关系 ——“is a” 还是 “has a&#x2F;depends on”</h2><p>这是最根本的判断标准，直接决定两种设计的适用场景：</p>
+<h3 id="1-若满足-“is-a”（A-是-B-的一种）→-优先用继承"><a href="#1-若满足-“is-a”（A-是-B-的一种）→-优先用继承" class="headerlink" title="1. 若满足 “is a”（A 是 B 的一种）→ 优先用继承"></a>1. 若满足 “is a”（A 是 B 的一种）→ 优先用继承</h3><p>当 A 实体本质上是 B 实体的<strong>特殊化版本</strong>，具备 B 的所有核心特征，且需要在此基础上扩展特有属性 &#x2F; 行为时，用继承。<br><strong>判断问题</strong>：能否用 “XX 是一种 XX” 描述两者关系？能则选继承。</p>
+<h4 id="典型场景示例："><a href="#典型场景示例：" class="headerlink" title="典型场景示例："></a>典型场景示例：</h4><ul>
+<li><strong>内核设备模型</strong>：<code>spi_device</code> 是一种 <code>struct device</code>（符合通用设备的所有特征：有名称、能匹配驱动、支持电源管理），因此 <code>spi_device</code> 继承 <code>struct device</code>。</li>
+<li><strong>面向对象编程</strong>：<code>Dog</code> 是一种 <code>Animal</code>（有呼吸、进食等通用行为，扩展 “汪汪叫” 特有行为），因此 <code>Dog</code> 继承 <code>Animal</code>。</li>
+<li><strong>驱动开发</strong>：<code>i2c_client</code>（I2C 从设备）是一种 <code>struct device</code>，因此继承 <code>struct device</code>。</li>
+</ul>
+<h3 id="2-若满足-“has-a”（A-包含-依赖-B-的能力）→-优先用从属关联"><a href="#2-若满足-“has-a”（A-包含-依赖-B-的能力）→-优先用从属关联" class="headerlink" title="2. 若满足 “has a”（A 包含 &#x2F; 依赖 B 的能力）→ 优先用从属关联"></a>2. 若满足 “has a”（A 包含 &#x2F; 依赖 B 的能力）→ 优先用从属关联</h3><p>当 A 实体需要 <strong>借助 B 实体的能力完成工作</strong>，但 A 不是 B 的 “特殊化版本”，两者是独立个体时，用从属关联。<br><strong>判断问题</strong>：能否用 “XX 需要 XX 的帮助才能工作” 或 “XX 包含 XX 的引用” 描述？能则选关联。</p>
+<h4 id="典型场景示例：-1"><a href="#典型场景示例：-1" class="headerlink" title="典型场景示例："></a>典型场景示例：</h4><ul>
+<li><strong>SPI 子系统</strong>：<code>spi_device</code> 需要 <code>spi_controller</code> 的 “数据传输能力” 才能收发数据，但 <code>spi_device</code> 不是 “一种”<code>spi_controller</code>（角色是 “被管理者” vs “管理者”），因此用指针关联（<code>spi_controller *controller</code>）。</li>
+<li><strong>硬件驱动</strong>：“LED 设备” 需要 “GPIO 控制器” 的 “引脚控制能力” 才能亮灭，但 LED 不是 “一种” GPIO 控制器，因此用 <code>struct gpio_desc *gpio</code> 关联 GPIO 引脚。</li>
+<li><strong>应用开发</strong>：“播放器” 需要 “音频解码器” 的 “解码能力” 才能播放音乐，但播放器不是 “一种” 解码器，因此用指针关联解码器实例。</li>
+</ul>
+<h2 id="二、第二步：判断属性-行为的复用需求"><a href="#二、第二步：判断属性-行为的复用需求" class="headerlink" title="二、第二步：判断属性 &#x2F; 行为的复用需求"></a>二、第二步：判断属性 &#x2F; 行为的复用需求</h2><p>若第一步的逻辑关系不明确，可通过 “是否需要复用属性 &#x2F; 行为” 进一步判断：</p>
+<h3 id="1-需要复用属性-行为-→-用继承"><a href="#1-需要复用属性-行为-→-用继承" class="headerlink" title="1. 需要复用属性 &#x2F; 行为 → 用继承"></a>1. 需要复用属性 &#x2F; 行为 → 用继承</h3><p>继承的核心价值是<strong>避免重复代码</strong>：父类的属性（如 <code>struct device</code> 的 <code>name</code>、<code>parent</code>）和行为（如内核提供的 <code>device_add</code> 注册函数），子类可直接复用，无需重新定义。<br><strong>反例</strong>：若 <code>spi_device</code> 不继承 <code>struct device</code>，则需要自己实现设备命名、驱动匹配、电源管理等逻辑，导致代码冗余（I2C、USB 等其他总线设备也需重复实现）。</p>
+<h3 id="2-仅需调用功能，无需复用属性-→-用从属关联"><a href="#2-仅需调用功能，无需复用属性-→-用从属关联" class="headerlink" title="2. 仅需调用功能，无需复用属性 → 用从属关联"></a>2. 仅需调用功能，无需复用属性 → 用从属关联</h3><p>从属关联中，A 仅需调用 B 的<strong>特定接口</strong>（如 <code>spi_controller-&gt;transfer_one</code>），无需复用 B 的属性（如 <code>num_chipselect</code>），此时用指针关联即可，避免不必要的属性暴露。<br><strong>反例</strong>：若 <code>spi_device</code> 继承 <code>spi_controller</code>，则会被迫包含 <code>num_chipselect</code>、<code>dma_tx</code> 等与从设备无关的属性，造成内存浪费和逻辑混乱。</p>
+<h2 id="三、第三步：判断生命周期是否绑定"><a href="#三、第三步：判断生命周期是否绑定" class="headerlink" title="三、第三步：判断生命周期是否绑定"></a>三、第三步：判断生命周期是否绑定</h2><p>两种设计的生命周期关系不同，直接影响资源管理的安全性：</p>
+<h3 id="1-生命周期必须绑定（同生共死）→-用继承"><a href="#1-生命周期必须绑定（同生共死）→-用继承" class="headerlink" title="1. 生命周期必须绑定（同生共死）→ 用继承"></a>1. 生命周期必须绑定（同生共死）→ 用继承</h3><p>继承中，子类的生命周期与父类<strong>完全绑定</strong>：创建子类时，父类成员会同步初始化；销毁子类时，父类成员也会同步释放，无需单独管理父类资源。<br><strong>示例</strong>：创建 <code>spi_device</code> 时，其内部的 <code>struct device dev</code> 会通过 <code>device_initialize</code> 初始化；销毁 <code>spi_device</code> 时，<code>dev</code> 会通过 <code>device_del</code> 自动清理，无需单独处理 <code>dev</code> 的生命周期。</p>
+<h3 id="2-生命周期独立（可分别创建-销毁）→-用从属关联"><a href="#2-生命周期独立（可分别创建-销毁）→-用从属关联" class="headerlink" title="2. 生命周期独立（可分别创建 &#x2F; 销毁）→ 用从属关联"></a>2. 生命周期独立（可分别创建 &#x2F; 销毁）→ 用从属关联</h3><p>从属关联中，A 和 B 的生命周期<strong>相互独立</strong>：B 可先于 A 创建（如 <code>spi_controller</code> 先注册，<code>spi_device</code> 后注册），A 可先于 B 销毁（如 <code>spi_device</code> 注销后，<code>spi_controller</code> 仍管理其他设备）。<br><strong>示例</strong>：<code>spi_controller</code> 注册后，可动态添加 &#x2F; 删除多个 <code>spi_device</code>；即使所有 <code>spi_device</code> 都注销，<code>spi_controller</code> 仍可保留（除非主动卸载控制器驱动）。</p>
+<h2 id="四、第四步：考虑耦合度需求（松耦合优先）"><a href="#四、第四步：考虑耦合度需求（松耦合优先）" class="headerlink" title="四、第四步：考虑耦合度需求（松耦合优先）"></a>四、第四步：考虑耦合度需求（松耦合优先）</h2><p>继承会导致<strong>强耦合</strong>（子类依赖父类的实现细节），关联则是<strong>松耦合</strong>（仅依赖接口，不依赖实现），实际编程中应优先选择松耦合设计，除非继承的收益（复用、逻辑清晰）远大于耦合成本。</p>
+<h3 id="1-需降低耦合（便于扩展-维护）→-优先关联"><a href="#1-需降低耦合（便于扩展-维护）→-优先关联" class="headerlink" title="1. 需降低耦合（便于扩展 &#x2F; 维护）→ 优先关联"></a>1. 需降低耦合（便于扩展 &#x2F; 维护）→ 优先关联</h3><p>若 B 的实现可能变化（如更换不同厂商的 SPI 控制器），A 只需适配 B 的接口（如 <code>transfer_one</code> 函数），无需修改 A 的代码，此时关联更合适。<br><strong>示例</strong>：更换 SPI 控制器驱动时，<code>spi_device</code> 无需修改（只需确保新控制器实现 <code>transfer_one</code> 接口），因为 <code>spi_device</code> 仅通过指针调用接口，不依赖控制器的内部实现。</p>
+<h3 id="2-需统一规范（不允许灵活修改）→-用继承"><a href="#2-需统一规范（不允许灵活修改）→-用继承" class="headerlink" title="2. 需统一规范（不允许灵活修改）→ 用继承"></a>2. 需统一规范（不允许灵活修改）→ 用继承</h3><p>若需要强制所有子类遵循统一的接口或属性（如内核设备模型要求所有设备必须有 <code>struct device</code> 成员），则用继承，确保规范不被打破。<br><strong>示例</strong>：内核所有硬件设备（SPI、I2C、PCI 等）都必须继承 <code>struct device</code>，以保证电源管理、sysfs 接口等功能的统一性，不允许通过关联绕过这一规范。</p>
+<h2 id="五、总结：决策流程图（实际编程可按此步骤）"><a href="#五、总结：决策流程图（实际编程可按此步骤）" class="headerlink" title="五、总结：决策流程图（实际编程可按此步骤）"></a>五、总结：决策流程图（实际编程可按此步骤）</h2><p>​    A[“判断两个实体关系”] –&gt; B{是否满足“is a”？}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">graph TD</span><br><span class="line">    A[判断两个实体关系] --&gt; B&#123;是否满足is a关系&#125;</span><br><span class="line">    B --&gt;|是| C[用继承,复用属性/行为,生命周期绑定]</span><br><span class="line">    B --&gt;|否| D&#123;是否仅需调用对方功能,无需复用属性?&#125;</span><br><span class="line">    D --&gt;|是| E[用从属关联,指针引用,松耦合,生命周期独立]</span><br><span class="line">    D --&gt;|否| F[重新审视逻辑关系是否误判is a?]</span><br><span class="line">    F --&gt;|确认不是is a| E</span><br><span class="line">    F --&gt;|确认是is a| C</span><br></pre></td></tr></table></figure>
+
+<h3 id="关键结论"><a href="#关键结论" class="headerlink" title="关键结论"></a>关键结论</h3><ul>
+<li><strong>继承</strong>：适用于 “XX 是一种 XX”、需复用属性 &#x2F; 行为、生命周期绑定、需统一规范的场景（如内核设备模型、类的特殊化）。</li>
+<li><strong>从属关联</strong>：适用于 “XX 依赖 XX 的能力”、仅需调用接口、生命周期独立、需降低耦合的场景（如设备与控制器的关系、模块间的功能调用）。</li>
+</ul>
+<p>回到之前的 SPI 例子：</p>
+<ul>
+<li><code>spi_device</code> 继承 <code>struct device</code>：因为 “spi_device 是一种设备”，需复用设备命名、电源管理等功能，生命周期绑定。</li>
+<li><code>spi_device</code> 关联 <code>spi_controller</code>：因为 “spi_device 依赖控制器的传输能力”，仅需调用接口，生命周期独立，需降低耦合。</li>
+</ul>
+<h3 id=""><a href="#" class="headerlink" title=""></a></h3><h3 id="优点-清晰的逻辑层级，降低理解成本"><a href="#优点-清晰的逻辑层级，降低理解成本" class="headerlink" title="优点 清晰的逻辑层级，降低理解成本"></a>优点 清晰的逻辑层级，降低理解成本</h3><p>继承直接体现 <strong>“is a” 的语义关系</strong>，子类与基类的层级明确，代码阅读者可快速理解实体间的逻辑归属，无需额外文档说明。</p>
+<ul>
+<li><strong>示例</strong>：看到 <code>struct spi_device</code> 嵌套 <code>struct device</code>，可立刻判断 “SPI 从设备是一种内核通用设备”；看到 <code>struct spi_controller</code> 也嵌套 <code>struct device</code>，可判断 “SPI 控制器也是一种通用设备”—— 这种层级关系比通过指针关联更直观。</li>
+<li><strong>收益</strong>：提升代码可读性，降低团队协作中的认知成本。</li>
+</ul>
+<h3 id="优点-统一接口与框架化管理"><a href="#优点-统一接口与框架化管理" class="headerlink" title="优点 统一接口与框架化管理"></a>优点 统一接口与框架化管理</h3><p>基类可定义 <strong>通用操作规范</strong>，所有子类遵循同一接口，便于框架统一管理不同类型的子类，实现 “多态” 效果（C 中通过函数指针和基类接口间接实现）。</p>
+<ul>
+<li><strong>示例</strong>：内核设备模型通过 <code>struct device</code> 定义了统一的设备生命周期接口（<code>probe</code>、<code>remove</code>、<code>suspend</code>、<code>resume</code>）。无论子类是 <code>spi_device</code> 还是 <code>i2c_client</code>，框架都能通过 <code>struct device *</code> 指针调用通用接口（如 <code>dev_pm_domain_attach(dev)</code>），无需区分设备类型 —— 这是内核能统一管理所有硬件设备的关键。</li>
+<li><strong>收益</strong>：简化框架设计，支持 “新增子类无需修改框架”（如新增一种总线设备，只需嵌套 <code>struct device</code> 即可融入现有模型）。</li>
+</ul>
+</article>
+<div class="article-footer">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    
+
+</div>
+
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2025/08/18/platformbus%E5%8F%8A%E5%85%B6%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90/">platformbus及其初始化过程分析</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/08/18/platform%E6%80%BB%E7%BA%BF%E5%8C%B9%E9%85%8D%E6%96%B9%E5%BC%8F/">platform总线匹配方式</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Dku</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.33.1">Stellar 1.33.1</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BB%A5spi-device%E7%BB%A7%E6%89%BFspi-controller%E5%88%86%E6%9E%90%E7%BB%A7%E6%89%BF%E5%92%8C%E5%85%B3%E8%81%94%E7%9A%84%E4%BD%BF%E7%94%A8%E5%8C%BA%E5%88%AB"><span class="toc-text">以spi_device继承spi_controller分析继承和关联的使用区别</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8C%BA%E5%88%86-%E2%80%9C%E7%BB%A7%E6%89%BF%E2%80%9D-%E5%92%8C-%E2%80%9C%E4%BB%8E%E5%B1%9E%E5%85%B3%E8%81%94%E2%80%9D"><span class="toc-text">区分 “继承” 和 “从属关联”</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%A0%B8%E5%BF%83%E5%AE%9A%E4%B9%89%EF%BC%9A%E6%9C%AC%E8%B4%A8%E5%B7%AE%E5%BC%82"><span class="toc-text">一、核心定义：本质差异</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%9B%9B%E4%B8%AA%E5%85%B3%E9%94%AE%E5%8C%BA%E5%88%86%E7%BB%B4%E5%BA%A6"><span class="toc-text">二、四个关键区分维度</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84%EF%BC%9A%E2%80%9C%E5%8C%85%E5%90%AB%E2%80%9D-vs-%E2%80%9C%E5%BC%95%E7%94%A8%E2%80%9D"><span class="toc-text">1. 内存结构：“包含” vs “引用”</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E7%BB%A7%E6%89%BF%EF%BC%9A%E5%AD%90%E7%B1%BB%E5%86%85%E5%AD%98%E5%8C%85%E5%90%AB%E7%88%B6%E7%B1%BB%E6%88%90%E5%91%98"><span class="toc-text">（1）继承：子类内存包含父类成员</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%882%EF%BC%89%E4%BB%8E%E5%B1%9E%E5%85%B3%E8%81%94%EF%BC%9A%E4%BB%85%E9%80%9A%E8%BF%87%E6%8C%87%E9%92%88-%E2%80%9C%E5%BC%95%E7%94%A8%E2%80%9D%EF%BC%8C%E4%B8%8D%E5%8C%85%E5%90%AB%E5%AF%B9%E6%96%B9%E6%88%90%E5%91%98"><span class="toc-text">（2）从属关联：仅通过指针 “引用”，不包含对方成员</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E9%80%BB%E8%BE%91%E5%85%B3%E7%B3%BB%EF%BC%9A%E2%80%9C%E6%98%AF%E4%B8%80%E7%A7%8D%E2%80%9D-vs-%E2%80%9C%E4%BE%9D%E8%B5%96%E4%B8%80%E7%A7%8D%E2%80%9D"><span class="toc-text">2. 逻辑关系：“是一种” vs “依赖一种”</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E7%BB%A7%E6%89%BF%EF%BC%9A%E2%80%9C%E6%98%AF%E4%B8%80%E7%A7%8D%E2%80%9D%EF%BC%88is-a%EF%BC%89"><span class="toc-text">（1）继承：“是一种”（is a）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%882%EF%BC%89%E4%BB%8E%E5%B1%9E%E5%85%B3%E8%81%94%EF%BC%9A%E2%80%9C%E4%BE%9D%E8%B5%96%E4%B8%80%E7%A7%8D%E2%80%9D%EF%BC%88depends-on%EF%BC%89"><span class="toc-text">（2）从属关联：“依赖一种”（depends on）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%B1%9E%E6%80%A7%E4%B8%8E%E8%A1%8C%E4%B8%BA%EF%BC%9A%E2%80%9C%E5%A4%8D%E7%94%A8%E2%80%9D-vs-%E2%80%9C%E9%9A%94%E7%A6%BB%E2%80%9D"><span class="toc-text">3. 属性与行为：“复用” vs “隔离”</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E7%BB%A7%E6%89%BF%EF%BC%9A%E5%AD%90%E7%B1%BB%E5%A4%8D%E7%94%A8%E7%88%B6%E7%B1%BB%E7%9A%84%E5%B1%9E%E6%80%A7%E5%92%8C%E8%A1%8C%E4%B8%BA"><span class="toc-text">（1）继承：子类复用父类的属性和行为</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%882%EF%BC%89%E4%BB%8E%E5%B1%9E%E5%85%B3%E8%81%94%EF%BC%9A%E5%B1%9E%E6%80%A7%E5%92%8C%E8%A1%8C%E4%B8%BA%E5%AE%8C%E5%85%A8%E9%9A%94%E7%A6%BB"><span class="toc-text">（2）从属关联：属性和行为完全隔离</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%EF%BC%9A%E2%80%9C%E7%BB%91%E5%AE%9A%E2%80%9D-vs-%E2%80%9C%E7%8B%AC%E7%AB%8B%E2%80%9D"><span class="toc-text">4. 生命周期：“绑定” vs “独立”</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E7%BB%A7%E6%89%BF%EF%BC%9A%E5%AD%90%E7%B1%BB%E4%B8%8E%E7%88%B6%E7%B1%BB%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%BB%91%E5%AE%9A"><span class="toc-text">（1）继承：子类与父类生命周期绑定</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%882%EF%BC%89%E4%BB%8E%E5%B1%9E%E5%85%B3%E8%81%94%EF%BC%9A%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%8B%AC%E7%AB%8B"><span class="toc-text">（2）从属关联：生命周期独立</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%80%BB%E7%BB%93%EF%BC%9A%E4%B8%80%E5%8F%A5%E8%AF%9D%E5%8C%BA%E5%88%86"><span class="toc-text">三、总结：一句话区分</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9C%A8%E5%AE%9E%E9%99%85%E7%BC%96%E7%A8%8B%E4%B8%AD%EF%BC%8C%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD%E5%BA%94%E8%AF%A5%E4%BD%BF%E7%94%A8%E7%BB%A7%E6%89%BF%E8%BF%98%E6%98%AF%E4%BB%8E%E5%B1%9E%E5%85%B3%E8%81%94%EF%BC%9F"><span class="toc-text">在实际编程中，如何判断应该使用继承还是从属关联？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E5%85%88%E5%88%A4%E6%96%AD%E6%A0%B8%E5%BF%83%E9%80%BB%E8%BE%91%E5%85%B3%E7%B3%BB-%E2%80%94%E2%80%94%E2%80%9Cis-a%E2%80%9D-%E8%BF%98%E6%98%AF-%E2%80%9Chas-a-depends-on%E2%80%9D"><span class="toc-text">一、第一步：先判断核心逻辑关系 ——“is a” 还是 “has a&#x2F;depends on”</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E8%8B%A5%E6%BB%A1%E8%B6%B3-%E2%80%9Cis-a%E2%80%9D%EF%BC%88A-%E6%98%AF-B-%E7%9A%84%E4%B8%80%E7%A7%8D%EF%BC%89%E2%86%92-%E4%BC%98%E5%85%88%E7%94%A8%E7%BB%A7%E6%89%BF"><span class="toc-text">1. 若满足 “is a”（A 是 B 的一种）→ 优先用继承</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%B8%E5%9E%8B%E5%9C%BA%E6%99%AF%E7%A4%BA%E4%BE%8B%EF%BC%9A"><span class="toc-text">典型场景示例：</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E8%8B%A5%E6%BB%A1%E8%B6%B3-%E2%80%9Chas-a%E2%80%9D%EF%BC%88A-%E5%8C%85%E5%90%AB-%E4%BE%9D%E8%B5%96-B-%E7%9A%84%E8%83%BD%E5%8A%9B%EF%BC%89%E2%86%92-%E4%BC%98%E5%85%88%E7%94%A8%E4%BB%8E%E5%B1%9E%E5%85%B3%E8%81%94"><span class="toc-text">2. 若满足 “has a”（A 包含 &#x2F; 依赖 B 的能力）→ 优先用从属关联</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%B8%E5%9E%8B%E5%9C%BA%E6%99%AF%E7%A4%BA%E4%BE%8B%EF%BC%9A-1"><span class="toc-text">典型场景示例：</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E5%88%A4%E6%96%AD%E5%B1%9E%E6%80%A7-%E8%A1%8C%E4%B8%BA%E7%9A%84%E5%A4%8D%E7%94%A8%E9%9C%80%E6%B1%82"><span class="toc-text">二、第二步：判断属性 &#x2F; 行为的复用需求</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E9%9C%80%E8%A6%81%E5%A4%8D%E7%94%A8%E5%B1%9E%E6%80%A7-%E8%A1%8C%E4%B8%BA-%E2%86%92-%E7%94%A8%E7%BB%A7%E6%89%BF"><span class="toc-text">1. 需要复用属性 &#x2F; 行为 → 用继承</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E4%BB%85%E9%9C%80%E8%B0%83%E7%94%A8%E5%8A%9F%E8%83%BD%EF%BC%8C%E6%97%A0%E9%9C%80%E5%A4%8D%E7%94%A8%E5%B1%9E%E6%80%A7-%E2%86%92-%E7%94%A8%E4%BB%8E%E5%B1%9E%E5%85%B3%E8%81%94"><span class="toc-text">2. 仅需调用功能，无需复用属性 → 用从属关联</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E5%88%A4%E6%96%AD%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E6%98%AF%E5%90%A6%E7%BB%91%E5%AE%9A"><span class="toc-text">三、第三步：判断生命周期是否绑定</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%BF%85%E9%A1%BB%E7%BB%91%E5%AE%9A%EF%BC%88%E5%90%8C%E7%94%9F%E5%85%B1%E6%AD%BB%EF%BC%89%E2%86%92-%E7%94%A8%E7%BB%A7%E6%89%BF"><span class="toc-text">1. 生命周期必须绑定（同生共死）→ 用继承</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%8B%AC%E7%AB%8B%EF%BC%88%E5%8F%AF%E5%88%86%E5%88%AB%E5%88%9B%E5%BB%BA-%E9%94%80%E6%AF%81%EF%BC%89%E2%86%92-%E7%94%A8%E4%BB%8E%E5%B1%9E%E5%85%B3%E8%81%94"><span class="toc-text">2. 生命周期独立（可分别创建 &#x2F; 销毁）→ 用从属关联</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E7%AC%AC%E5%9B%9B%E6%AD%A5%EF%BC%9A%E8%80%83%E8%99%91%E8%80%A6%E5%90%88%E5%BA%A6%E9%9C%80%E6%B1%82%EF%BC%88%E6%9D%BE%E8%80%A6%E5%90%88%E4%BC%98%E5%85%88%EF%BC%89"><span class="toc-text">四、第四步：考虑耦合度需求（松耦合优先）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E9%9C%80%E9%99%8D%E4%BD%8E%E8%80%A6%E5%90%88%EF%BC%88%E4%BE%BF%E4%BA%8E%E6%89%A9%E5%B1%95-%E7%BB%B4%E6%8A%A4%EF%BC%89%E2%86%92-%E4%BC%98%E5%85%88%E5%85%B3%E8%81%94"><span class="toc-text">1. 需降低耦合（便于扩展 &#x2F; 维护）→ 优先关联</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E9%9C%80%E7%BB%9F%E4%B8%80%E8%A7%84%E8%8C%83%EF%BC%88%E4%B8%8D%E5%85%81%E8%AE%B8%E7%81%B5%E6%B4%BB%E4%BF%AE%E6%94%B9%EF%BC%89%E2%86%92-%E7%94%A8%E7%BB%A7%E6%89%BF"><span class="toc-text">2. 需统一规范（不允许灵活修改）→ 用继承</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%80%BB%E7%BB%93%EF%BC%9A%E5%86%B3%E7%AD%96%E6%B5%81%E7%A8%8B%E5%9B%BE%EF%BC%88%E5%AE%9E%E9%99%85%E7%BC%96%E7%A8%8B%E5%8F%AF%E6%8C%89%E6%AD%A4%E6%AD%A5%E9%AA%A4%EF%BC%89"><span class="toc-text">五、总结：决策流程图（实际编程可按此步骤）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E7%BB%93%E8%AE%BA"><span class="toc-text">关键结论</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-text"></span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BC%98%E7%82%B9-%E6%B8%85%E6%99%B0%E7%9A%84%E9%80%BB%E8%BE%91%E5%B1%82%E7%BA%A7%EF%BC%8C%E9%99%8D%E4%BD%8E%E7%90%86%E8%A7%A3%E6%88%90%E6%9C%AC"><span class="toc-text">优点 清晰的逻辑层级，降低理解成本</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BC%98%E7%82%B9-%E7%BB%9F%E4%B8%80%E6%8E%A5%E5%8F%A3%E4%B8%8E%E6%A1%86%E6%9E%B6%E5%8C%96%E7%AE%A1%E7%90%86"><span class="toc-text">优点 统一接口与框架化管理</span></a></li></ol></li></ol></li></ol></div><div class="widget-footer"><a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/><path d="M7 3.338A9.95 9.95 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+
+
+<script type="text/javascript">
+  window.canonical = {"originalHost":null,"officialHosts":["localhost"],"encoded":""};
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+    tag_plugins: {
+      chat: Object.assign({"api":"https://siteinfo.listentothewind.cn/api/v1"}),
+    }
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":null,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+    loading: `https://api.iconify.design/eos-icons:three-dots-loading.svg?color=%231cd0fd`,
+  };
+  const deps = {
+    jquery: `https://gcore.jsdelivr.net/npm/jquery@3.7/dist/jquery.min.js`,
+    marked: `https://gcore.jsdelivr.net/npm/marked@13.0/lib/marked.umd.min.js`,
+    lazyload: `/%5Bobject%20Object%5D`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  
+  function RunItem() {
+    this.list = []; // 存放回调函数
+    this.start = () => {
+      for (var i = 0; i < this.list.length; i++) {
+        this.list[i].run();
+      }
+    };
+    this.push = (fn, name, setRequestAnimationFrame = true) => {
+      let myfn = fn
+      if (setRequestAnimationFrame) {
+        myfn = () => {
+          utils.requestAnimationFrame(fn)
+        }
+      }
+      var f = new Item(myfn, name);
+      this.list.push(f);
+    };
+    this.remove = (name) => {
+      for (let index = 0; index < this.list.length; index++) {
+        const e = this.list[index];
+        if (e.name == name) {
+          this.list.splice(index, 1);
+        }
+      }
+    }
+    // 构造一个可以run的对象
+    function Item(fn, name) {
+      // 函数名称
+      this.name = name || fn.name;
+      // run方法
+      this.run = () => {
+        try {
+          fn()
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    }
+  }
+
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')) {
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function () {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      const maxRetry = 3;
+      let retryCount = 0;
+
+      return new Promise((resolve, reject) => {
+        const load = () => {
+          utils.onLoading?.(el);
+
+          let timedOut = false;
+          const timeout = setTimeout(() => {
+            timedOut = true;
+            console.warn('[request] 超时:', url);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject('请求超时');
+            } else {
+              setTimeout(load, 1000);
+            }
+          }, 5000);
+
+          fetch(url).then(resp => {
+            if (timedOut) return;
+            clearTimeout(timeout);
+
+            if (!resp.ok) throw new Error('响应失败');
+            return resp;
+          }).then(data => {
+            if (timedOut) return;
+            utils.onLoadSuccess?.(el);
+            callback(data);
+            resolve(data);
+          }).catch(err => {
+            clearTimeout(timeout);
+            console.warn('[request] 错误:', err);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject(err);
+            } else {
+              setTimeout(load, 1000);
+            }
+          });
+        };
+
+        load();
+      });
+    },
+    requestWithoutLoading: (url, options = {}, maxRetry = 2, timeout = 5000) => {
+      return new Promise((resolve, reject) => {
+        let retryCount = 0;
+
+        const tryRequest = () => {
+          let timedOut = false;
+          const timer = setTimeout(() => {
+            timedOut = true;
+            if (++retryCount > maxRetry) reject('timeout');
+            else tryRequest();
+          }, timeout);
+
+          fetch(url, options)
+            .then(resp => {
+              clearTimeout(timer);
+              if (!resp.ok) throw new Error('bad response');
+              resolve(resp);
+            })
+            .catch(err => {
+              clearTimeout(timer);
+              if (++retryCount > maxRetry) reject(err);
+              else setTimeout(tryRequest, 500);
+            });
+        };
+
+        tryRequest();
+      });
+    },
+    /********************** requestAnimationFrame ********************************/
+    // 1、requestAnimationFrame 会把每一帧中的所有 DOM 操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
+    // 2、在隐藏或不可见的元素中，requestAnimationFrame 将不会进行重绘或回流，这当然就意味着更少的的 cpu，gpu 和内存使用量。
+    requestAnimationFrame: (fn) => {
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+      }
+      window.requestAnimationFrame(fn)
+    },
+    dark: {},
+  };
+
+  // utils.dark.mode 当前模式 dark or light
+  // utils.dark.toggle() 暗黑模式触发器
+  // utils.dark.push(callBack[,"callBackName"]) 传入触发器回调函数
+  utils.dark.method = {
+    toggle: new RunItem(),
+  };
+  utils.dark = Object.assign(utils.dark, {
+    push: utils.dark.method.toggle.push,
+  });
+</script>
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+<script async src="https://gcore.jsdelivr.net/npm/vanilla-lazyload@19.1/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+    callback_loaded: (el) => {
+      el.classList.add('loaded');
+      const wrapper = el.closest('.lazy-box');
+      const icon = wrapper?.querySelector('.lazy-icon');
+      if (icon) icon.remove();
+    }
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+
+  window.wrapLazyloadImages = (container) => {
+    if (typeof container === 'string') {
+      container = document.querySelector(container);
+    }
+    if (!container) return;
+    
+    const images = container.querySelectorAll('img');
+    images.forEach((img) => {
+      if (img.classList.contains('lazy')) return;
+
+      const src = img.getAttribute('src');
+      if (!src) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'lazy-box';
+
+      const newImg = img.cloneNode();
+      newImg.removeAttribute('src');
+      newImg.setAttribute('data-src', src);
+      newImg.classList.add('lazy');
+
+      const icon = document.createElement('div');
+      icon.className = 'lazy-icon';
+      if (def.loading) {
+        icon.style.backgroundImage = `url("${def.loading}")`;
+      }
+
+      wrapper.appendChild(newImg);
+      wrapper.appendChild(icon);
+
+      img.replaceWith(wrapper);
+    });
+
+    // 通知 LazyLoad 更新
+    if (window.lazyLoadInstance?.update) {
+      window.lazyLoadInstance.update();
+    }
+  }
+  
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.33.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    // applyThemeToGiscus(theme)
+  }
+
+  // FIXME: 这会导致无法使用 preferred_color_scheme 以外的主题
+  const applyThemeToGiscus = (theme) => {
+    // theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+    utils.dark.mode = newTheme === 'auto' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : newTheme;
+    utils.dark.method.toggle.start();
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    } else {
+      utils.dark.mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    utils.dark.method.toggle.start();
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"rating":{"js":"/js/services/rating.js","api":"https://star-vote.xaox.cc/api/rating"},"vote":{"js":"/js/services/vote.js","api":"https://star-vote.xaox.cc/api/vote"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"friends_and_posts":{"js":"/js/services/friends_and_posts.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"voice":{"js":"/js/plugins/voice.js"},"video":{"js":"/js/plugins/video.js"},"download-file":{"js":"/js/plugins/download-file.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"},"contributors":{"edit_this_page":{"_posts/":null,"wiki/stellar/":"https://github.com/xaoxuu/hexo-theme-stellar-docs/blob/main/"},"js":"/js/services/contributors.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else if (id == 'voice') {
+        ctx.voiceAudios = document.querySelectorAll('.voice>audio');
+        if (ctx.voiceAudios?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            createVoiceDom(ctx.voiceAudios);
+          });
+        }
+      } else if (id == 'video') {
+        ctx.videos = document.querySelectorAll('.video>video');
+        if (ctx.videos?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            videoEvents(ctx.videos);
+          });
+        }
+      } else if (id == 'download-file') {
+        ctx.files = document.querySelectorAll('.file');
+        if (ctx.files?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            downloadFileEvent(ctx.files);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+
+    // chat iphone time
+    let phoneTimes = document.querySelectorAll('.chat .status-bar .time');
+
+    if (phoneTimes.length > 0) {
+      NowTime();
+      var date = new Date();
+      var sec = date.getSeconds();
+      var firstAdjustInterval = setInterval(firstAdjustTime, 1000 * (60 - sec));
+    }
+
+    function firstAdjustTime() {
+      NowTime();
+      clearInterval(firstAdjustInterval);
+      setInterval(NowTime, 1000 * 60);
+    }
+
+    function NowTime() {
+      for (let i = 0; i < phoneTimes.length; ++i) {
+        var timeSpan = phoneTimes[i];
+        var date = new Date();
+        var hour = date.getHours();
+        var min = date.getMinutes();
+        timeSpan.innerHTML = check(hour) + ":" + check(min);
+      }
+    };
+
+    function check(val) {
+      if (val < 10) {
+        return ("0" + val);
+      }
+      return (val);
+    }
+
+    // chat quote
+    const chat_quote_obverser = new IntersectionObserver((entries, observer) => {
+      entries.filter((entry) => { return entry.isIntersecting }).sort((a, b) => a.intersectionRect.y !== b.intersectionRect.y ? a.intersectionRect.y - b.intersectionRect.y : a.intersectionRect.x - b.intersectionRect.x).forEach((entry, index) => {
+          observer.unobserve(entry.target);
+          setTimeout(() => {
+            entry.target.classList.add('quote-blink');
+            setTimeout(() => {
+              entry.target.classList.remove('quote-blink');
+            }, 1000);
+          }, Math.max(100, 16) * (index + 1));
+        });
+    });
+
+    var chatQuotes = document.querySelectorAll(".chat .talk .quote");
+    chatQuotes.forEach((quote) => {
+      quote.addEventListener('click', function () {
+        var chatCellDom = document.getElementById("quote-" + quote.getAttribute("quotedCellTag"));
+        if (chatCellDom) {
+          var chatDiv = chatCellDom.parentElement;
+          var mid = chatDiv.clientHeight / 2;
+          var offsetTop = chatCellDom.offsetTop;
+          if (offsetTop > mid - chatCellDom.clientHeight / 2) {
+            chatDiv.scrollTo({
+              top: chatCellDom.offsetTop - mid + chatCellDom.clientHeight / 2,
+              behavior: "smooth"
+            });
+          } else {
+            chatDiv.scrollTo({
+              top: 0,
+              behavior: "smooth"
+            });
+          }
+          chat_quote_obverser.observe(chatCellDom);
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://gcore.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error), .with-fancybox .atk-content img:not([atk-emoticon])';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const memos = document.getElementsByClassName('ds-memos');
+    if (memos != undefined && memos.length > 0) {
+      needFancybox = true;
+    }
+    const fancybox = document.getElementsByClassName('with-fancybox');
+    if (fancybox != undefined && fancybox.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>

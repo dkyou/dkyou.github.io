@@ -1,0 +1,943 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.33.1" theme-name="Stellar" theme-version="1.33.1">
+  
+  
+  <meta name="generator" content="Hexo 8.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  <title>通过platform实现LED设备驱动一些基础知识 - 又是摸鱼的一天</title>
+
+  
+    <meta name="description" content="通过platform实现LED设备驱动一些基础知识首先要知道一个字符设备驱动的流程为：分配file_operations结构体，设置file_operations结构体，注册file_operations结构体。具体来说就是：1.确定一个主设备号，2.定义自己的file_operations结构体，3.实现file_operations结构体中的open&#x2F;wirte&#x2F;read函">
+<meta property="og:type" content="article">
+<meta property="og:title" content="通过platform实现LED设备驱动一些基础知识">
+<meta property="og:url" content="https://dkyou.github.io/2025/08/18/platform%E7%9A%84LED%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86(%E6%9C%AA%E5%AE%8C%E6%88%90)/">
+<meta property="og:site_name" content="又是摸鱼的一天">
+<meta property="og:description" content="通过platform实现LED设备驱动一些基础知识首先要知道一个字符设备驱动的流程为：分配file_operations结构体，设置file_operations结构体，注册file_operations结构体。具体来说就是：1.确定一个主设备号，2.定义自己的file_operations结构体，3.实现file_operations结构体中的open&#x2F;wirte&#x2F;read函">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-08-17T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-11-02T15:17:08.161Z">
+<meta property="article:author" content="Dku">
+<meta property="article:tag" content="LED">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="platform">
+<meta name="twitter:card" content="summary">
+  
+  
+  
+  <meta name="keywords" content="linux,platform,LED">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.33.1">
+
+
+  
+
+  
+
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dku","sameAs":[]},"dateCreated":"2025-08-18T00:00:00+08:00","dateModified":"2025-11-02T23:17:08+08:00","datePublished":"2025-08-18T00:00:00+08:00","description":"","headline":"通过platform实现LED设备驱动一些基础知识","mainEntityOfPage":{"@type":"WebPage","@id":"https://dkyou.github.io/2025/08/18/platform%E7%9A%84LED%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86(%E6%9C%AA%E5%AE%8C%E6%88%90)/"},"publisher":{"@type":"Organization","name":"Dku","sameAs":[]},"url":"https://dkyou.github.io/2025/08/18/platform%E7%9A%84LED%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86(%E6%9C%AA%E5%AE%8C%E6%88%90)/","keywords":"linux, platform, LED","image":[]}</script>
+  
+</head>
+<body>
+
+<div class="l_body content" id="start" layout="post" type="tech" ><aside class="l_left"><div class="sidebg"></div><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大白鹅喝酒.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main">👀瞅啥呢！👀</div><div class="sub normal cap">今天又是摸鱼的一天！</div><div class="sub hover cap" style="opacity:0">可不摸鱼又干什么呢？</div></a></div></header>
+
+<div class="nav-area">
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+
+<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/18/git%20ssh%E5%A4%B1%E8%B4%A5/"><span class="title">git ssh失败</span></a><a class="item title" href="/2025/08/18/sys%20class/"><span class="title">Linux sys 虚拟文件系统分析</span></a><a class="item title" href="/2025/08/18/spi%E5%AD%90%E7%B3%BB%E7%BB%9Fdw%E6%8E%A7%E5%88%B6%E5%99%A8probe%E8%BF%87%E7%A8%8B/"><span class="title">dw-spi-mmio控制器驱动</span></a><a class="item title" href="/2025/08/18/SPI%E6%97%B6%E5%BA%8F%E7%90%86%E8%A7%A3/"><span class="title">SPI时序理解</span></a><a class="item title" href="/2025/08/18/platformbus%E5%8F%8A%E5%85%B6%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90/"><span class="title">platformbus及其初始化过程分析</span></a><a class="item title" href="/2025/08/18/platform%E6%80%BB%E7%BA%BF%E5%8C%B9%E9%85%8D%E6%96%B9%E5%BC%8F/"><span class="title">platform总线匹配方式</span></a><a class="item title" href="/2025/08/18/platform%E7%9A%84LED%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86(%E6%9C%AA%E5%AE%8C%E6%88%90)/"><span class="title">通过platform实现LED设备驱动一些基础知识</span></a><a class="item title" href="/2025/08/18/platform_device%E7%9A%84%E4%B8%80%E7%AF%87%E7%9F%A5%E4%B9%8E%E8%A7%A3%E6%9E%90/"><span class="title">platform_device的一篇知乎解析</span></a><a class="item title" href="/2025/08/18/linuxmain/"><span class="title">Linux启动分析</span></a><a class="item title" href="/2025/08/18/imx6ull%E5%90%AF%E5%8A%A8%E6%97%A5%E5%BF%97/"><span class="title">imx6ull启动日志分析</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E9%A9%B1%E5%8A%A8/">驱动</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-08-17T16:00:00.000Z">2025-08-18</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-11-02T15:17:08.161Z">2025-11-02</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>通过platform实现LED设备驱动一些基础知识</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h1 id="通过platform实现LED设备驱动一些基础知识"><a href="#通过platform实现LED设备驱动一些基础知识" class="headerlink" title="通过platform实现LED设备驱动一些基础知识"></a>通过platform实现LED设备驱动一些基础知识</h1><p>首先要知道一个字符设备驱动的流程为：分配file_operations结构体，设置file_operations结构体，注册file_operations结构体。具体来说就是：1.确定一个主设备号，2.定义自己的file_operations结构体，3.实现file_operations结构体中的open&#x2F;wirte&#x2F;read函数，4.把file_operations结构体告诉内核，即注册file_operations结构体，5.实现入口函数，在这个入口函数中注册file_operations结构体。</p>
+<h3 id="首先要区分：设备号-devid-，主设备号-major-，次设备号-minor"><a href="#首先要区分：设备号-devid-，主设备号-major-，次设备号-minor" class="headerlink" title="首先要区分：设备号(devid)，主设备号(major)，次设备号(minor)"></a>首先要区分：设备号(devid)，主设备号(major)，次设备号(minor)</h3><p>主设备号：用于标识不同的驱动程序</p>
+<p>次设备号：用于区分同一主设备号下的不同设备实例。</p>
+<p>设备号：内核设备的唯一标识符。是主设备号和次设备号的组合，通过<code>MKDEV(major,minor)</code>宏生成。</p>
+<h4 id="三者之间的关系："><a href="#三者之间的关系：" class="headerlink" title="三者之间的关系："></a>三者之间的关系：</h4><ol>
+<li>设备号<code>devid</code>通过<code>devid=MKDEV(marjor,minor)</code>获得</li>
+<li>主设备号<code>major</code>通过<code>marjor=MAJOR(devid)</code>获得</li>
+<li>次设备号<code>minor</code>通过<code>minor=MINOR(devid)</code>获得</li>
+</ol>
+<h4 id="举例1：动态分配设备号"><a href="#举例1：动态分配设备号" class="headerlink" title="举例1：动态分配设备号"></a>举例1：动态分配设备号</h4><ol>
+<li>通过alloc_chrdev_region获得设备号，使用MAJOR和MINOR得到主设备号major和次设备号MINOR</li>
+<li>class_create会在&#x2F;sys&#x2F;class&#x2F;下创建一个名为“GPIO_NAME”的类</li>
+<li>根据设备号devid，通过device_create()创建GPIOLED_NAME设备 。会在&#x2F;sys&#x2F;class&#x2F;GPIO_NAME的类下面再创建一个名为GPIO_NAME的设备节点。同样该节点在&#x2F;dev&#x2F;GPIO_NAME中，应用程序可以open打开这个设备</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">alloc_chrdev_region(&amp;gpioled.devid, <span class="number">0</span>, GPIOLED_CNT, GPIOLED_NAME);</span><br><span class="line">gpioled.major = MAJOR(gpioled.devid);</span><br><span class="line">gpioled.minor = MINOR(gpioled.devid);</span><br><span class="line">...</span><br><span class="line"><span class="comment">/* 4、创建类 */</span></span><br><span class="line">gpioled.class = class_create(THIS_MODULE, GPIOLED_NAME);</span><br><span class="line"><span class="comment">/* 5,创建设备  */</span></span><br><span class="line">gpioled.device = device_create(gpioled.class, <span class="literal">NULL</span>, gpioled.devid, <span class="literal">NULL</span>, GPIOLED_NAME);</span><br></pre></td></tr></table></figure>
+
+<h4 id="举例2：分配设备号"><a href="#举例2：分配设备号" class="headerlink" title="举例2：分配设备号"></a>举例2：分配设备号</h4><ol>
+<li>通过register_chrdev注册lfile_operation结构体，得到主设备号</li>
+<li>再使用MKDEV(major,i)得到设备号devid，根据devid创建100ask_led0等设备</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">major = register_chrdev(<span class="number">0</span>, <span class="string">&quot;100ask_led&quot;</span>, &amp;led_drv);  <span class="comment">/* /dev/100ask_led */</span></span><br><span class="line">led_class = class_create(THIS_MODULE, <span class="string">&quot;100ask_led_class&quot;</span>);</span><br><span class="line"><span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; LED_NUM; i++)</span><br><span class="line">device_create(led_class, <span class="literal">NULL</span>, MKDEV(major, i), <span class="literal">NULL</span>, <span class="string">&quot;100ask_led%d&quot;</span>, i); <span class="comment">/* /dev/100ask_led0,1,... */</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="再来看下如何分配设备号："><a href="#再来看下如何分配设备号：" class="headerlink" title="再来看下如何分配设备号："></a>再来看下如何分配设备号：</h3><p>设备号的分配可以分为动态分配和静态分配。</p>
+<h4 id="静态分配函数原型："><a href="#静态分配函数原型：" class="headerlink" title="静态分配函数原型："></a>静态分配函数原型：</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">int</span> <span class="title function_">regiser_chrdev</span><span class="params">(<span class="type">unsigned</span> <span class="type">int</span> major,<span class="type">const</span> <span class="type">char</span> *name,<span class="type">const</span> <span class="keyword">struct</span> file_operations* fops)</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="使用示例："><a href="#使用示例：" class="headerlink" title="使用示例："></a>使用示例：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">major = register_chrdev(<span class="number">0</span>, <span class="string">&quot;100ask_led&quot;</span>, &amp;led_drv);</span><br></pre></td></tr></table></figure>
+
+<h5 id="参数："><a href="#参数：" class="headerlink" title="参数："></a>参数：</h5><ul>
+<li>major:主设备号，一般为0，让系统自动分配一个未使用的主设备号</li>
+<li>name:名字，可以通过cat &#x2F;proc&#x2F;devices查看</li>
+<li>fops:需要注册的file_operations结构体</li>
+</ul>
+<p>返回值：成功则返回主设备号</p>
+<h4 id="动态分配函数原型："><a href="#动态分配函数原型：" class="headerlink" title="动态分配函数原型："></a>动态分配函数原型：</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">alloc_chrdev_region</span><span class="params">(<span class="type">dev_t</span> *dev, <span class="type">unsigned</span> baseminor, <span class="type">unsigned</span> count, <span class="type">const</span> <span class="type">char</span> *name)</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="使用示例：-1"><a href="#使用示例：-1" class="headerlink" title="使用示例："></a>使用示例：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alloc_chrdev_region(&amp;gpioled.devid, <span class="number">0</span>, GPIOLED_CNT, GPIOLED_NAME);</span><br></pre></td></tr></table></figure>
+
+<h5 id="参数：-1"><a href="#参数：-1" class="headerlink" title="参数："></a>参数：</h5><ul>
+<li>dev:用于保存申请到的设备号，dev_t为unsigned int 类型数据</li>
+<li>baseminor:次设备号的起始地址，一般为0表示次设备号从0开始</li>
+<li>count:需要申请的设备号数量，一般为1</li>
+<li>name:设备名字，同register_chrdev一样，可以在&#x2F;proc&#x2F;devices查看</li>
+</ul>
+<h5 id="返回值："><a href="#返回值：" class="headerlink" title="返回值："></a>返回值：</h5><ul>
+<li>成功返回</li>
+</ul>
+<h4 id="如果给定了设备的主设备号和次设备号，使用register-chrdev-region"><a href="#如果给定了设备的主设备号和次设备号，使用register-chrdev-region" class="headerlink" title="如果给定了设备的主设备号和次设备号，使用register_chrdev_region"></a>如果给定了设备的主设备号和次设备号，使用register_chrdev_region</h4><h5 id="函数原型："><a href="#函数原型：" class="headerlink" title="函数原型："></a>函数原型：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">register_chrdev_region</span><span class="params">(<span class="type">dev_t</span> from, <span class="type">unsigned</span> count, <span class="type">const</span> <span class="type">char</span> *name)</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="动态分配设备号下注册字符设备驱动"><a href="#动态分配设备号下注册字符设备驱动" class="headerlink" title="动态分配设备号下注册字符设备驱动"></a>动态分配设备号下注册字符设备驱动</h3><p>静态分配不仅分配了设备号，还直接完成了字符设备file_operations的注册，但是会占据主设备号下面的所有次设备号。</p>
+<p>动态分配仅仅分配了字符设备的设备号(devid)，需要配合cdev_init和cdev_add将设备和文件操作绑定。在分析cdev_init和cdev_add之前，先来看看cdev结构体有哪些成员</p>
+<h4 id="cdev结构体："><a href="#cdev结构体：" class="headerlink" title="cdev结构体："></a>cdev结构体：</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">cdev</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">kobject</span> <span class="title">kobj</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">module</span> *<span class="title">owner</span>;</span></span><br><span class="line">	<span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> *<span class="title">ops</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">list</span>;</span></span><br><span class="line">	<span class="type">dev_t</span> dev;			<span class="comment">//设备号</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> count;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>其中dev_t dev就是设备号，file_operations *ops就是最重要的那个设备文件操作结构体指针，一般包括以下内容，这里仅作为示例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> <span class="title">led_fops</span> =</span> &#123;</span><br><span class="line">    .owner		=	THIS_MODULE,</span><br><span class="line">	.write		=	led_write,</span><br><span class="line">	.open		=	led_open,</span><br><span class="line">	.release	=	led_release,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h4 id="cdev-init"><a href="#cdev-init" class="headerlink" title="cdev_init"></a>cdev_init</h4><p>定义好cdev变量之后，cdev_add用于向Linux系统添加字符设备(cdev结构体)，但在使用cdev_add之前需要先对cdev结构体变量进行初始化，cdev_init函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">cdev_init</span><span class="params">(<span class="keyword">struct</span> cdev* cdev,<span class="type">const</span> <span class="keyword">struct</span> file_operations *fops)</span></span><br></pre></td></tr></table></figure>
+
+<p>参考示例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cdev_init(&amp;gpioled.cdev, &amp;led_fops);</span><br></pre></td></tr></table></figure>
+
+<p>参数：</p>
+<ul>
+<li>cdev:cdev就是要进行初始化的cdev结构体变量</li>
+<li>fops:就是我们一直提到的file_operations结构体，通过cdev_init将cdev和file_operations绑定</li>
+</ul>
+<h4 id="cdev-add"><a href="#cdev-add" class="headerlink" title="cdev_add"></a>cdev_add</h4><p>对cdev初始化之后就可以通过cdev_add向linux系统中添加这个字符设备。cdev_add原型为：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">cdev_add</span><span class="params">(<span class="keyword">struct</span> cdev *p,<span class="type">dev_t</span> dev,<span class="type">unsigned</span> count)</span></span><br></pre></td></tr></table></figure>
+
+<p>参考示例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cdev_add(&amp;gpioled.cdev, gpioled.devid, GPIOLED_CNT);</span><br></pre></td></tr></table></figure>
+
+<p>参数：</p>
+<ul>
+<li>p:指向cdev指针</li>
+<li>dev:显示传入的设备号，应该会将devid(通过alloc_chrdev_region)保存到cdev-&gt;dev(设备号)中</li>
+<li>count:要添加的设备的数量</li>
+</ul>
+<p>以上便实现了一个字符设备驱动的大部分内容了：包括确定主设备号(动态分配和静态分配)，定义自己的file_operations结构体，3.实现file_operations结构体中的open&#x2F;wirte&#x2F;read函数(没写出细节)，4.把file_operations结构体告诉内核，即注册file_operations结构体(静态注册register_chrdev，cdev_add)，5.实现入口函数(实际上上述所有案例代码都位于init函数或者probe函数中)</p>
+<p>设备树</p>
+<ol>
+<li>在根节点下创建gpioled</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">gpioled &#123;</span><br><span class="line"> 18         #address-cells = &lt;1&gt;;</span><br><span class="line"> 19         #size-cells = &lt;1&gt;;</span><br><span class="line"> 20         compatible = &quot;atkalpha-gpioled&quot;;</span><br><span class="line"> 21         pinctrl-names = &quot;default&quot;;</span><br><span class="line"> 22         pinctrl-0 = &lt;&amp;pinctrl_leds&gt;;</span><br><span class="line"> 23         led-gpio = &lt;&amp;gpio5 3 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line"> 24         status = &quot;okay&quot;;</span><br><span class="line"> 25      &#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+<ol start="2">
+<li>在imx6ul-evk下创建pinctrl_leds节点</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">pinctrl_leds: ledgrp &#123;</span><br><span class="line">738             fsl,pins = &lt;</span><br><span class="line">739                   MX6ULL_PAD_SNVS_TAMPER3__GPIO5_IO03        0x000110A0</span><br><span class="line">740             &gt;;</span><br><span class="line">741         &#125;;</span><br></pre></td></tr></table></figure>
+
+<p>看几个重要的结构体</p>
+<p>cdev再看一遍，实际上只用到了owner，其他暂时未用到</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">cdev</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">kobject</span> <span class="title">kobj</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">module</span> *<span class="title">owner</span>;</span></span><br><span class="line">	<span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> *<span class="title">ops</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">list</span>;</span></span><br><span class="line">	<span class="type">dev_t</span> dev;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> count;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>再看class这个庞大的结构体,反正就是通过gpioled.class &#x3D; class_create(THIS_MODULE, GPIOLED_NAME);创建了一个类，啥也没设置，类下边有很多的成员，同样也有owner name啥的。在class结构体前，可以看到这样的一句话：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">* A <span class="class"><span class="keyword">class</span> <span class="title">is</span> <span class="title">a</span> <span class="title">higher</span>-<span class="title">level</span> <span class="title">view</span> <span class="title">of</span> <span class="title">a</span> <span class="title">device</span> <span class="title">that</span> <span class="title">abstracts</span> <span class="title">out</span> <span class="title">low</span>-<span class="title">level</span></span></span><br><span class="line"><span class="class">* <span class="title">implementation</span> <span class="title">details</span>. <span class="title">Drivers</span> <span class="title">may</span> <span class="title">see</span> <span class="title">a</span> <span class="title">SCSI</span> <span class="title">disk</span> <span class="title">or</span> <span class="title">an</span> <span class="title">ATA</span> <span class="title">disk</span>, <span class="title">but</span>,</span></span><br><span class="line"><span class="class">* <span class="title">at</span> <span class="title">the</span> <span class="keyword">class</span> <span class="title">level</span>, <span class="title">they</span> <span class="title">are</span> <span class="title">all</span> <span class="title">simply</span> <span class="title">disks</span>. <span class="title">Classes</span> <span class="title">allow</span> <span class="title">user</span> <span class="title">space</span></span></span><br><span class="line"><span class="class">* <span class="title">to</span> <span class="title">work</span> <span class="title">with</span> <span class="title">devices</span> <span class="title">based</span> <span class="title">on</span> <span class="title">what</span> <span class="title">they</span> <span class="title">do</span>, <span class="title">rather</span> <span class="title">than</span> <span class="title">how</span> <span class="title">they</span> <span class="title">are</span></span></span><br><span class="line"><span class="class">* <span class="title">connected</span> <span class="title">or</span> <span class="title">how</span> <span class="title">they</span> <span class="title">work</span>.</span></span><br></pre></td></tr></table></figure>
+
+<p>翻译过来大概就是：类是设备的更高的视角，类抽象出了低层次的实现细节。比如，驱动程序会区分SCSI磁盘和ATA磁盘，但是在类看来，他们都是简单的磁盘。类允许用户空间根据他们的功能进行使用，而不是设备的连接方式和工作方式。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="keyword">class</span> &#123;</span></span><br><span class="line">	<span class="type">const</span> <span class="type">char</span>		*name;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">module</span>		*<span class="title">owner</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">class_attribute</span>		*<span class="title">class_attrs</span>;</span></span><br><span class="line">	<span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">attribute_group</span>	**<span class="title">dev_groups</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">kobject</span>			*<span class="title">dev_kobj</span>;</span></span><br><span class="line">...省略一些函数</span><br><span class="line">	<span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">dev_pm_ops</span> *<span class="title">pm</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">subsys_private</span> *<span class="title">p</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>device结构体也是一个庞大的结构体，gpioled.device &#x3D; device_create(gpioled.class, NULL, gpioled.devid, NULL, GPIOLED_NAME);</p>
+<p>platform_device结构体</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">struct platform_device &#123;</span><br><span class="line">	const char	*name;//会在/sys/devices/platform/name中表现出来</span><br><span class="line">	int		id;</span><br><span class="line">	bool		id_auto;</span><br><span class="line">	struct device	dev;</span><br><span class="line">	u32		num_resources;</span><br><span class="line">	struct resource	*resource;</span><br><span class="line"></span><br><span class="line">	const struct platform_device_id	*id_entry;</span><br><span class="line">	char *driver_override; /* Driver name to force a match */</span><br><span class="line"></span><br><span class="line">	/* MFD cell pointer */</span><br><span class="line">	struct mfd_cell *mfd_cell;</span><br><span class="line"></span><br><span class="line">	/* arch specific additions */</span><br><span class="line">	struct pdev_archdata	archdata;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>platform_driver -&gt; device_driver-&gt;</p>
+<p>&#x2F;&#x2F;&#x2F;代码源码在nfs_rootfs&#x2F;myled_driver目录下</p>
+</article>
+<div class="article-footer">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    
+
+</div>
+
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2025/08/18/imx6ull%E5%90%AF%E5%8A%A8%E6%97%A5%E5%BF%97/">imx6ull启动日志分析</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/08/18/sys%20class/">Linux sys 虚拟文件系统分析</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Dku</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.33.1">Stellar 1.33.1</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%80%9A%E8%BF%87platform%E5%AE%9E%E7%8E%B0LED%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86"><span class="toc-text">通过platform实现LED设备驱动一些基础知识</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A6%96%E5%85%88%E8%A6%81%E5%8C%BA%E5%88%86%EF%BC%9A%E8%AE%BE%E5%A4%87%E5%8F%B7-devid-%EF%BC%8C%E4%B8%BB%E8%AE%BE%E5%A4%87%E5%8F%B7-major-%EF%BC%8C%E6%AC%A1%E8%AE%BE%E5%A4%87%E5%8F%B7-minor"><span class="toc-text">首先要区分：设备号(devid)，主设备号(major)，次设备号(minor)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%89%E8%80%85%E4%B9%8B%E9%97%B4%E7%9A%84%E5%85%B3%E7%B3%BB%EF%BC%9A"><span class="toc-text">三者之间的关系：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%BE%E4%BE%8B1%EF%BC%9A%E5%8A%A8%E6%80%81%E5%88%86%E9%85%8D%E8%AE%BE%E5%A4%87%E5%8F%B7"><span class="toc-text">举例1：动态分配设备号</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%BE%E4%BE%8B2%EF%BC%9A%E5%88%86%E9%85%8D%E8%AE%BE%E5%A4%87%E5%8F%B7"><span class="toc-text">举例2：分配设备号</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%8D%E6%9D%A5%E7%9C%8B%E4%B8%8B%E5%A6%82%E4%BD%95%E5%88%86%E9%85%8D%E8%AE%BE%E5%A4%87%E5%8F%B7%EF%BC%9A"><span class="toc-text">再来看下如何分配设备号：</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%9D%99%E6%80%81%E5%88%86%E9%85%8D%E5%87%BD%E6%95%B0%E5%8E%9F%E5%9E%8B%EF%BC%9A"><span class="toc-text">静态分配函数原型：</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B%EF%BC%9A"><span class="toc-text">使用示例：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%8F%82%E6%95%B0%EF%BC%9A"><span class="toc-text">参数：</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8A%A8%E6%80%81%E5%88%86%E9%85%8D%E5%87%BD%E6%95%B0%E5%8E%9F%E5%9E%8B%EF%BC%9A"><span class="toc-text">动态分配函数原型：</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B%EF%BC%9A-1"><span class="toc-text">使用示例：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%8F%82%E6%95%B0%EF%BC%9A-1"><span class="toc-text">参数：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E8%BF%94%E5%9B%9E%E5%80%BC%EF%BC%9A"><span class="toc-text">返回值：</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A6%82%E6%9E%9C%E7%BB%99%E5%AE%9A%E4%BA%86%E8%AE%BE%E5%A4%87%E7%9A%84%E4%B8%BB%E8%AE%BE%E5%A4%87%E5%8F%B7%E5%92%8C%E6%AC%A1%E8%AE%BE%E5%A4%87%E5%8F%B7%EF%BC%8C%E4%BD%BF%E7%94%A8register-chrdev-region"><span class="toc-text">如果给定了设备的主设备号和次设备号，使用register_chrdev_region</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%87%BD%E6%95%B0%E5%8E%9F%E5%9E%8B%EF%BC%9A"><span class="toc-text">函数原型：</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8A%A8%E6%80%81%E5%88%86%E9%85%8D%E8%AE%BE%E5%A4%87%E5%8F%B7%E4%B8%8B%E6%B3%A8%E5%86%8C%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8"><span class="toc-text">动态分配设备号下注册字符设备驱动</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#cdev%E7%BB%93%E6%9E%84%E4%BD%93%EF%BC%9A"><span class="toc-text">cdev结构体：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#cdev-init"><span class="toc-text">cdev_init</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#cdev-add"><span class="toc-text">cdev_add</span></a></li></ol></li></ol></li></ol></div><div class="widget-footer"><a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/><path d="M7 3.338A9.95 9.95 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+
+
+<script type="text/javascript">
+  window.canonical = {"originalHost":null,"officialHosts":["localhost"],"encoded":""};
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+    tag_plugins: {
+      chat: Object.assign({"api":"https://siteinfo.listentothewind.cn/api/v1"}),
+    }
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":null,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+    loading: `https://api.iconify.design/eos-icons:three-dots-loading.svg?color=%231cd0fd`,
+  };
+  const deps = {
+    jquery: `https://gcore.jsdelivr.net/npm/jquery@3.7/dist/jquery.min.js`,
+    marked: `https://gcore.jsdelivr.net/npm/marked@13.0/lib/marked.umd.min.js`,
+    lazyload: `/%5Bobject%20Object%5D`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  
+  function RunItem() {
+    this.list = []; // 存放回调函数
+    this.start = () => {
+      for (var i = 0; i < this.list.length; i++) {
+        this.list[i].run();
+      }
+    };
+    this.push = (fn, name, setRequestAnimationFrame = true) => {
+      let myfn = fn
+      if (setRequestAnimationFrame) {
+        myfn = () => {
+          utils.requestAnimationFrame(fn)
+        }
+      }
+      var f = new Item(myfn, name);
+      this.list.push(f);
+    };
+    this.remove = (name) => {
+      for (let index = 0; index < this.list.length; index++) {
+        const e = this.list[index];
+        if (e.name == name) {
+          this.list.splice(index, 1);
+        }
+      }
+    }
+    // 构造一个可以run的对象
+    function Item(fn, name) {
+      // 函数名称
+      this.name = name || fn.name;
+      // run方法
+      this.run = () => {
+        try {
+          fn()
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    }
+  }
+
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')) {
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function () {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      const maxRetry = 3;
+      let retryCount = 0;
+
+      return new Promise((resolve, reject) => {
+        const load = () => {
+          utils.onLoading?.(el);
+
+          let timedOut = false;
+          const timeout = setTimeout(() => {
+            timedOut = true;
+            console.warn('[request] 超时:', url);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject('请求超时');
+            } else {
+              setTimeout(load, 1000);
+            }
+          }, 5000);
+
+          fetch(url).then(resp => {
+            if (timedOut) return;
+            clearTimeout(timeout);
+
+            if (!resp.ok) throw new Error('响应失败');
+            return resp;
+          }).then(data => {
+            if (timedOut) return;
+            utils.onLoadSuccess?.(el);
+            callback(data);
+            resolve(data);
+          }).catch(err => {
+            clearTimeout(timeout);
+            console.warn('[request] 错误:', err);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject(err);
+            } else {
+              setTimeout(load, 1000);
+            }
+          });
+        };
+
+        load();
+      });
+    },
+    requestWithoutLoading: (url, options = {}, maxRetry = 2, timeout = 5000) => {
+      return new Promise((resolve, reject) => {
+        let retryCount = 0;
+
+        const tryRequest = () => {
+          let timedOut = false;
+          const timer = setTimeout(() => {
+            timedOut = true;
+            if (++retryCount > maxRetry) reject('timeout');
+            else tryRequest();
+          }, timeout);
+
+          fetch(url, options)
+            .then(resp => {
+              clearTimeout(timer);
+              if (!resp.ok) throw new Error('bad response');
+              resolve(resp);
+            })
+            .catch(err => {
+              clearTimeout(timer);
+              if (++retryCount > maxRetry) reject(err);
+              else setTimeout(tryRequest, 500);
+            });
+        };
+
+        tryRequest();
+      });
+    },
+    /********************** requestAnimationFrame ********************************/
+    // 1、requestAnimationFrame 会把每一帧中的所有 DOM 操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
+    // 2、在隐藏或不可见的元素中，requestAnimationFrame 将不会进行重绘或回流，这当然就意味着更少的的 cpu，gpu 和内存使用量。
+    requestAnimationFrame: (fn) => {
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+      }
+      window.requestAnimationFrame(fn)
+    },
+    dark: {},
+  };
+
+  // utils.dark.mode 当前模式 dark or light
+  // utils.dark.toggle() 暗黑模式触发器
+  // utils.dark.push(callBack[,"callBackName"]) 传入触发器回调函数
+  utils.dark.method = {
+    toggle: new RunItem(),
+  };
+  utils.dark = Object.assign(utils.dark, {
+    push: utils.dark.method.toggle.push,
+  });
+</script>
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+<script async src="https://gcore.jsdelivr.net/npm/vanilla-lazyload@19.1/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+    callback_loaded: (el) => {
+      el.classList.add('loaded');
+      const wrapper = el.closest('.lazy-box');
+      const icon = wrapper?.querySelector('.lazy-icon');
+      if (icon) icon.remove();
+    }
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+
+  window.wrapLazyloadImages = (container) => {
+    if (typeof container === 'string') {
+      container = document.querySelector(container);
+    }
+    if (!container) return;
+    
+    const images = container.querySelectorAll('img');
+    images.forEach((img) => {
+      if (img.classList.contains('lazy')) return;
+
+      const src = img.getAttribute('src');
+      if (!src) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'lazy-box';
+
+      const newImg = img.cloneNode();
+      newImg.removeAttribute('src');
+      newImg.setAttribute('data-src', src);
+      newImg.classList.add('lazy');
+
+      const icon = document.createElement('div');
+      icon.className = 'lazy-icon';
+      if (def.loading) {
+        icon.style.backgroundImage = `url("${def.loading}")`;
+      }
+
+      wrapper.appendChild(newImg);
+      wrapper.appendChild(icon);
+
+      img.replaceWith(wrapper);
+    });
+
+    // 通知 LazyLoad 更新
+    if (window.lazyLoadInstance?.update) {
+      window.lazyLoadInstance.update();
+    }
+  }
+  
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.33.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    // applyThemeToGiscus(theme)
+  }
+
+  // FIXME: 这会导致无法使用 preferred_color_scheme 以外的主题
+  const applyThemeToGiscus = (theme) => {
+    // theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+    utils.dark.mode = newTheme === 'auto' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : newTheme;
+    utils.dark.method.toggle.start();
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    } else {
+      utils.dark.mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    utils.dark.method.toggle.start();
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"rating":{"js":"/js/services/rating.js","api":"https://star-vote.xaox.cc/api/rating"},"vote":{"js":"/js/services/vote.js","api":"https://star-vote.xaox.cc/api/vote"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"friends_and_posts":{"js":"/js/services/friends_and_posts.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"voice":{"js":"/js/plugins/voice.js"},"video":{"js":"/js/plugins/video.js"},"download-file":{"js":"/js/plugins/download-file.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"},"contributors":{"edit_this_page":{"_posts/":null,"wiki/stellar/":"https://github.com/xaoxuu/hexo-theme-stellar-docs/blob/main/"},"js":"/js/services/contributors.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else if (id == 'voice') {
+        ctx.voiceAudios = document.querySelectorAll('.voice>audio');
+        if (ctx.voiceAudios?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            createVoiceDom(ctx.voiceAudios);
+          });
+        }
+      } else if (id == 'video') {
+        ctx.videos = document.querySelectorAll('.video>video');
+        if (ctx.videos?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            videoEvents(ctx.videos);
+          });
+        }
+      } else if (id == 'download-file') {
+        ctx.files = document.querySelectorAll('.file');
+        if (ctx.files?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            downloadFileEvent(ctx.files);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+
+    // chat iphone time
+    let phoneTimes = document.querySelectorAll('.chat .status-bar .time');
+
+    if (phoneTimes.length > 0) {
+      NowTime();
+      var date = new Date();
+      var sec = date.getSeconds();
+      var firstAdjustInterval = setInterval(firstAdjustTime, 1000 * (60 - sec));
+    }
+
+    function firstAdjustTime() {
+      NowTime();
+      clearInterval(firstAdjustInterval);
+      setInterval(NowTime, 1000 * 60);
+    }
+
+    function NowTime() {
+      for (let i = 0; i < phoneTimes.length; ++i) {
+        var timeSpan = phoneTimes[i];
+        var date = new Date();
+        var hour = date.getHours();
+        var min = date.getMinutes();
+        timeSpan.innerHTML = check(hour) + ":" + check(min);
+      }
+    };
+
+    function check(val) {
+      if (val < 10) {
+        return ("0" + val);
+      }
+      return (val);
+    }
+
+    // chat quote
+    const chat_quote_obverser = new IntersectionObserver((entries, observer) => {
+      entries.filter((entry) => { return entry.isIntersecting }).sort((a, b) => a.intersectionRect.y !== b.intersectionRect.y ? a.intersectionRect.y - b.intersectionRect.y : a.intersectionRect.x - b.intersectionRect.x).forEach((entry, index) => {
+          observer.unobserve(entry.target);
+          setTimeout(() => {
+            entry.target.classList.add('quote-blink');
+            setTimeout(() => {
+              entry.target.classList.remove('quote-blink');
+            }, 1000);
+          }, Math.max(100, 16) * (index + 1));
+        });
+    });
+
+    var chatQuotes = document.querySelectorAll(".chat .talk .quote");
+    chatQuotes.forEach((quote) => {
+      quote.addEventListener('click', function () {
+        var chatCellDom = document.getElementById("quote-" + quote.getAttribute("quotedCellTag"));
+        if (chatCellDom) {
+          var chatDiv = chatCellDom.parentElement;
+          var mid = chatDiv.clientHeight / 2;
+          var offsetTop = chatCellDom.offsetTop;
+          if (offsetTop > mid - chatCellDom.clientHeight / 2) {
+            chatDiv.scrollTo({
+              top: chatCellDom.offsetTop - mid + chatCellDom.clientHeight / 2,
+              behavior: "smooth"
+            });
+          } else {
+            chatDiv.scrollTo({
+              top: 0,
+              behavior: "smooth"
+            });
+          }
+          chat_quote_obverser.observe(chatCellDom);
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://gcore.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error), .with-fancybox .atk-content img:not([atk-emoticon])';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const memos = document.getElementsByClassName('ds-memos');
+    if (memos != undefined && memos.length > 0) {
+      needFancybox = true;
+    }
+    const fancybox = document.getElementsByClassName('with-fancybox');
+    if (fancybox != undefined && fancybox.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>

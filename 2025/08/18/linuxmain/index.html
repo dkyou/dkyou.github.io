@@ -1,0 +1,1006 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.33.1" theme-name="Stellar" theme-version="1.33.1">
+  
+  
+  <meta name="generator" content="Hexo 8.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  <title>Linux启动分析 - 又是摸鱼的一天</title>
+
+  
+    <meta name="description" content="这几天一直在纠结： main函数是程序的入口，一个程序启动后，经过bootloader的初始化就该经main函数进入C语言的世界，但是linux中每个应用程序的开始都是从main函数开始的。linux下有多个应用程序，岂不是有很多个main。那bootloader会知道跳到哪个main？多个main编译怎么不冲突？ 在网上搜索了很久，渐渐的有些明白了： 1、main函数是C语言的入口，这句话没错；">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux启动分析">
+<meta property="og:url" content="https://dkyou.github.io/2025/08/18/linuxmain/">
+<meta property="og:site_name" content="又是摸鱼的一天">
+<meta property="og:description" content="这几天一直在纠结： main函数是程序的入口，一个程序启动后，经过bootloader的初始化就该经main函数进入C语言的世界，但是linux中每个应用程序的开始都是从main函数开始的。linux下有多个应用程序，岂不是有很多个main。那bootloader会知道跳到哪个main？多个main编译怎么不冲突？ 在网上搜索了很久，渐渐的有些明白了： 1、main函数是C语言的入口，这句话没错；">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-08-17T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-11-02T15:16:00.904Z">
+<meta property="article:author" content="Dku">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="启动">
+<meta name="twitter:card" content="summary">
+  
+  
+  
+  <meta name="keywords" content="linux,启动">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.33.1">
+
+
+  
+
+  
+
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dku","sameAs":[]},"dateCreated":"2025-08-18T00:00:00+08:00","dateModified":"2025-11-02T23:16:00+08:00","datePublished":"2025-08-18T00:00:00+08:00","description":"","headline":"Linux启动分析","mainEntityOfPage":{"@type":"WebPage","@id":"https://dkyou.github.io/2025/08/18/linuxmain/"},"publisher":{"@type":"Organization","name":"Dku","sameAs":[]},"url":"https://dkyou.github.io/2025/08/18/linuxmain/","keywords":"linux, 启动","image":[]}</script>
+  
+</head>
+<body>
+
+<div class="l_body content" id="start" layout="post" type="tech" ><aside class="l_left"><div class="sidebg"></div><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大白鹅喝酒.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main">👀瞅啥呢！👀</div><div class="sub normal cap">今天又是摸鱼的一天！</div><div class="sub hover cap" style="opacity:0">可不摸鱼又干什么呢？</div></a></div></header>
+
+<div class="nav-area">
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+
+<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/18/git%20ssh%E5%A4%B1%E8%B4%A5/"><span class="title">git ssh失败</span></a><a class="item title" href="/2025/08/18/sys%20class/"><span class="title">Linux sys 虚拟文件系统分析</span></a><a class="item title" href="/2025/08/18/spi%E5%AD%90%E7%B3%BB%E7%BB%9Fdw%E6%8E%A7%E5%88%B6%E5%99%A8probe%E8%BF%87%E7%A8%8B/"><span class="title">dw-spi-mmio控制器驱动</span></a><a class="item title" href="/2025/08/18/SPI%E6%97%B6%E5%BA%8F%E7%90%86%E8%A7%A3/"><span class="title">SPI时序理解</span></a><a class="item title" href="/2025/08/18/platformbus%E5%8F%8A%E5%85%B6%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90/"><span class="title">platformbus及其初始化过程分析</span></a><a class="item title" href="/2025/08/18/platform%E6%80%BB%E7%BA%BF%E5%8C%B9%E9%85%8D%E6%96%B9%E5%BC%8F/"><span class="title">platform总线匹配方式</span></a><a class="item title" href="/2025/08/18/platform%E7%9A%84LED%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86(%E6%9C%AA%E5%AE%8C%E6%88%90)/"><span class="title">通过platform实现LED设备驱动一些基础知识</span></a><a class="item title" href="/2025/08/18/platform_device%E7%9A%84%E4%B8%80%E7%AF%87%E7%9F%A5%E4%B9%8E%E8%A7%A3%E6%9E%90/"><span class="title">platform_device的一篇知乎解析</span></a><a class="item title" href="/2025/08/18/linuxmain/"><span class="title">Linux启动分析</span></a><a class="item title" href="/2025/08/18/imx6ull%E5%90%AF%E5%8A%A8%E6%97%A5%E5%BF%97/"><span class="title">imx6ull启动日志分析</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/LINUX/">LINUX</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-08-17T16:00:00.000Z">2025-08-18</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-11-02T15:16:00.904Z">2025-11-02</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>Linux启动分析</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><p>这几天一直在纠结：</p>
+<p>main函数是程序的入口，一个程序启动后，经过bootloader的初始化就该经main函数进入C语言的世界，<br>但是linux中每个应用程序的开始都是从main函数开始的。<br>linux下有多个应用程序，岂不是有很多个main。那bootloader会知道跳到哪个main？多个main编译怎么不冲突？</p>
+<p>在网上搜索了很久，渐渐的有些明白了：</p>
+<p>1、main函数是C语言的入口，这句话没错；但是这句话仅仅是一个约定，而非一个亘古不变的铁律！<br>从程序的更为本质的汇编代码来看，只是大家约定汇编初始化完了后，跳到一个名字叫”main”的标号处；<br>言外之意就是这个标号也是可以改名的，比如linux的C语言入口就是start_kernel（）；<br>从这个标号地址后就是C语言的天下了。用main这个名字仅仅是因为大家的约定而已，不遵守约定能玩的转也行啊，就像苹果充电线啥的都和别人不一样。</p>
+<p>2、在编译时是不存多个main函数的！每个应用程序虽说都有一个main函数（从应用程序来看应用程序的入口是main函数哦）；<br>但是应用程序都是独立编译的，不会一起编译，操作系统内核就更不可能和应用程序一起编译了！<br>所以根本不存在多个main冲突的！！<br>可能是统一操作系统与应用程序之间的接口，抑或是侧面影响下main是程序入口的说法，main是应用程序和操作系统之间约定好的一个接口名！<br>所以linux中每个应用程序的第一个函数必须是main。除非你改掉了内核调度的接口地方。</p>
+<p>3、linux的应用程序的安装启动也可以类比下我们每天都在用的Windows。<br>Windows应用程序的安装其实也是把一些执行文件拷贝到指定的文件夹里（从绿色软件看），点击就可以运行。<br>linux下也是这样。编译好的bin文件放到指定的文件夹目录下，然后用命令启动执行。</p>
+<p>&#x2F;*</p>
+<ul>
+<li>linux&#x2F;init&#x2F;main.c</li>
+<li></li>
+<li>Copyright (C) 1991, 1992  Linus Torvalds</li>
+<li></li>
+<li>GK 2&#x2F;5&#x2F;95  -  Changed to support mounting root fs via NFS</li>
+<li>Added initrd &amp; change_root: Werner Almesberger &amp; Hans Lermen, Feb ‘96</li>
+<li>Moan early if gcc is old, avoiding bogus kernels - Paul Gortmaker, May ‘96</li>
+<li>Simplified starting of init:  Michael A. Griffith <a href="mailto:&#103;&#x72;&#x69;&#x66;&#64;&#x61;&#x63;&#109;&#46;&#111;&#x72;&#x67;">grif@acm.org</a> </li>
+<li>start_kernel-&gt;rest_init-&gt;kernel_init创建用户init  pid&#x3D;1<br>                   -&gt;kthreadd管理内核线程     pid&#x3D;x<br>                   -&gt;pid&#x3D;0，是idle线程<br> 在rest_init中，会创建kernel_init线程，它负责创建用户init进程,完成工作后，自己<br> 化身为idle线程<br> *&#x2F;</li>
+</ul>
+<p>#include &lt;linux&#x2F;types.h&gt;<br>#include &lt;linux&#x2F;module.h&gt;<br>#include &lt;linux&#x2F;proc_fs.h&gt;<br>#include &lt;linux&#x2F;kernel.h&gt;<br>#include &lt;linux&#x2F;syscalls.h&gt;<br>#include &lt;linux&#x2F;stackprotector.h&gt;<br>#include &lt;linux&#x2F;string.h&gt;<br>#include &lt;linux&#x2F;ctype.h&gt;<br>#include &lt;linux&#x2F;delay.h&gt;<br>#include &lt;linux&#x2F;ioport.h&gt;<br>#include &lt;linux&#x2F;init.h&gt;<br>#include &lt;linux&#x2F;initrd.h&gt;<br>#include &lt;linux&#x2F;bootmem.h&gt;<br>#include &lt;linux&#x2F;acpi.h&gt;<br>#include &lt;linux&#x2F;tty.h&gt;<br>#include &lt;linux&#x2F;percpu.h&gt;<br>#include &lt;linux&#x2F;kmod.h&gt;<br>#include &lt;linux&#x2F;vmalloc.h&gt;<br>#include &lt;linux&#x2F;kernel_stat.h&gt;<br>#include &lt;linux&#x2F;start_kernel.h&gt;<br>#include &lt;linux&#x2F;security.h&gt;<br>#include &lt;linux&#x2F;smp.h&gt;<br>#include &lt;linux&#x2F;profile.h&gt;<br>#include &lt;linux&#x2F;rcupdate.h&gt;<br>#include &lt;linux&#x2F;moduleparam.h&gt;<br>#include &lt;linux&#x2F;kallsyms.h&gt;<br>#include &lt;linux&#x2F;writeback.h&gt;<br>#include &lt;linux&#x2F;cpu.h&gt;<br>#include &lt;linux&#x2F;cpuset.h&gt;<br>#include &lt;linux&#x2F;cgroup.h&gt;<br>#include &lt;linux&#x2F;efi.h&gt;<br>#include &lt;linux&#x2F;tick.h&gt;<br>#include &lt;linux&#x2F;interrupt.h&gt;<br>#include &lt;linux&#x2F;taskstats_kern.h&gt;<br>#include &lt;linux&#x2F;delayacct.h&gt;<br>#include &lt;linux&#x2F;unistd.h&gt;<br>#include &lt;linux&#x2F;rmap.h&gt;<br>#include &lt;linux&#x2F;mempolicy.h&gt;<br>#include &lt;linux&#x2F;key.h&gt;<br>#include &lt;linux&#x2F;buffer_head.h&gt;<br>#include &lt;linux&#x2F;page_cgroup.h&gt;<br>#include &lt;linux&#x2F;debug_locks.h&gt;<br>#include &lt;linux&#x2F;debugobjects.h&gt;<br>#include &lt;linux&#x2F;lockdep.h&gt;<br>#include &lt;linux&#x2F;kmemleak.h&gt;<br>#include &lt;linux&#x2F;pid_namespace.h&gt;<br>#include &lt;linux&#x2F;device.h&gt;<br>#include &lt;linux&#x2F;kthread.h&gt;<br>#include &lt;linux&#x2F;sched.h&gt;<br>#include &lt;linux&#x2F;signal.h&gt;<br>#include &lt;linux&#x2F;idr.h&gt;<br>#include &lt;linux&#x2F;kgdb.h&gt;<br>#include &lt;linux&#x2F;ftrace.h&gt;<br>#include &lt;linux&#x2F;async.h&gt;<br>#include &lt;linux&#x2F;kmemcheck.h&gt;<br>#include &lt;linux&#x2F;sfi.h&gt;<br>#include &lt;linux&#x2F;shmem_fs.h&gt;<br>#include &lt;linux&#x2F;slab.h&gt;<br>#include &lt;linux&#x2F;perf_event.h&gt;</p>
+<p>#include &lt;asm&#x2F;io.h&gt;<br>#include &lt;asm&#x2F;bugs.h&gt;<br>#include &lt;asm&#x2F;setup.h&gt;<br>#include &lt;asm&#x2F;sections.h&gt;<br>#include &lt;asm&#x2F;cacheflush.h&gt;</p>
+<p>#ifdef CONFIG_X86_LOCAL_APIC<br>#include &lt;asm&#x2F;smp.h&gt;<br>#endif</p>
+<p>static int kernel_init(void *);</p>
+<p>extern void init_IRQ(void);<br>extern void fork_init(unsigned long);<br>extern void mca_init(void);<br>extern void sbus_init(void);<br>extern void prio_tree_init(void);<br>extern void radix_tree_init(void);<br>#ifndef CONFIG_DEBUG_RODATA<br>static inline void mark_rodata_ro(void) { }<br>#endif</p>
+<p>#ifdef CONFIG_TC<br>extern void tc_init(void);<br>#endif</p>
+<p>&#x2F;*</p>
+<ul>
+<li>Debug helper: via this flag we know that we are in ‘early bootup code’</li>
+<li>where only the boot processor is running with IRQ disabled.  This means</li>
+<li>two things - IRQ must not be enabled before the flag is cleared and some</li>
+<li>operations which are not allowed with IRQ disabled are allowed while the</li>
+<li>flag is set.<br> *&#x2F;<br>bool early_boot_irqs_disabled __read_mostly;</li>
+</ul>
+<p>enum system_states system_state __read_mostly;<br>EXPORT_SYMBOL(system_state);</p>
+<p>&#x2F;*</p>
+<ul>
+<li>Boot command-line arguments<br> *&#x2F;</li>
+</ul>
+<p>#define MAX_INIT_ARGS CONFIG_INIT_ENV_ARG_LIMIT<br>#define MAX_INIT_ENVS CONFIG_INIT_ENV_ARG_LIMIT</p>
+<p>extern void time_init(void);<br>&#x2F;* Default late time init is NULL. archs can override this later. <em>&#x2F;<br>void (</em>__initdata late_time_init)(void);<br>extern void softirq_init(void);</p>
+<p>&#x2F;* Untouched command line saved by arch-specific code. <em>&#x2F;<br>char __initdata boot_command_line[COMMAND_LINE_SIZE];<br>&#x2F;</em> Untouched saved command line (eg. for &#x2F;proc) *&#x2F;<br>char <em>saved_command_line;<br>&#x2F;</em> Command line for parameter parsing *&#x2F;<br>static char *static_command_line;</p>
+<p>static char *execute_command;<br>static char *ramdisk_execute_command;</p>
+<p>&#x2F;*</p>
+<ul>
+<li>If set, this is an indication to the drivers that reset the underlying</li>
+<li>device before going ahead with the initialization otherwise driver might</li>
+<li>rely on the BIOS and skip the reset operation.</li>
+<li></li>
+<li>This is useful if kernel is booting in an unreliable environment.</li>
+<li>For ex. kdump situaiton where previous kernel has crashed, BIOS has been</li>
+<li>skipped and devices will be in unknown state.<br> *&#x2F;<br>unsigned int reset_devices;<br>EXPORT_SYMBOL(reset_devices);</li>
+</ul>
+<p>static int __init set_reset_devices(char *str)<br>{<br>    reset_devices &#x3D; 1;<br>    return 1;<br>}</p>
+<p>__setup(“reset_devices”, set_reset_devices);</p>
+<p>static const char * argv_init[MAX_INIT_ARGS+2] &#x3D; { “init”, NULL, };<br>const char * envp_init[MAX_INIT_ENVS+2] &#x3D; { “HOME&#x3D;&#x2F;“, “TERM&#x3D;linux”, NULL, };<br>static const char *panic_later, *panic_param;</p>
+<p>extern const struct obs_kernel_param __setup_start[], __setup_end[];</p>
+<p>static int __init obsolete_checksetup(char *line)<br>{<br>    const struct obs_kernel_param *p;<br>    int had_early_param &#x3D; 0;</p>
+<pre><code>p = __setup_start;
+do {
+    int n = strlen(p-&gt;str);
+    if (parameqn(line, p-&gt;str, n)) {
+        if (p-&gt;early) {
+            /* Already done in parse_early_param?
+             * (Needs exact match on param part).
+             * Keep iterating, as we can have early
+             * params and __setups of same names 8( */
+            if (line[n] == &#39;\0&#39; || line[n] == &#39;=&#39;)
+                had_early_param = 1;
+        } else if (!p-&gt;setup_func) {
+            printk(KERN_WARNING &quot;Parameter %s is obsolete,&quot;
+                   &quot; ignored\n&quot;, p-&gt;str);
+            return 1;
+        } else if (p-&gt;setup_func(line + n))
+            return 1;
+    }
+    p++;
+} while (p &lt; __setup_end);
+
+return had_early_param;
+</code></pre>
+<p>}</p>
+<p>&#x2F;*</p>
+<ul>
+<li>This should be approx 2 Bo*oMips to start (note initial shift), and will</li>
+<li>still work even if initially too large, it will just take slightly longer<br> *&#x2F;<br>unsigned long loops_per_jiffy &#x3D; (1&lt;&lt;12);<br>EXPORT_SYMBOL(loops_per_jiffy);<br>static int __init debug_kernel(char *str)<br>{<br> console_loglevel &#x3D; 10;<br> return 0;<br>}<br>static int __init quiet_kernel(char *str)<br>{<br> console_loglevel &#x3D; 4;<br> return 0;<br>}<br>early_param(“debug”, debug_kernel);<br>early_param(“quiet”, quiet_kernel);<br>static int __init loglevel(char <em>str)<br>{<br> int newlevel;<br> &#x2F;</em><ul>
+<li>Only update loglevel value when a correct setting was passed,</li>
+<li>to prevent blind crashes (when loglevel being set to 0) that</li>
+<li>are quite hard to debug<br>  <em>&#x2F;<br> if (get_option(&amp;str, &amp;newlevel)) {<br> console_loglevel &#x3D; newlevel;<br> return 0;<br> }<br> return -EINVAL;<br>}<br>early_param(“loglevel”, loglevel);<br>&#x2F;</em> Change NUL term back to “&#x3D;”, to make “param” the whole string. *&#x2F;<br>static int __init repair_env_string(char *param, char <em>val)<br>{<br> if (val) {<br> &#x2F;</em> param&#x3D;val or param&#x3D;”val”? *&#x2F;<br> if (val &#x3D;&#x3D; param+strlen(param)+1)<br> val[-1] &#x3D; ‘&#x3D;’;<br> else if (val &#x3D;&#x3D; param+strlen(param)+2) {<br> val[-2] &#x3D; ‘&#x3D;’;<br> memmove(val-1, val, strlen(val)+1);<br> val–;<br> } else<br> BUG();</li>
+</ul>
+<p> }<br> return 0;<br>}<br>&#x2F;*</p>
+</li>
+<li>Unknown boot options get handed to init, unless they look like</li>
+<li>unused parameters (modprobe will find them in &#x2F;proc&#x2F;cmdline).<br> *&#x2F;<br>static int __init unknown_bootoption(char *param, char <em>val)<br>{<br> repair_env_string(param, val);<br> &#x2F;</em> Handle obsolete-style parameters <em>&#x2F;<br> if (obsolete_checksetup(param))<br> return 0;<br> &#x2F;</em> Unused module parameter. <em>&#x2F;<br> if (strchr(param, ‘.’) &amp;&amp; (!val || strchr(param, ‘.’) &lt; val))<br> return 0;<br> if (panic_later)<br> return 0;<br> if (val) {<br> &#x2F;</em> Environment option *&#x2F;<br> unsigned int i;<br> for (i &#x3D; 0; envp_init[i]; i++) {<br>     if (i &#x3D;&#x3D; MAX_INIT_ENVS) {<br>         panic_later &#x3D; “Too many boot env vars at <code>%s&#39;&quot;;          panic_param = param;      }      if (!strncmp(param, envp_init[i], val - param))          break;  }  envp_init[i] = param;  } else {  /* Command line option */  unsigned int i;  for (i = 0; argv_init[i]; i++) {      if (i == MAX_INIT_ARGS) {          panic_later = &quot;Too many boot init vars at </code>%s’”;<br>         panic_param &#x3D; param;<br>     }<br> }<br> argv_init[i] &#x3D; param;<br> }<br> return 0;<br>}<br>static int __init init_setup(char <em>str)<br>{<br> unsigned int i;<br> execute_command &#x3D; str;<br> &#x2F;</em><ul>
+<li>In case LILO is going to boot us with default command line,</li>
+<li>it prepends “auto” before the whole cmdline which makes</li>
+<li>the shell think it should execute a script with such name.</li>
+<li>So we ignore all arguments entered <em>before</em> init&#x3D;… [MJ]<br>  *&#x2F;<br> for (i &#x3D; 1; i &lt; MAX_INIT_ARGS; i++)<br> argv_init[i] &#x3D; NULL;<br> return 1;<br>}<br>__setup(“init&#x3D;”, init_setup);<br>static int __init rdinit_setup(char <em>str)<br>{<br> unsigned int i;<br> ramdisk_execute_command &#x3D; str;<br> &#x2F;</em> See “auto” comment in init_setup *&#x2F;<br> for (i &#x3D; 1; i &lt; MAX_INIT_ARGS; i++)<br> argv_init[i] &#x3D; NULL;<br> return 1;<br>}<br>__setup(“rdinit&#x3D;”, rdinit_setup);</li>
+</ul>
+</li>
+</ul>
+<p>#ifndef CONFIG_SMP<br>static const unsigned int setup_max_cpus &#x3D; NR_CPUS;<br>#ifdef CONFIG_X86_LOCAL_APIC<br>static void __init smp_init(void)<br>{<br>    APIC_init_uniprocessor();<br>}<br>#else<br>#define smp_init()  do { } while (0)<br>#endif<br>static inline void setup_nr_cpu_ids(void) { }<br>static inline void smp_prepare_cpus(unsigned int maxcpus) { }<br>#endif<br>&#x2F;*</p>
+<ul>
+<li>We need to store the untouched command line for future reference.</li>
+<li>We also need to store the touched command line since the parameter</li>
+<li>parsing is performed in place, and we should allow a component to</li>
+<li>store reference of name&#x2F;value for future reference.<br> *&#x2F;<br>static void __init setup_command_line(char <em>command_line)<br>{<br> saved_command_line &#x3D; alloc_bootmem(strlen (boot_command_line)+1);<br> static_command_line &#x3D; alloc_bootmem(strlen (command_line)+1);<br> strcpy (saved_command_line, boot_command_line);<br> strcpy (static_command_line, command_line);<br>}<br>&#x2F;</em></li>
+<li>We need to finalize in a non-__init function or else race conditions</li>
+<li>between the root thread and the init thread may cause start_kernel to</li>
+<li>be reaped by free_initmem before the root thread has proceeded to</li>
+<li>cpu_idle.</li>
+<li></li>
+<li>gcc-3.4 accidentally inlines this function, so use noinline.<br> <em>&#x2F;<br>static __initdata DECLARE_COMPLETION(kthreadd_done);<br>static noinline void __init_refok rest_init(void)<br>{<br> int pid;<br> rcu_scheduler_starting();&#x2F;&#x2F;READ-COPY UPDATE启动<br> &#x2F;</em><ul>
+<li>We need to spawn init first so that it obtains pid 1, however</li>
+<li>the init task will end up wanting to create kthreads, which, if</li>
+<li>we schedule it before we create kthreadd, will OOPS.</li>
+<li>创建一个内核线程，它的线程函数是kernel_init,pid&#x3D;1,内核进程<br>  <em>&#x2F;<br> kernel_thread(kernel_init, NULL, CLONE_FS | CLONE_SIGHAND);<br> &#x2F;&#x2F;numa策略设置<br> numa_default_policy();<br> &#x2F;&#x2F;全局链表kthread_create_list中的kthread内核线程都被运行<br> &#x2F;&#x2F;kthreadd线程管理和调度其它内核线程<br> pid &#x3D; kernel_thread(kthreadd, NULL, CLONE_FS | CLONE_FILES);<br> rcu_read_lock();<br> &#x2F;&#x2F;通过pid,ini_pid_ns取得kthreadd地址<br> kthreadd_task &#x3D; find_task_by_pid_ns(pid, &amp;init_pid_ns);<br> rcu_read_unlock();<br> &#x2F;&#x2F;通知在kthreadd_done条件的kernel_init线程<br> complete(&amp;kthreadd_done);<br> &#x2F;</em></li>
+<li>The boot idle thread must execute schedule()</li>
+<li>at least once to get things moving:</li>
+<li>idle 线程初始化<br>  <em>&#x2F;<br> init_idle_bootup_task(current);<br> &#x2F;&#x2F;抢占禁用<br> schedule_preempt_disabled();<br> &#x2F;</em> Call into cpu_idle with preempt disabled <em>&#x2F;<br> cpu_idle();<br>}<br>&#x2F;</em> Check for early params. *&#x2F;<br>static int __init do_early_param(char *param, char *val)<br>{<br> const struct obs_kernel_param <em>p;<br> for (p &#x3D; __setup_start; p &lt; __setup_end; p++) {<br> if ((p-&gt;early &amp;&amp; parameq(param, p-&gt;str)) ||<br> (strcmp(param, “console”) &#x3D;&#x3D; 0 &amp;&amp;<br>  strcmp(p-&gt;str, “earlycon”) &#x3D;&#x3D; 0)<br> ) {<br> if (p-&gt;setup_func(val) !&#x3D; 0)<br>     printk(KERN_WARNING<br>            “Malformed early option ‘%s’\n”, param);<br> }<br> }<br> &#x2F;</em> We accept everything at this stage. *&#x2F;<br> return 0;<br>}<br>void __init parse_early_options(char <em>cmdline)<br>{<br> parse_args(“early options”, cmdline, NULL, 0, 0, 0, do_early_param);<br>}<br>&#x2F;</em> Arch code calls this early on, or if not, just before other parsing. <em>&#x2F;<br>void __init parse_early_param(void)<br>{<br> static __initdata int done &#x3D; 0;<br> static __initdata char tmp_cmdline[COMMAND_LINE_SIZE];<br> if (done)<br> return;<br> &#x2F;</em> All fall through to do_early_param. <em>&#x2F;<br> strlcpy(tmp_cmdline, boot_command_line, COMMAND_LINE_SIZE);<br> parse_early_options(tmp_cmdline);<br> done &#x3D; 1;<br>}<br>&#x2F;</em></li>
+</ul>
+</li>
+<li>Activate the first processor.<br> <em>&#x2F;<br>static void __init boot_cpu_init(void)<br>{<br>int cpu &#x3D; smp_processor_id();<br>&#x2F;</em> Mark the boot cpu “present”, “online” etc for SMP and UP case <em>&#x2F;<br>set_cpu_online(cpu, true);<br>set_cpu_active(cpu, true);<br>set_cpu_present(cpu, true);<br>set_cpu_possible(cpu, true);<br>}<br>void __init __weak smp_setup_processor_id(void)<br>{<br>}<br>void __init __weak thread_info_cache_init(void)<br>{<br>}<br>&#x2F;</em></li>
+<li>Set up kernel memory allocators<br> <em>&#x2F;<br>static void __init mm_init(void)<br>{<br> &#x2F;</em><ul>
+<li>page_cgroup requires contiguous pages,</li>
+<li>bigger than MAX_ORDER unless SPARSEMEM.<br>  <em>&#x2F;<br> page_cgroup_init_flatmem();<br> mem_init();<br> kmem_cache_init();<br> percpu_init_late();<br> pgtable_cache_init();<br> vmalloc_init();<br>}<br>asmlinkage void __init start_kernel(void)<br>{<br> char * command_line;<br> extern const struct kernel_param __start___param[], __stop___param[];<br> &#x2F;</em></li>
+<li>Need to run as early as possible, to initialize the</li>
+<li>lockdep hash:<br>  <em>&#x2F;<br> &#x2F;&#x2F;初始化2个hash表-Lock Dependency Validator(内核依赖的关系表)<br> lockdep_init();<br> smp_setup_processor_id(); &#x2F;&#x2F;空函数<br> debug_objects_early_init();&#x2F;&#x2F;初始化内核调试相关<br> &#x2F;</em></li>
+<li>Set up the the initial canary ASAP:<br>  <em>&#x2F;<br> boot_init_stack_canary();&#x2F;&#x2F;栈溢出保护初始化<br> &#x2F;&#x2F;控制组初始化-cgroup-资源任务分组管理<br> cgroup_init_early();<br> local_irq_disable();&#x2F;&#x2F;关中断<br> early_boot_irqs_disabled &#x3D; true;<br>&#x2F;</em></li>
+</ul>
+</li>
+<li>Interrupts are still disabled. Do necessary setups, then</li>
+<li>enable them<br> <em>&#x2F;<br> tick_init();&#x2F;&#x2F;时钟初始化<br> boot_cpu_init();&#x2F;&#x2F;启动cpu初始化<br> page_address_init();&#x2F;&#x2F;页面初始化<br> printk(KERN_NOTICE “%s”, linux_banner);<br> setup_arch(&amp;command_line);&#x2F;&#x2F;架构相关初始化<br> mm_init_owner(&amp;init_mm, &amp;init_task);&#x2F;&#x2F;内存管理初始化<br> mm_init_cpumask(&amp;init_mm);&#x2F;&#x2F;内存管理初始化<br> setup_command_line(command_line);&#x2F;&#x2F;处理命令行(保存2份)<br> setup_nr_cpu_ids();&#x2F;&#x2F;cpuid相关<br> setup_per_cpu_areas();&#x2F;&#x2F;每cpu变量申请空间(包括gdt)<br> &#x2F;&#x2F;smp中用来启动的cpu<br> smp_prepare_boot_cpu(); &#x2F;</em> arch-specific boot-cpu hooks <em>&#x2F;<br>  &#x2F;&#x2F;建立系统内存页区链表<br> build_all_zonelists(NULL);<br> &#x2F;&#x2F;内存页相关初始化<br> page_alloc_init();<br> printk(KERN_NOTICE “Kernel command line: %s\n”, boot_command_line);<br> &#x2F;&#x2F;命令行boot_command_line<br> parse_early_param();<br> &#x2F;&#x2F;解析参数<br> parse_args(“Booting kernel”, static_command_line, __start___param,<br>    __stop___param - __start___param,<br>    -1, -1, &amp;unknown_bootoption);<br> &#x2F;&#x2F;<br> jump_label_init();<br> &#x2F;</em><ul>
+<li>These use large bootmem allocations and must precede</li>
+<li>kmem_cache_init()</li>
+<li>内存初始化相关<br>  <em>&#x2F;<br> setup_log_buf(0);<br> pidhash_init();<br> vfs_caches_init_early();<br> sort_main_extable();<br> trap_init();<br> mm_init();<br> &#x2F;</em></li>
+<li>Set up the scheduler prior starting any interrupts (such as the</li>
+<li>timer interrupt). Full topology setup happens at smp_init()</li>
+<li>time - but meanwhile we still have a functioning scheduler.</li>
+<li>调度初始化<br>  <em>&#x2F;<br> sched_init();<br> &#x2F;</em></li>
+<li>Disable preemption - early bootup scheduling is extremely</li>
+<li>fragile until we cpu_idle() for the first time.</li>
+<li>抢占禁用<br>  <em>&#x2F;<br> preempt_disable();<br> if (!irqs_disabled()) {<br> printk(KERN_WARNING “start_kernel(): bug: interrupts were “<br>     “enabled <em>very</em> early, fixing it\n”);<br> local_irq_disable();<br> }<br> idr_init_cache();&#x2F;&#x2F;idr<br> perf_event_init();&#x2F;&#x2F;performance event<br> rcu_init();&#x2F;&#x2F;read-copy-update 机制<br> radix_tree_init();&#x2F;&#x2F;radix树机制<br> &#x2F;</em> init some links before init_ISA_irqs() *&#x2F;<br> early_irq_init();&#x2F;&#x2F;中断请求<br> init_IRQ();&#x2F;&#x2F;中断请求<br> prio_tree_init();&#x2F;&#x2F;优先查找树<br> init_timers();&#x2F;&#x2F;时钟<br> hrtimers_init();&#x2F;&#x2F;High-resolution kernel timers高精度内核时钟<br> softirq_init();&#x2F;&#x2F;软中断<br> timekeeping_init();&#x2F;&#x2F;时间相关<br> time_init();&#x2F;&#x2F;时间<br> profile_init();&#x2F;&#x2F;分配内核性能统计保存的内存<br> call_function_init();&#x2F;&#x2F;smp中每cpu的call_single_queue初始化<br> if (!irqs_disabled())<br> printk(KERN_CRIT “start_kernel(): bug: interrupts were “<br>      “enabled early\n”);</li>
+</ul>
+<p> early_boot_irqs_disabled &#x3D; false;&#x2F;&#x2F;中断请求开<br> local_irq_enable();&#x2F;&#x2F;本地中断开<br> kmem_cache_init_late();&#x2F;&#x2F;kmem后期初始化<br> &#x2F;*</p>
+<ul>
+<li>HACK ALERT! This is early. We’re enabling the console before</li>
+<li>we’ve done PCI setups etc, and console_init() must be aware of</li>
+<li>this. But we do want output early, in case something goes wrong.<br>  <em>&#x2F;<br> console_init();&#x2F;&#x2F;初始化系统控制台结构<br> if (panic_later)<br> panic(panic_later, panic_param);<br> &#x2F;&#x2F;锁依赖信息<br> lockdep_info();<br> &#x2F;</em></li>
+<li>Need to run this when irqs are enabled, because it wants</li>
+<li>to self-test [hard&#x2F;soft]-irqs on&#x2F;off lock inversion bugs</li>
+<li>too:<br>  *&#x2F;<br> locking_selftest();</li>
+</ul>
+</li>
+</ul>
+<p>#ifdef CONFIG_BLK_DEV_INITRD<br>    if (initrd_start &amp;&amp; !initrd_below_start_ok &amp;&amp;<br>        page_to_pfn(virt_to_page((void *)initrd_start)) &lt; min_low_pfn) {<br>        printk(KERN_CRIT “initrd overwritten (0x%08lx &lt; 0x%08lx) - “<br>            “disabling it.\n”,<br>            page_to_pfn(virt_to_page((void <em>)initrd_start)),<br>            min_low_pfn);<br>        initrd_start &#x3D; 0;<br>    }<br>#endif<br>    page_cgroup_init();&#x2F;&#x2F;control groups初始化<br>    debug_objects_mem_init();&#x2F;&#x2F;对象调试<br>    kmemleak_init();&#x2F;&#x2F;检测内核内存泄漏的功能<br>    setup_per_cpu_pageset();&#x2F;&#x2F;申请并初始化每cpu页set<br>    numa_policy_init();&#x2F;&#x2F;numa相关<br>    if (late_time_init)<br>        late_time_init();<br>    &#x2F;&#x2F;初始化每cpusched_clock_data&#x3D;ktime_now<br>    sched_clock_init();<br>    calibrate_delay();&#x2F;&#x2F;计算cpuMIPS百万条指令&#x2F;s<br>    pidmap_init();&#x2F;&#x2F;pid进程id表初始化<br>    anon_vma_init();&#x2F;&#x2F;虚拟地址<br>#ifdef CONFIG_X86<br>    if (efi_enabled)&#x2F;&#x2F;efi bois<br>        efi_enter_virtual_mode();<br>#endif<br>    thread_info_cache_init();&#x2F;&#x2F;申请thread_info的内存<br>    cred_init();&#x2F;&#x2F;credential健在分配<br>    &#x2F;&#x2F;根据物理内存大小，计算可创建进&#x2F;线程数量<br>    fork_init(totalram_pages);<br>    proc_caches_init();&#x2F;&#x2F;进程内存初始化<br>    buffer_init();&#x2F;&#x2F;页高速缓存<br>    key_init();&#x2F;&#x2F;红黑树内存，存keys<br>    security_init();&#x2F;&#x2F;安全相关<br>    dbg_late_init();&#x2F;&#x2F;调试相关<br>    vfs_caches_init(totalram_pages);&#x2F;&#x2F;虚拟文件系统初始化<br>    signals_init();&#x2F;&#x2F;sigqueue申请内存，信号系统<br>    &#x2F;</em> rootfs populating might need page-writeback <em>&#x2F;<br>    page_writeback_init();&#x2F;&#x2F;页回写<br>#ifdef CONFIG_PROC_FS<br>    proc_root_init();&#x2F;&#x2F;proc文件系统初始化<br>#endif<br>    cgroup_init();&#x2F;&#x2F;cgroup相关<br>    cpuset_init();&#x2F;&#x2F;cpuset相关<br>    taskstats_init_early();&#x2F;&#x2F;进程计数器<br>    delayacct_init();&#x2F;&#x2F;进程延时审计<br>    check_bugs();&#x2F;&#x2F;系统bug相关测试<br>    &#x2F;&#x2F;acpi总线<br>    acpi_early_init(); &#x2F;</em> before LAPIC and SMP init <em>&#x2F;<br>    sfi_init_late();&#x2F;&#x2F;Simple Firmware Interface<br>    &#x2F;&#x2F;功能追踪初始化,一种调试工具<br>    ftrace_init();<br>    &#x2F;</em> Do the rest non-__init’ed, we’re now alive <em>&#x2F;<br>    rest_init();<br>}<br>&#x2F;</em> Call all constructor functions linked into the kernel. *&#x2F;<br>static void __init do_ctors(void)<br>{<br>#ifdef CONFIG_CONSTRUCTORS<br>    ctor_fn_t *fn &#x3D; (ctor_fn_t *) __ctors_start;<br>    for (; fn &lt; (ctor_fn_t *) __ctors_end; fn++)<br>        (*fn)();<br>#endif<br>}<br>bool initcall_debug;<br>core_param(initcall_debug, initcall_debug, bool, 0644);<br>static char msgbuf[64];<br>static int __init_or_module do_one_initcall_debug(initcall_t fn)<br>{<br>    ktime_t calltime, delta, rettime;<br>    unsigned long long duration;<br>    int ret;<br>    printk(KERN_DEBUG “calling  %pF @ %i\n”, fn, task_pid_nr(current));<br>    calltime &#x3D; ktime_get();<br>    ret &#x3D; fn();<br>    rettime &#x3D; ktime_get();<br>    delta &#x3D; ktime_sub(rettime, calltime);<br>    duration &#x3D; (unsigned long long) ktime_to_ns(delta) &gt;&gt; 10;<br>    printk(KERN_DEBUG “initcall %pF returned %d after %lld usecs\n”, fn,<br>        ret, duration);<br>    return ret;<br>}<br>int __init_or_module do_one_initcall(initcall_t fn)<br>{<br>    int count &#x3D; preempt_count();<br>    int ret;<br>    if (initcall_debug)<br>        ret &#x3D; do_one_initcall_debug(fn);<br>    else<br>        ret &#x3D; fn();<br>    msgbuf[0] &#x3D; 0;<br>    if (ret &amp;&amp; ret !&#x3D; -ENODEV &amp;&amp; initcall_debug)<br>        sprintf(msgbuf, “error code %d “, ret);<br>    if (preempt_count() !&#x3D; count) {<br>        strlcat(msgbuf, “preemption imbalance “, sizeof(msgbuf));<br>        preempt_count() &#x3D; count;<br>    }<br>    if (irqs_disabled()) {<br>        strlcat(msgbuf, “disabled interrupts “, sizeof(msgbuf));<br>        local_irq_enable();<br>    }<br>    if (msgbuf[0]) {<br>        printk(“initcall %pF returned with %s\n”, fn, msgbuf);<br>    }<br>    return ret;<br>}<br>extern initcall_t __initcall_start[];<br>extern initcall_t __initcall0_start[];<br>extern initcall_t __initcall1_start[];<br>extern initcall_t __initcall2_start[];<br>extern initcall_t __initcall3_start[];<br>extern initcall_t __initcall4_start[];<br>extern initcall_t __initcall5_start[];<br>extern initcall_t __initcall6_start[];<br>extern initcall_t __initcall7_start[];<br>extern initcall_t __initcall_end[];<br>static initcall_t *initcall_levels[] __initdata &#x3D; {<br>    __initcall0_start,<br>    __initcall1_start,<br>    __initcall2_start,<br>    __initcall3_start,<br>    __initcall4_start,<br>    __initcall5_start,<br>    __initcall6_start,<br>    __initcall7_start,<br>    __initcall_end,<br>};<br>static char *initcall_level_names[] __initdata &#x3D; {<br>    “early parameters”,<br>    “core parameters”,<br>    “postcore parameters”,<br>    “arch parameters”,<br>    “subsys parameters”,<br>    “fs parameters”,<br>    “device parameters”,<br>    “late parameters”,<br>};<br>static void __init do_initcall_level(int level)<br>{<br>    extern const struct kernel_param __start___param[], __stop___param[];<br>    initcall_t *fn;<br>    strcpy(static_command_line, saved_command_line);<br>    parse_args(initcall_level_names[level],<br>           static_command_line, __start___param,<br>           __stop___param - __start___param,<br>           level, level,<br>           repair_env_string);<br>    for (fn &#x3D; initcall_levels[level]; fn &lt; initcall_levels[level+1]; fn++)<br>        do_one_initcall(<em>fn);<br>}<br>static void __init do_initcalls(void)<br>{<br>    int level;<br>    for (level &#x3D; 0; level &lt; ARRAY_SIZE(initcall_levels) - 1; level++)<br>        do_initcall_level(level);<br>}<br>&#x2F;</em></p>
+<ul>
+<li>Ok, the machine is now initialized. None of the devices</li>
+<li>have been touched yet, but the CPU subsystem is up and</li>
+<li>running, and memory and process management works.</li>
+<li></li>
+<li>Now we can finally start doing some real work..<br> *&#x2F;<br>static void __init do_basic_setup(void)<br>{<br> cpuset_init_smp();&#x2F;&#x2F;smp cpuset相关<br> usermodehelper_init();&#x2F;&#x2F;khelper单线程工作队列<br> shmem_init();&#x2F;&#x2F;sheme机制<br> driver_init();&#x2F;&#x2F;驱动各子系统<br> init_irq_proc();&#x2F;&#x2F;proc中创建irq目录<br> do_ctors();&#x2F;&#x2F;内核中所有构造函数,介于.ctors段中的函数<br> usermodehelper_enable();<br> &#x2F;&#x2F;所有编译进内核的驱动模块初始化函数<br> do_initcalls();<br>}<br>static void __init do_pre_smp_initcalls(void)<br>{<br> initcall_t *fn;<br> for (fn &#x3D; __initcall_start; fn &lt; __initcall0_start; fn++)<br> do_one_initcall(*fn);</li>
+</ul>
+<p>}<br>static void run_init_process(const char <em>init_filename)<br>{<br>    argv_init[0] &#x3D; init_filename;<br>    kernel_execve(init_filename, argv_init, envp_init);<br>}<br>&#x2F;</em> This is a non __init function. Force it to be noinline otherwise gcc</p>
+<ul>
+<li>makes it inline to init() and it becomes part of init.text section</li>
+<li>这是个非Init函数，防止gcc让它内联到init()，并成为Init.text段的一部分<br> <em>&#x2F;<br>static noinline int init_post(void)<br>{<br> &#x2F;</em> need to finish all async __init code before freeing the memory <ul>
+<li>在释放init内存前，必须完成所有__init代码执行<br>  *&#x2F;<br> async_synchronize_full();<br> free_initmem();&#x2F;&#x2F;释放init.*段中的内存<br> &#x2F;&#x2F;修改页表，保证只读数据段为只读属性read only<br> mark_rodata_ro();<br> &#x2F;&#x2F;系统运行状态标志<br> system_state &#x3D; SYSTEM_RUNNING;<br> &#x2F;&#x2F;numa默认策略<br> numa_default_policy();<br> &#x2F;&#x2F;当前进程不能被杀掉，只为它是init<br> current-&gt;signal-&gt;flags |&#x3D; SIGNAL_UNKILLABLE;<br> &#x2F;&#x2F;如果ramdisk_execute_command变量指定了init程序，执行它<br> if (ramdisk_execute_command) {<br> run_init_process(ramdisk_execute_command);<br> printk(KERN_WARNING “Failed to execute %s\n”,<br>     ramdisk_execute_command);</li>
+</ul>
+<p> }<br> &#x2F;*</p>
+<ul>
+<li>We try each of these until one succeeds.</li>
+<li></li>
+<li>The Bourne shell can be used instead of init if we are</li>
+<li>trying to recover a really broken machine.</li>
+<li>又一个程序，看能不能执行，如果不能，则执行下面4个之一<br>  *&#x2F;<br> if (execute_command) {<br> run_init_process(execute_command);<br> printk(KERN_WARNING “Failed to execute %s.  Attempting “<br>         “defaults…\n”, execute_command);</li>
+</ul>
+<p> }<br> run_init_process(“&#x2F;sbin&#x2F;init”);<br> run_init_process(“&#x2F;etc&#x2F;init”);<br> run_init_process(“&#x2F;bin&#x2F;init”);<br> run_init_process(“&#x2F;bin&#x2F;sh”);<br> &#x2F;&#x2F;两个变量和4个init都不能成功执行，报错<br> panic(“No init found.  Try passing init&#x3D; option to kernel. “<br>       “See Linux Documentation&#x2F;init.txt for guidance.”);</p>
+</li>
+</ul>
+<p>}<br>static int __init kernel_init(void * unused)<br>{<br>    &#x2F;*<br>     * Wait until kthreadd is all set-up.等待kthreadd的启动完成<br>     <em>&#x2F;<br>    wait_for_completion(&amp;kthreadd_done);<br>    &#x2F;</em> Now the scheduler is fully set up and can do blocking allocations<br>     *<br>     <em>&#x2F;<br>    gfp_allowed_mask &#x3D; __GFP_BITS_MASK;<br>    &#x2F;</em><br>     * init can allocate pages on any node<br>     <em>&#x2F;<br>    set_mems_allowed(node_states[N_HIGH_MEMORY]);<br>    &#x2F;</em><br>     * init can run on any cpu.<br>     <em>&#x2F;<br>    set_cpus_allowed_ptr(current, cpu_all_mask);<br>    &#x2F;&#x2F;cad_pid为接收Ctrl-alt-del操作的INT信号的进程ID,设置成了init的pid<br>    &#x2F;&#x2F;说明init可接受这3个键<br>    cad_pid &#x3D; task_pid(current);<br>    &#x2F;&#x2F;smp系统准备、激活所有cpu<br>    smp_prepare_cpus(setup_max_cpus);<br>    do_pre_smp_initcalls();<br>    lockup_detector_init();<br>    smp_init();<br>    sched_init_smp();<br>    &#x2F;&#x2F;初始化设备驱动、内核模块<br>    do_basic_setup();<br>    &#x2F;</em> Open the &#x2F;dev&#x2F;console on the rootfs, this should never fail<br>     * 打开&#x2F;dev&#x2F;console设备<br>     *&#x2F;<br>    if (sys_open((const char __user <em>) “&#x2F;dev&#x2F;console”, O_RDWR, 0) &lt; 0)<br>        printk(KERN_WARNING “Warning: unable to open an initial console.\n”);<br>    &#x2F;</em><br>     * 复制两次标准输入0，一个是标准输入1，一个是标准错误2<br>     <em>&#x2F;<br>    (void) sys_dup(0);<br>    (void) sys_dup(0);<br>    &#x2F;</em><br>     * check if there is an early userspace init.  If yes, let it do all<br>     * the work<br>     * 是否有早期用户空间init进程，有的话，让其执行<br>     *&#x2F;<br>    if (!ramdisk_execute_command)<br>        ramdisk_execute_command &#x3D; “&#x2F;init”;<br>    if (sys_access((const char __user <em>) ramdisk_execute_command, 0) !&#x3D; 0) {<br>        ramdisk_execute_command &#x3D; NULL;<br>        prepare_namespace();<br>    }<br>    &#x2F;</em><br>     * Ok, we have completed the initial bootup, and<br>     * we’re essentially up and running. Get rid of the<br>     * initmem segments and start the user-mode stuff..<br>     *&#x2F;<br>    &#x2F;&#x2F;启动用户空间的init进程<br>    init_post();<br>    return 0;<br>}</p>
+</article>
+<div class="article-footer">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    
+
+</div>
+
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2025/08/18/SPI%E6%97%B6%E5%BA%8F%E7%90%86%E8%A7%A3/">SPI时序理解</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/08/18/git%20ssh%E5%A4%B1%E8%B4%A5/">git ssh失败</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Dku</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.33.1">Stellar 1.33.1</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+</aside><div class='float-panel'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+
+
+<script type="text/javascript">
+  window.canonical = {"originalHost":null,"officialHosts":["localhost"],"encoded":""};
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+    tag_plugins: {
+      chat: Object.assign({"api":"https://siteinfo.listentothewind.cn/api/v1"}),
+    }
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":null,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+    loading: `https://api.iconify.design/eos-icons:three-dots-loading.svg?color=%231cd0fd`,
+  };
+  const deps = {
+    jquery: `https://gcore.jsdelivr.net/npm/jquery@3.7/dist/jquery.min.js`,
+    marked: `https://gcore.jsdelivr.net/npm/marked@13.0/lib/marked.umd.min.js`,
+    lazyload: `/%5Bobject%20Object%5D`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  
+  function RunItem() {
+    this.list = []; // 存放回调函数
+    this.start = () => {
+      for (var i = 0; i < this.list.length; i++) {
+        this.list[i].run();
+      }
+    };
+    this.push = (fn, name, setRequestAnimationFrame = true) => {
+      let myfn = fn
+      if (setRequestAnimationFrame) {
+        myfn = () => {
+          utils.requestAnimationFrame(fn)
+        }
+      }
+      var f = new Item(myfn, name);
+      this.list.push(f);
+    };
+    this.remove = (name) => {
+      for (let index = 0; index < this.list.length; index++) {
+        const e = this.list[index];
+        if (e.name == name) {
+          this.list.splice(index, 1);
+        }
+      }
+    }
+    // 构造一个可以run的对象
+    function Item(fn, name) {
+      // 函数名称
+      this.name = name || fn.name;
+      // run方法
+      this.run = () => {
+        try {
+          fn()
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    }
+  }
+
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')) {
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function () {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      const maxRetry = 3;
+      let retryCount = 0;
+
+      return new Promise((resolve, reject) => {
+        const load = () => {
+          utils.onLoading?.(el);
+
+          let timedOut = false;
+          const timeout = setTimeout(() => {
+            timedOut = true;
+            console.warn('[request] 超时:', url);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject('请求超时');
+            } else {
+              setTimeout(load, 1000);
+            }
+          }, 5000);
+
+          fetch(url).then(resp => {
+            if (timedOut) return;
+            clearTimeout(timeout);
+
+            if (!resp.ok) throw new Error('响应失败');
+            return resp;
+          }).then(data => {
+            if (timedOut) return;
+            utils.onLoadSuccess?.(el);
+            callback(data);
+            resolve(data);
+          }).catch(err => {
+            clearTimeout(timeout);
+            console.warn('[request] 错误:', err);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject(err);
+            } else {
+              setTimeout(load, 1000);
+            }
+          });
+        };
+
+        load();
+      });
+    },
+    requestWithoutLoading: (url, options = {}, maxRetry = 2, timeout = 5000) => {
+      return new Promise((resolve, reject) => {
+        let retryCount = 0;
+
+        const tryRequest = () => {
+          let timedOut = false;
+          const timer = setTimeout(() => {
+            timedOut = true;
+            if (++retryCount > maxRetry) reject('timeout');
+            else tryRequest();
+          }, timeout);
+
+          fetch(url, options)
+            .then(resp => {
+              clearTimeout(timer);
+              if (!resp.ok) throw new Error('bad response');
+              resolve(resp);
+            })
+            .catch(err => {
+              clearTimeout(timer);
+              if (++retryCount > maxRetry) reject(err);
+              else setTimeout(tryRequest, 500);
+            });
+        };
+
+        tryRequest();
+      });
+    },
+    /********************** requestAnimationFrame ********************************/
+    // 1、requestAnimationFrame 会把每一帧中的所有 DOM 操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
+    // 2、在隐藏或不可见的元素中，requestAnimationFrame 将不会进行重绘或回流，这当然就意味着更少的的 cpu，gpu 和内存使用量。
+    requestAnimationFrame: (fn) => {
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+      }
+      window.requestAnimationFrame(fn)
+    },
+    dark: {},
+  };
+
+  // utils.dark.mode 当前模式 dark or light
+  // utils.dark.toggle() 暗黑模式触发器
+  // utils.dark.push(callBack[,"callBackName"]) 传入触发器回调函数
+  utils.dark.method = {
+    toggle: new RunItem(),
+  };
+  utils.dark = Object.assign(utils.dark, {
+    push: utils.dark.method.toggle.push,
+  });
+</script>
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+<script async src="https://gcore.jsdelivr.net/npm/vanilla-lazyload@19.1/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+    callback_loaded: (el) => {
+      el.classList.add('loaded');
+      const wrapper = el.closest('.lazy-box');
+      const icon = wrapper?.querySelector('.lazy-icon');
+      if (icon) icon.remove();
+    }
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+
+  window.wrapLazyloadImages = (container) => {
+    if (typeof container === 'string') {
+      container = document.querySelector(container);
+    }
+    if (!container) return;
+    
+    const images = container.querySelectorAll('img');
+    images.forEach((img) => {
+      if (img.classList.contains('lazy')) return;
+
+      const src = img.getAttribute('src');
+      if (!src) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'lazy-box';
+
+      const newImg = img.cloneNode();
+      newImg.removeAttribute('src');
+      newImg.setAttribute('data-src', src);
+      newImg.classList.add('lazy');
+
+      const icon = document.createElement('div');
+      icon.className = 'lazy-icon';
+      if (def.loading) {
+        icon.style.backgroundImage = `url("${def.loading}")`;
+      }
+
+      wrapper.appendChild(newImg);
+      wrapper.appendChild(icon);
+
+      img.replaceWith(wrapper);
+    });
+
+    // 通知 LazyLoad 更新
+    if (window.lazyLoadInstance?.update) {
+      window.lazyLoadInstance.update();
+    }
+  }
+  
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.33.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    // applyThemeToGiscus(theme)
+  }
+
+  // FIXME: 这会导致无法使用 preferred_color_scheme 以外的主题
+  const applyThemeToGiscus = (theme) => {
+    // theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+    utils.dark.mode = newTheme === 'auto' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : newTheme;
+    utils.dark.method.toggle.start();
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    } else {
+      utils.dark.mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    utils.dark.method.toggle.start();
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"rating":{"js":"/js/services/rating.js","api":"https://star-vote.xaox.cc/api/rating"},"vote":{"js":"/js/services/vote.js","api":"https://star-vote.xaox.cc/api/vote"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"friends_and_posts":{"js":"/js/services/friends_and_posts.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"voice":{"js":"/js/plugins/voice.js"},"video":{"js":"/js/plugins/video.js"},"download-file":{"js":"/js/plugins/download-file.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"},"contributors":{"edit_this_page":{"_posts/":null,"wiki/stellar/":"https://github.com/xaoxuu/hexo-theme-stellar-docs/blob/main/"},"js":"/js/services/contributors.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else if (id == 'voice') {
+        ctx.voiceAudios = document.querySelectorAll('.voice>audio');
+        if (ctx.voiceAudios?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            createVoiceDom(ctx.voiceAudios);
+          });
+        }
+      } else if (id == 'video') {
+        ctx.videos = document.querySelectorAll('.video>video');
+        if (ctx.videos?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            videoEvents(ctx.videos);
+          });
+        }
+      } else if (id == 'download-file') {
+        ctx.files = document.querySelectorAll('.file');
+        if (ctx.files?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            downloadFileEvent(ctx.files);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+
+    // chat iphone time
+    let phoneTimes = document.querySelectorAll('.chat .status-bar .time');
+
+    if (phoneTimes.length > 0) {
+      NowTime();
+      var date = new Date();
+      var sec = date.getSeconds();
+      var firstAdjustInterval = setInterval(firstAdjustTime, 1000 * (60 - sec));
+    }
+
+    function firstAdjustTime() {
+      NowTime();
+      clearInterval(firstAdjustInterval);
+      setInterval(NowTime, 1000 * 60);
+    }
+
+    function NowTime() {
+      for (let i = 0; i < phoneTimes.length; ++i) {
+        var timeSpan = phoneTimes[i];
+        var date = new Date();
+        var hour = date.getHours();
+        var min = date.getMinutes();
+        timeSpan.innerHTML = check(hour) + ":" + check(min);
+      }
+    };
+
+    function check(val) {
+      if (val < 10) {
+        return ("0" + val);
+      }
+      return (val);
+    }
+
+    // chat quote
+    const chat_quote_obverser = new IntersectionObserver((entries, observer) => {
+      entries.filter((entry) => { return entry.isIntersecting }).sort((a, b) => a.intersectionRect.y !== b.intersectionRect.y ? a.intersectionRect.y - b.intersectionRect.y : a.intersectionRect.x - b.intersectionRect.x).forEach((entry, index) => {
+          observer.unobserve(entry.target);
+          setTimeout(() => {
+            entry.target.classList.add('quote-blink');
+            setTimeout(() => {
+              entry.target.classList.remove('quote-blink');
+            }, 1000);
+          }, Math.max(100, 16) * (index + 1));
+        });
+    });
+
+    var chatQuotes = document.querySelectorAll(".chat .talk .quote");
+    chatQuotes.forEach((quote) => {
+      quote.addEventListener('click', function () {
+        var chatCellDom = document.getElementById("quote-" + quote.getAttribute("quotedCellTag"));
+        if (chatCellDom) {
+          var chatDiv = chatCellDom.parentElement;
+          var mid = chatDiv.clientHeight / 2;
+          var offsetTop = chatCellDom.offsetTop;
+          if (offsetTop > mid - chatCellDom.clientHeight / 2) {
+            chatDiv.scrollTo({
+              top: chatCellDom.offsetTop - mid + chatCellDom.clientHeight / 2,
+              behavior: "smooth"
+            });
+          } else {
+            chatDiv.scrollTo({
+              top: 0,
+              behavior: "smooth"
+            });
+          }
+          chat_quote_obverser.observe(chatCellDom);
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://gcore.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error), .with-fancybox .atk-content img:not([atk-emoticon])';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const memos = document.getElementsByClassName('ds-memos');
+    if (memos != undefined && memos.length > 0) {
+      needFancybox = true;
+    }
+    const fancybox = document.getElementsByClassName('with-fancybox');
+    if (fancybox != undefined && fancybox.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
