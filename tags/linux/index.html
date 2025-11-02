@@ -795,20 +795,7 @@
 <!-- inject -->
 
 </div></body></html>
-,
-      hour: `小时前`,
-      day: `天前`,
-    },
-    root : `/`,
-    tag_plugins: {
-      chat: Object.assign({"api":"https://siteinfo.listentothewind.cn/api/v1"}),
-    }
-  };
-
-  // required plugins (only load if needs)
-  if (`local_search`) {
-    ctx.search = {};
-    ctx.search.service = `local_search`;
+ocal_search`;
     if (ctx.search.service == 'local_search') {
       let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":null,"sort":"-date"}`);
       ctx.search[ctx.search.service] = service_obj;
