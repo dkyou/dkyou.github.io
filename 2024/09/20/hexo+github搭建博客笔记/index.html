@@ -1,0 +1,968 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.33.1" theme-name="Stellar" theme-version="1.33.1">
+  
+  
+  <meta name="generator" content="Hexo 8.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  <title>hexo+github搭建博客笔记 - 又是摸鱼的一天</title>
+
+  
+    <meta name="description" content="hexo+github搭建博客笔记1. 软件安装和使用1.Git 查看是否成功安装 1git version   绑定git邮箱和git用户，命令如下： 12git config --global user.name dkyou #输入git不需要双引号git config --global user.email 2323@xx.com  2.安装NodeJS 2.1 NodeJS 是一个基于 C">
+<meta property="og:type" content="article">
+<meta property="og:title" content="hexo+github搭建博客笔记">
+<meta property="og:url" content="https://dkyou.github.io/2024/09/20/hexo+github%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E7%AC%94%E8%AE%B0/">
+<meta property="og:site_name" content="又是摸鱼的一天">
+<meta property="og:description" content="hexo+github搭建博客笔记1. 软件安装和使用1.Git 查看是否成功安装 1git version   绑定git邮箱和git用户，命令如下： 12git config --global user.name dkyou #输入git不需要双引号git config --global user.email 2323@xx.com  2.安装NodeJS 2.1 NodeJS 是一个基于 C">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920172627650.png">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920172830103.png">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920174721935.png">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920175357945.png">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920175717150.png">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920182049570.png">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920181648998.png">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920184319727.png">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920184229783.png">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920193126322.png">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920194849457.png">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920194441963.png">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920195602908.png">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920195816917.png">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920195932499.png">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920200418549.png">
+<meta property="og:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920200638025.png">
+<meta property="article:published_time" content="2024-09-20T12:13:20.000Z">
+<meta property="article:modified_time" content="2024-10-17T11:14:18.851Z">
+<meta property="article:author" content="Dku">
+<meta property="article:tag" content="hexo">
+<meta property="article:tag" content="搭建博客">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://sk473ajar.sabkt.gdipper.com/images/image-20240920172627650.png">
+  
+  
+  
+  <meta name="keywords" content="hexo,搭建博客">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.33.1">
+
+
+  
+
+  
+
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dku","sameAs":[]},"dateCreated":"2024-09-20T20:13:20+08:00","dateModified":"2024-10-17T19:14:18+08:00","datePublished":"2024-09-20T20:13:20+08:00","description":"","headline":"hexo+github搭建博客笔记","mainEntityOfPage":{"@type":"WebPage","@id":"https://dkyou.github.io/2024/09/20/hexo+github%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E7%AC%94%E8%AE%B0/"},"publisher":{"@type":"Organization","name":"Dku","sameAs":[]},"url":"https://dkyou.github.io/2024/09/20/hexo+github%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E7%AC%94%E8%AE%B0/","keywords":"hexo, 搭建博客","image":[]}</script>
+  
+</head>
+<body>
+
+<div class="l_body content" id="start" layout="post" type="tech" ><aside class="l_left"><div class="sidebg"></div><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大白鹅喝酒.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main">👀瞅啥呢！👀</div><div class="sub normal cap">今天又是摸鱼的一天！</div><div class="sub hover cap" style="opacity:0">可不摸鱼又干什么呢？</div></a></div></header>
+
+<div class="nav-area">
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+
+<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2024/09/20/%E5%8F%8B%E9%93%BE/"><span class="title">友链</span></a><a class="item title" href="/2025/11/01/%E7%BC%96%E8%AF%91Buildroot_2020.02%E6%97%B6%E9%81%87%E5%88%B0IndexErrorlist%20index%20out%20of%20range%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/"><span class="title">编译Buildroot_2020.02时遇到IndexError:list index out of range问题解决</span></a><a class="item title" href="/2024/10/18/Makefile%E6%80%BB%E7%BB%93%E5%8F%8A%E9%80%9A%E7%94%A8%E6%A8%A1%E6%9D%BF%E4%BD%BF%E7%94%A8/"><span class="title">Makefile总结及通用模板使用</span></a><a class="item title" href="/2024/12/15/%E7%A7%BB%E9%99%A4%E5%8F%8A%E6%81%A2%E5%A4%8D%E5%8E%9F%E6%9C%89UI/"><span class="title">IMX6ULL移除及恢复原有UI</span></a><a class="item title" href="/2024/12/20/LVGL%E7%A7%BB%E6%A4%8D%E5%88%B0IMX6ULL/"><span class="title">LVGL移植到IMX6ULL笔记</span></a><a class="item title" href="/2024/09/30/poll%E7%AC%94%E8%AE%B0%E6%B7%B1%E5%85%A5/"><span class="title">poll笔记深入</span></a><a class="item title" href="/2024/09/20/%E7%BD%91%E4%B8%8A%E4%B8%80%E4%BA%9B%E4%B8%BB%E9%A2%98%E6%8E%A8%E8%8D%90/"><span class="title">搭建博客</span></a><a class="item title" href="/2024/10/31/roslaunch%E5%87%BA%E9%94%99/"><span class="title">roslaunch 出错</span></a><a class="item title" href="/2024/10/14/stack%E5%AE%9E%E7%8E%B0queue/"><span class="title">stack实现queue</span></a><a class="item title" href="/2024/09/20/LVGL/"><span class="title">LVGL</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/">搭建博客</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-09-20T12:13:20.000Z">2024-09-20</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-10-17T11:14:18.851Z">2024-10-17</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>hexo+github搭建博客笔记</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h1 id="hexo-github搭建博客笔记"><a href="#hexo-github搭建博客笔记" class="headerlink" title="hexo+github搭建博客笔记"></a>hexo+github搭建博客笔记</h1><h2 id="1-软件安装和使用"><a href="#1-软件安装和使用" class="headerlink" title="1. 软件安装和使用"></a>1. 软件安装和使用</h2><p>1.Git</p>
+<p>查看是否成功安装</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git version</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://sk473ajar.sabkt.gdipper.com/images/image-20240920172627650.png"></p>
+<p>绑定git邮箱和git用户，命令如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git config --global user.name dkyou <span class="comment">#输入git不需要双引号</span></span><br><span class="line">git config --global user.email 2323@xx.com</span><br></pre></td></tr></table></figure>
+
+<p>2.安装NodeJS</p>
+<p>2.1 NodeJS 是一个基于 Chrome V8 引擎的 JavaScript 运行环境。Node.js 使用了一个事件驱动、非阻塞式 I&#x2F;O 的模型，使其轻量又高效。</p>
+<p><strong>简单的说 Node.js 就是运行在服务端的 JavaScript，利用JavaScript在服务端进行编程。</strong></p>
+<p>关于NodeJS是什么可以参考：<a href="%5Bnodejs(%E7%AC%AC%E4%B8%80%E7%AF%87)%EF%BC%9Anodejs%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9FJavaScript%E8%AF%AD%E8%A8%80%E4%B8%8Enode%E3%80%81nodejs%E7%9A%84%E7%89%B9%E7%82%B9%E3%80%81nodejs%E5%8F%AF%E4%BB%A5%E5%81%9A%E4%BB%80%E4%B9%88%EF%BC%9F%E5%AE%89%E8%A3%85nodejs_node.js%E6%98%AF%E4%BB%80%E4%B9%88-CSDN%E5%8D%9A%E5%AE%A2%5D(https://blog.csdn.net/thlzjfefe/article/details/117648732)">nodejs(第一篇)：nodejs是什么？</a></p>
+<p>2.2 安装并配置环境变量，可以参考：[Node.js安装及环境配置超详细教程](<a target="_blank" rel="noopener" href="https://blog.csdn.net/Nicolecocol/article/details/136788200">Node.js安装及环境配置超详细教程【Windows系统】_windows 安装nodejs-CSDN博客</a>)</p>
+<p>2.3 同样的，使用命令查看是否安装成功</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">node -v</span><br><span class="line">npm -v</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://sk473ajar.sabkt.gdipper.com/images/image-20240920172830103.png"></p>
+<p>3.Hexo安装和设置</p>
+<p>3.1 hexo安装命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">npm install -g hexo-cli</span><br><span class="line"><span class="comment">#用于全局安装 Hexo 的命令行工具</span></span><br></pre></td></tr></table></figure>
+
+<p>以下是上述命令的解释：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">1.npm</span><br><span class="line">npm 是 Node.js 包管理器（Node Package Manager）的缩写，用于管理和安装 Node.js 应用程序的依赖包。</span><br><span class="line">2.install</span><br><span class="line">install 是 npm 的一个子命令，用于安装指定的包。</span><br><span class="line">3. -g</span><br><span class="line">-g 表示全局安装（global）。这意味着包将被安装到系统的全局位置，而不是项目的本地 node_modules 目录中。全局安装的包可以在系统中的任何位置使用。</span><br><span class="line">hexo-cli</span><br><span class="line">4. hexo-cli 是 Hexo 的命令行接口工具。Hexo 是一个静态站点生成器，可以用来快速生成静态博客或网站。</span><br></pre></td></tr></table></figure>
+
+<p>3.2 新建一个文件夹，例如”D:\myblog”，不需要进入该文件夹，直接鼠标右键—&gt;Git Bash Here，依次执行以下命令</p>
+<p>初始化myblog,即从<a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo-starter.git%E5%85%8B%E9%9A%86%E6%96%87%E4%BB%B6%EF%BC%8C%E5%B9%B6%E4%B8%94%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96">https://github.com/hexojs/hexo-starter.git克隆文件，并且安装依赖</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">hexo init myBlog</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>进入myblog文件夹，并且执行npm install命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> myBlog</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="http://sk473ajar.sabkt.gdipper.com/images/image-20240920174721935.png"></p>
+<p>运行hexo s命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo s</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://sk473ajar.sabkt.gdipper.com/images/image-20240920175357945.png"></p>
+<p>根据提示，可以直接在浏览器中输入<code>http://localhost:4000/</code>,回车即可看到效果</p>
+<p><img src="http://sk473ajar.sabkt.gdipper.com/images/image-20240920175717150.png"></p>
+<p>这是部署在本地的默认的一篇<code>hello world</code>博客，使用的是默认<code>theme: landscape</code>主题，此时和<code>github</code>还没有任何关系。</p>
+<h2 id="2-主题安装"><a href="#2-主题安装" class="headerlink" title="2. 主题安装"></a>2. 主题安装</h2><p>可从主题官网下载自己喜欢的主题：<a target="_blank" rel="noopener" href="https://hexo.io/themes/">Themes | Hexo</a></p>
+<p>以<a target="_blank" rel="noopener" href="https://github.com/Siricee/hexo-theme-Chic.git">hexo-theme-Chic</a>为例设置自己的主题,链接：<a target="_blank" rel="noopener" href="https://github.com/Siricee/hexo-theme-Chic.git">https://github.com/Siricee/hexo-theme-Chic.git</a></p>
+<p>执行<code>git clone https://github.com/Siricee/hexo-theme-Chic.git</code>或者直接<code>download zip</code>将下载的主题文件解压放在D:\myblog\themes文件夹中。注意文件名为<code>hexo-theme-Chic</code>后边没有<code>-master</code>和其他信息。</p>
+<p><img src="http://sk473ajar.sabkt.gdipper.com/images/image-20240920182049570.png"></p>
+<p>在D:\myblog中找到<code>_config.yml</code>，使用记事本或者vscode等打开，在第100行左右找到<code>theme: landscape</code>，改为<code>theme: hexo-theme-Chic</code>。</p>
+<p>注意：这里的<code>_config.yml</code>是根目录下的，即”D:\myblog\_config.yml”，不是<code>D:\myblog\themes\hexo-theme-Chic</code>下的<code>_config.yml</code></p>
+<p><img src="http://sk473ajar.sabkt.gdipper.com/images/image-20240920181648998.png" alt="image-20240920181648998"></p>
+<p>依次执行以下命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">hexo g</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://sk473ajar.sabkt.gdipper.com/images/image-20240920184319727.png" alt="image-20240920184319727"></p>
+<p>根据提示，可以直接在浏览器中输入<code>http://localhost:4000/</code>,回车即可看到更换主题之后的效果</p>
+<p><img src="http://sk473ajar.sabkt.gdipper.com/images/image-20240920184229783.png" alt="image-20240920184229783"></p>
+<p>themes主题文件结构：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">.</span><br><span class="line">├── _config.yml</span><br><span class="line">├── languages</span><br><span class="line">├── layout</span><br><span class="line">├── scripts</span><br><span class="line">└── <span class="built_in">source</span></span><br></pre></td></tr></table></figure>
+
+<p>主题配置文件设置：<code>D:\myblog\themes\hexo-theme-Chic</code>下的<code>_config.yml</code></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#文件位置`D:\myblog\themes\hexo-theme-Chic`下的`_config.yml`</span></span><br><span class="line"><span class="comment"># Header  </span></span><br><span class="line"><span class="attr">navname:</span> <span class="string">dku&#x27;s</span> <span class="string">Blog</span> <span class="string">//对应左上角</span></span><br><span class="line"><span class="comment"># 对应右上角  Posts Categories Tags About</span></span><br><span class="line"><span class="comment"># navigatior items</span></span><br><span class="line"><span class="attr">nav:</span></span><br><span class="line">  <span class="attr">Posts:</span> <span class="string">/archives</span></span><br><span class="line">  <span class="attr">Categories:</span> <span class="string">/category</span></span><br><span class="line">  <span class="attr">Tags:</span> <span class="string">/tag</span></span><br><span class="line">  <span class="attr">About:</span> <span class="string">/about</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># favicon 浏览器网址栏显示的图标，但是不知道为什么我默认的不是favicon.ico，而是我之前设置的神里凌华的图片，有点奇怪</span></span><br><span class="line"><span class="attr">favicon:</span> <span class="string">/favicon.ico</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Profile 中间显示的名字</span></span><br><span class="line"><span class="attr">nickname:</span> <span class="string">Dku</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### this variable is MarkDown form.</span></span><br><span class="line"><span class="comment"># 个人描述 显示在图像下边</span></span><br><span class="line"><span class="attr">description:</span> <span class="string">Lorem</span> <span class="string">ipsum</span> <span class="string">dolor</span> <span class="string">sit</span> <span class="string">amet,</span> <span class="string">**consectetur</span> <span class="string">adipiscing</span> <span class="string">elit.**</span> <span class="string">&lt;br&gt;Fusce</span> <span class="string">eget</span> <span class="string">urna</span> <span class="string">vitae</span> <span class="string">velit</span> <span class="string">*eleifend</span> <span class="string">interdum</span> <span class="string">at</span> <span class="string">ac*</span> <span class="string">nisi.</span></span><br><span class="line"><span class="comment"># 个人头像图片</span></span><br><span class="line"><span class="attr">avatar:</span> <span class="string">/image/avatar.jpeg</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># main menu navigation</span></span><br><span class="line"><span class="comment">## links key words should not be changed.</span></span><br><span class="line"><span class="comment">## Complete url after key words.</span></span><br><span class="line"><span class="comment">## Unused key can be commented out.</span></span><br><span class="line"><span class="comment">#常用网站的个人链接，取消注释添加即可</span></span><br><span class="line"><span class="attr">links:</span></span><br><span class="line">  <span class="attr">Blog:</span> <span class="string">/archives</span></span><br><span class="line">  <span class="comment"># Category:</span></span><br><span class="line">  <span class="comment"># Tags: </span></span><br><span class="line">  <span class="comment"># Link:</span></span><br><span class="line">  <span class="comment"># Resume:</span></span><br><span class="line">  <span class="comment"># Publish:</span></span><br><span class="line">  <span class="comment"># Trophy:</span></span><br><span class="line">  <span class="comment"># Gallery:</span></span><br><span class="line">  <span class="comment"># RSS:</span></span><br><span class="line">  <span class="comment"># AliPay:</span></span><br><span class="line">  <span class="attr">ZhiHu:</span> <span class="string">https://www.zhihu.com/people/sirice</span></span><br><span class="line">  <span class="comment"># LinkedIn:</span></span><br><span class="line">  <span class="comment"># FaceBook:</span></span><br><span class="line">  <span class="comment"># Twitter:</span></span><br><span class="line">  <span class="comment"># Skype:</span></span><br><span class="line">  <span class="comment"># CodeSandBox:</span></span><br><span class="line">  <span class="comment"># CodePen:</span></span><br><span class="line">  <span class="comment"># Sketch:</span></span><br><span class="line">  <span class="comment"># Gitlab:</span></span><br><span class="line">  <span class="comment"># Dribbble:</span></span><br><span class="line">  <span class="attr">Instagram:</span></span><br><span class="line">  <span class="attr">Reddit:</span></span><br><span class="line">  <span class="comment"># YouTube:</span></span><br><span class="line">  <span class="comment"># QQ:</span></span><br><span class="line">  <span class="comment"># Weibo:</span></span><br><span class="line">  <span class="comment"># WeChat:</span></span><br><span class="line">  <span class="attr">Github:</span> <span class="string">https://github.com/Siricee</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># how links show: you have 2 choice--text or icon.</span></span><br><span class="line"><span class="comment"># 图标或者文字显示常用网站的个人链接</span></span><br><span class="line"><span class="attr">links_text_enable:</span> <span class="literal">false</span></span><br><span class="line"><span class="attr">links_icon_enable:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Post page</span></span><br><span class="line"><span class="comment">## Post_meta</span></span><br><span class="line"><span class="attr">post_meta_enable:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="attr">post_author_enable:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">post_date_enable:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">post_category_enable:</span> <span class="literal">true</span></span><br><span class="line"><span class="comment">## Post copyright</span></span><br><span class="line"><span class="attr">post_copyright_enable:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="attr">post_copyright_author_enable:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">post_copyright_permalink_enable:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">post_copyright_license_enable:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">post_copyright_license_text:</span> <span class="string">Copyright</span> <span class="string">(c)</span> <span class="number">2019</span> <span class="string">&lt;a</span> <span class="string">href=&quot;http://creativecommons.org/licenses/by-nc/4.0/&quot;&gt;CC-BY-NC-4.0&lt;/a&gt;</span> <span class="string">LICENSE</span></span><br><span class="line"><span class="attr">post_copyright_slogan_enable:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">post_copyright_slogan_text:</span> <span class="string">Do</span> <span class="string">you</span> <span class="string">believe</span> <span class="string">in</span> <span class="string">&lt;strong&gt;DESTINY&lt;/strong&gt;?</span></span><br><span class="line"><span class="comment">## toc</span></span><br><span class="line"><span class="attr">post_toc_enable:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Page</span></span><br><span class="line"><span class="attr">page_title_enable:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Date / Time format</span></span><br><span class="line"><span class="comment">## Hexo uses Moment.js to parse and display date</span></span><br><span class="line"><span class="comment">## You can customize the date format as defined in</span></span><br><span class="line"><span class="comment">## http://momentjs.com/docs/#/displaying/format/</span></span><br><span class="line"><span class="comment">#日期格式</span></span><br><span class="line"><span class="attr">date_format:</span> <span class="string">MMMM</span> <span class="string">D,</span> <span class="string">YYYY</span></span><br><span class="line"><span class="attr">time_format:</span> <span class="string">H:mm:ss</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># stylesheets loaded in the &lt;head&gt;</span></span><br><span class="line"><span class="attr">stylesheets:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">/css/style.css</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># scripts loaded in the end of the body</span></span><br><span class="line"><span class="attr">scripts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">/js/script.js</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">/js/tocbot.min.js</span></span><br><span class="line">    <span class="comment"># tscanlin/tocbot: Build a table of contents from headings in an HTML document.</span></span><br><span class="line">    <span class="comment"># https://github.com/tscanlin/tocbot</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># plugin functions</span></span><br><span class="line"><span class="comment">## Mathjax: Math Formula Support</span></span><br><span class="line"><span class="comment">## https://www.mathjax.org</span></span><br><span class="line"><span class="attr">mathjax:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">import:</span> <span class="string">demand</span> <span class="comment"># global or demand</span></span><br><span class="line">  <span class="comment">## global: all pages will load mathjax,this will degrade performance and some grammers may be parsed wrong.</span></span><br><span class="line">  <span class="comment">## demand: Recommend option,if your post need fomula, you can declare &#x27;mathjax: true&#x27; in Front-matter</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>更改完<code>D:\myblog\themes\hexo-theme-Chic</code>下的<code>_config.yml</code>配置文件之后，可以依次执行<code>hexo g</code> <code>hexo s</code>根据提示，在浏览器中输入<code>http://localhost:4000/</code>,回车即可看到设置主题之后的效果</p>
+<p><img src="http://sk473ajar.sabkt.gdipper.com/images/image-20240920193126322.png" alt="image-20240920193126322"></p>
+<p>可以设置的东西挺多，简单设置的效果</p>
+<h1 id="3-将hexo博客部署到github上"><a href="#3-将hexo博客部署到github上" class="headerlink" title="3.将hexo博客部署到github上"></a>3.将hexo博客部署到github上</h1><p>以上，所有的设置和内容都只能显示在自己的电脑上，如何部署到github上？</p>
+<p>3.1 准备工作—新建仓库并设置ssh key</p>
+<p><em><strong>如果之前已经使用hexo搭建过博客，或者设置过以下内容，则无需再进行设置！</strong></em><br>如果想了解什么是ssh key及其原理，可以参考<strong>ssh_key简记</strong>，本文只讲如何操作。</p>
+<p>新建一个github仓库，仓库名要按照：<code>用户名.github.io</code>设置</p>
+<p>配置ssh key,使用git配置ssh key，命令如下</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git config --global user.name dkyou <span class="comment">#输入git不需要双引号</span></span><br><span class="line">git config --global user.email 2323@xx.com</span><br><span class="line">ssh-keygen -t rsa -C 2323@xx.com</span><br></pre></td></tr></table></figure>
+
+<p>查看ssh</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> ~/.ssh/id_rsa.pub</span><br></pre></td></tr></table></figure>
+
+<p>添加可信列表。若返回 Hi xxx! You’ve successfully authenticated, but GitHub does not provide shell access. 内容，则证实添加成功。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh -T git@github.com</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://sk473ajar.sabkt.gdipper.com/images/image-20240920194849457.png" alt="image-20240920194849457"></p>
+<p>登陆 Github 上添加刚刚生成的SSH key，按如下步骤添加，右上角点击头像-&gt; settings -&gt; SSH and GPG keys，建立一个新的 SSH key, 标题随便，key 就填刚才生成那个，确认建立，这样在你的 SSH keys 列表里就会看到你刚刚添加的密钥。</p>
+<p><img src="http://sk473ajar.sabkt.gdipper.com/images/image-20240920194441963.png" alt="image-20240920194441963"></p>
+<p>3.2 部署</p>
+<p> 在D:\myblog中找到<code>_config.yml</code>，使用记事本或者vscode等打开，找到最后几行，改为</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 文件路径：D:\myblog\_config.yml</span></span><br><span class="line"></span><br><span class="line"><span class="attr">deploy:</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">&#x27;git&#x27;</span></span><br><span class="line">  <span class="attr">repo:</span> <span class="string">https://github.com/dkyou/dkyou.github.io</span></span><br><span class="line">  <span class="attr">branch:</span> <span class="string">master</span></span><br></pre></td></tr></table></figure>
+
+<p>安装<code> hexo-deployer-git</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://sk473ajar.sabkt.gdipper.com/images/image-20240920195602908.png" alt="image-20240920195602908"></p>
+<p>执行命令上传</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">hexo g <span class="comment">#生成</span></span><br><span class="line">hexo d <span class="comment">#上传</span></span><br></pre></td></tr></table></figure>
+
+<p>有时候在执行hexo d会报错，再执行一次就可以</p>
+<p><img src="http://sk473ajar.sabkt.gdipper.com/images/image-20240920195816917.png" alt="image-20240920195816917"></p>
+<p>成功的截图</p>
+<p><img src="http://sk473ajar.sabkt.gdipper.com/images/image-20240920195932499.png" alt="image-20240920195932499"></p>
+<p>接下来使用<code>用户名.github.io</code>即可访问部署到github上的博客</p>
+<p>成功部署到github效果演示</p>
+<p><img src="http://sk473ajar.sabkt.gdipper.com/images/image-20240920200418549.png" alt="image-20240920200418549"></p>
+<p><img src="http://sk473ajar.sabkt.gdipper.com/images/image-20240920200638025.png" alt="image-20240920200638025"></p>
+<h1 id="4-更新文章"><a href="#4-更新文章" class="headerlink" title="4.更新文章"></a>4.更新文章</h1><p>可以使用<code>hexo new &#39;文章标题&#39;</code>命令来创建一个<code>文章标题.md</code>文件，也可以按照格式直接将自己的<code>.md</code></p>
+<p>文件复制到<code>&quot;D:\myblog\source\_posts\&quot;</code>文件夹中，同时按照以下格式添加一些命令</p>
+<p>使用<code>hexo new &#39;文章标题&#39;</code>命令来创建一个<code>文章标题.md</code>文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo new <span class="string">&#x27;文章标题&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>博客语法结构:</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">title: Hello World #文章标题</span><br><span class="line">date: 2024-09-20 20:13:20</span><br><span class="line">tags: [tag1,tag2,...]</span><br><span class="line"><span class="section">categories: </span></span><br><span class="line"><span class="section">---</span></span><br></pre></td></tr></table></figure>
+
+<p>将新文章部署到github上</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">hexo g <span class="comment"># 生成，必须</span></span><br><span class="line">hexo s <span class="comment"># 本地渲染，非必要</span></span><br><span class="line">hexo d <span class="comment"># 部署到Github 上，必须</span></span><br></pre></td></tr></table></figure>
+
+<p>注意：一个主题可能有以下文件结构</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">.</span><br><span class="line">├── _config.yml</span><br><span class="line">├── languages</span><br><span class="line">├── layout</span><br><span class="line">├── scripts</span><br><span class="line">└── <span class="built_in">source</span></span><br></pre></td></tr></table></figure>
+
+<p>涉及到<code>hexo d</code>的文件</p>
+<p>Source 文件夹。 将您的素材（如 CSS 和 JavaScript 文件）放在这里。 文件或文件夹开头名称为 <code>_</code>（下划线）或隐藏的文件会被忽略。</p>
+<p>Hexo 将处理所有可渲染的文件，并将它们保存到 <code>public</code> 文件夹下。 不可渲染的文件将直接复制到 <code>public</code> 文件夹。</p>
+<p><code>hexo d</code>也会把D:\myblog\source_posts中的md文件上传到 <code>public</code> 文件夹下，如果_post的md文件被删除或者增加，则会完全覆盖github中的md文件，所以不要轻易删除<code>_post</code>文件夹下的md文件。</p>
+<h1 id="5-完结！"><a href="#5-完结！" class="headerlink" title="5.完结！"></a>5.完结！</h1></article>
+<div class="article-footer">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    
+
+</div>
+
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2024/09/20/LVGL/">LVGL</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2024/09/20/ssh_key/">ssh_key简记</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Dku</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.33.1">Stellar 1.33.1</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#hexo-github%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E7%AC%94%E8%AE%B0"><span class="toc-text">hexo+github搭建博客笔记</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E8%BD%AF%E4%BB%B6%E5%AE%89%E8%A3%85%E5%92%8C%E4%BD%BF%E7%94%A8"><span class="toc-text">1. 软件安装和使用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%B8%BB%E9%A2%98%E5%AE%89%E8%A3%85"><span class="toc-text">2. 主题安装</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-%E5%B0%86hexo%E5%8D%9A%E5%AE%A2%E9%83%A8%E7%BD%B2%E5%88%B0github%E4%B8%8A"><span class="toc-text">3.将hexo博客部署到github上</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#4-%E6%9B%B4%E6%96%B0%E6%96%87%E7%AB%A0"><span class="toc-text">4.更新文章</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#5-%E5%AE%8C%E7%BB%93%EF%BC%81"><span class="toc-text">5.完结！</span></a></li></ol></div><div class="widget-footer"><a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/><path d="M7 3.338A9.95 9.95 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+
+
+<script type="text/javascript">
+  window.canonical = {"originalHost":null,"officialHosts":["localhost"],"encoded":""};
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+    tag_plugins: {
+      chat: Object.assign({"api":"https://siteinfo.listentothewind.cn/api/v1"}),
+    }
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":null,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+    loading: `https://api.iconify.design/eos-icons:three-dots-loading.svg?color=%231cd0fd`,
+  };
+  const deps = {
+    jquery: `https://gcore.jsdelivr.net/npm/jquery@3.7/dist/jquery.min.js`,
+    marked: `https://gcore.jsdelivr.net/npm/marked@13.0/lib/marked.umd.min.js`,
+    lazyload: `/%5Bobject%20Object%5D`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  
+  function RunItem() {
+    this.list = []; // 存放回调函数
+    this.start = () => {
+      for (var i = 0; i < this.list.length; i++) {
+        this.list[i].run();
+      }
+    };
+    this.push = (fn, name, setRequestAnimationFrame = true) => {
+      let myfn = fn
+      if (setRequestAnimationFrame) {
+        myfn = () => {
+          utils.requestAnimationFrame(fn)
+        }
+      }
+      var f = new Item(myfn, name);
+      this.list.push(f);
+    };
+    this.remove = (name) => {
+      for (let index = 0; index < this.list.length; index++) {
+        const e = this.list[index];
+        if (e.name == name) {
+          this.list.splice(index, 1);
+        }
+      }
+    }
+    // 构造一个可以run的对象
+    function Item(fn, name) {
+      // 函数名称
+      this.name = name || fn.name;
+      // run方法
+      this.run = () => {
+        try {
+          fn()
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    }
+  }
+
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')) {
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function () {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      const maxRetry = 3;
+      let retryCount = 0;
+
+      return new Promise((resolve, reject) => {
+        const load = () => {
+          utils.onLoading?.(el);
+
+          let timedOut = false;
+          const timeout = setTimeout(() => {
+            timedOut = true;
+            console.warn('[request] 超时:', url);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject('请求超时');
+            } else {
+              setTimeout(load, 1000);
+            }
+          }, 5000);
+
+          fetch(url).then(resp => {
+            if (timedOut) return;
+            clearTimeout(timeout);
+
+            if (!resp.ok) throw new Error('响应失败');
+            return resp;
+          }).then(data => {
+            if (timedOut) return;
+            utils.onLoadSuccess?.(el);
+            callback(data);
+            resolve(data);
+          }).catch(err => {
+            clearTimeout(timeout);
+            console.warn('[request] 错误:', err);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject(err);
+            } else {
+              setTimeout(load, 1000);
+            }
+          });
+        };
+
+        load();
+      });
+    },
+    requestWithoutLoading: (url, options = {}, maxRetry = 2, timeout = 5000) => {
+      return new Promise((resolve, reject) => {
+        let retryCount = 0;
+
+        const tryRequest = () => {
+          let timedOut = false;
+          const timer = setTimeout(() => {
+            timedOut = true;
+            if (++retryCount > maxRetry) reject('timeout');
+            else tryRequest();
+          }, timeout);
+
+          fetch(url, options)
+            .then(resp => {
+              clearTimeout(timer);
+              if (!resp.ok) throw new Error('bad response');
+              resolve(resp);
+            })
+            .catch(err => {
+              clearTimeout(timer);
+              if (++retryCount > maxRetry) reject(err);
+              else setTimeout(tryRequest, 500);
+            });
+        };
+
+        tryRequest();
+      });
+    },
+    /********************** requestAnimationFrame ********************************/
+    // 1、requestAnimationFrame 会把每一帧中的所有 DOM 操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
+    // 2、在隐藏或不可见的元素中，requestAnimationFrame 将不会进行重绘或回流，这当然就意味着更少的的 cpu，gpu 和内存使用量。
+    requestAnimationFrame: (fn) => {
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+      }
+      window.requestAnimationFrame(fn)
+    },
+    dark: {},
+  };
+
+  // utils.dark.mode 当前模式 dark or light
+  // utils.dark.toggle() 暗黑模式触发器
+  // utils.dark.push(callBack[,"callBackName"]) 传入触发器回调函数
+  utils.dark.method = {
+    toggle: new RunItem(),
+  };
+  utils.dark = Object.assign(utils.dark, {
+    push: utils.dark.method.toggle.push,
+  });
+</script>
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+<script async src="https://gcore.jsdelivr.net/npm/vanilla-lazyload@19.1/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+    callback_loaded: (el) => {
+      el.classList.add('loaded');
+      const wrapper = el.closest('.lazy-box');
+      const icon = wrapper?.querySelector('.lazy-icon');
+      if (icon) icon.remove();
+    }
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+
+  window.wrapLazyloadImages = (container) => {
+    if (typeof container === 'string') {
+      container = document.querySelector(container);
+    }
+    if (!container) return;
+    
+    const images = container.querySelectorAll('img');
+    images.forEach((img) => {
+      if (img.classList.contains('lazy')) return;
+
+      const src = img.getAttribute('src');
+      if (!src) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'lazy-box';
+
+      const newImg = img.cloneNode();
+      newImg.removeAttribute('src');
+      newImg.setAttribute('data-src', src);
+      newImg.classList.add('lazy');
+
+      const icon = document.createElement('div');
+      icon.className = 'lazy-icon';
+      if (def.loading) {
+        icon.style.backgroundImage = `url("${def.loading}")`;
+      }
+
+      wrapper.appendChild(newImg);
+      wrapper.appendChild(icon);
+
+      img.replaceWith(wrapper);
+    });
+
+    // 通知 LazyLoad 更新
+    if (window.lazyLoadInstance?.update) {
+      window.lazyLoadInstance.update();
+    }
+  }
+  
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.33.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    // applyThemeToGiscus(theme)
+  }
+
+  // FIXME: 这会导致无法使用 preferred_color_scheme 以外的主题
+  const applyThemeToGiscus = (theme) => {
+    // theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+    utils.dark.mode = newTheme === 'auto' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : newTheme;
+    utils.dark.method.toggle.start();
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    } else {
+      utils.dark.mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    utils.dark.method.toggle.start();
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"rating":{"js":"/js/services/rating.js","api":"https://star-vote.xaox.cc/api/rating"},"vote":{"js":"/js/services/vote.js","api":"https://star-vote.xaox.cc/api/vote"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"friends_and_posts":{"js":"/js/services/friends_and_posts.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"voice":{"js":"/js/plugins/voice.js"},"video":{"js":"/js/plugins/video.js"},"download-file":{"js":"/js/plugins/download-file.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"},"contributors":{"edit_this_page":{"_posts/":null,"wiki/stellar/":"https://github.com/xaoxuu/hexo-theme-stellar-docs/blob/main/"},"js":"/js/services/contributors.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else if (id == 'voice') {
+        ctx.voiceAudios = document.querySelectorAll('.voice>audio');
+        if (ctx.voiceAudios?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            createVoiceDom(ctx.voiceAudios);
+          });
+        }
+      } else if (id == 'video') {
+        ctx.videos = document.querySelectorAll('.video>video');
+        if (ctx.videos?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            videoEvents(ctx.videos);
+          });
+        }
+      } else if (id == 'download-file') {
+        ctx.files = document.querySelectorAll('.file');
+        if (ctx.files?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            downloadFileEvent(ctx.files);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+
+    // chat iphone time
+    let phoneTimes = document.querySelectorAll('.chat .status-bar .time');
+
+    if (phoneTimes.length > 0) {
+      NowTime();
+      var date = new Date();
+      var sec = date.getSeconds();
+      var firstAdjustInterval = setInterval(firstAdjustTime, 1000 * (60 - sec));
+    }
+
+    function firstAdjustTime() {
+      NowTime();
+      clearInterval(firstAdjustInterval);
+      setInterval(NowTime, 1000 * 60);
+    }
+
+    function NowTime() {
+      for (let i = 0; i < phoneTimes.length; ++i) {
+        var timeSpan = phoneTimes[i];
+        var date = new Date();
+        var hour = date.getHours();
+        var min = date.getMinutes();
+        timeSpan.innerHTML = check(hour) + ":" + check(min);
+      }
+    };
+
+    function check(val) {
+      if (val < 10) {
+        return ("0" + val);
+      }
+      return (val);
+    }
+
+    // chat quote
+    const chat_quote_obverser = new IntersectionObserver((entries, observer) => {
+      entries.filter((entry) => { return entry.isIntersecting }).sort((a, b) => a.intersectionRect.y !== b.intersectionRect.y ? a.intersectionRect.y - b.intersectionRect.y : a.intersectionRect.x - b.intersectionRect.x).forEach((entry, index) => {
+          observer.unobserve(entry.target);
+          setTimeout(() => {
+            entry.target.classList.add('quote-blink');
+            setTimeout(() => {
+              entry.target.classList.remove('quote-blink');
+            }, 1000);
+          }, Math.max(100, 16) * (index + 1));
+        });
+    });
+
+    var chatQuotes = document.querySelectorAll(".chat .talk .quote");
+    chatQuotes.forEach((quote) => {
+      quote.addEventListener('click', function () {
+        var chatCellDom = document.getElementById("quote-" + quote.getAttribute("quotedCellTag"));
+        if (chatCellDom) {
+          var chatDiv = chatCellDom.parentElement;
+          var mid = chatDiv.clientHeight / 2;
+          var offsetTop = chatCellDom.offsetTop;
+          if (offsetTop > mid - chatCellDom.clientHeight / 2) {
+            chatDiv.scrollTo({
+              top: chatCellDom.offsetTop - mid + chatCellDom.clientHeight / 2,
+              behavior: "smooth"
+            });
+          } else {
+            chatDiv.scrollTo({
+              top: 0,
+              behavior: "smooth"
+            });
+          }
+          chat_quote_obverser.observe(chatCellDom);
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://gcore.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error), .with-fancybox .atk-content img:not([atk-emoticon])';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const memos = document.getElementsByClassName('ds-memos');
+    if (memos != undefined && memos.length > 0) {
+      needFancybox = true;
+    }
+    const fancybox = document.getElementsByClassName('with-fancybox');
+    if (fancybox != undefined && fancybox.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
