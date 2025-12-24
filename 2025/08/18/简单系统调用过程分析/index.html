@@ -1,0 +1,1180 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.33.1" theme-name="Stellar" theme-version="1.33.1">
+  
+  
+  <meta name="generator" content="Hexo 8.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  <title>杂记-不完整 - 又是摸鱼的一天</title>
+
+  
+    <meta name="description" content="简单系统调用过程分析前言我写了一段C代码： 1234int main()&#123;	printf(&quot;hello world!\n&quot;);	return 0;&#125;  在终端执行： 1strace -o printf.log .&#x2F;print_helloworld  终端中输出： 1hello world!  printf.log中的内容为： 1234567891011121">
+<meta property="og:type" content="article">
+<meta property="og:title" content="杂记-不完整">
+<meta property="og:url" content="https://dkyou.github.io/2025/08/18/%E7%AE%80%E5%8D%95%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90/">
+<meta property="og:site_name" content="又是摸鱼的一天">
+<meta property="og:description" content="简单系统调用过程分析前言我写了一段C代码： 1234int main()&#123;	printf(&quot;hello world!\n&quot;);	return 0;&#125;  在终端执行： 1strace -o printf.log .&#x2F;print_helloworld  终端中输出： 1hello world!  printf.log中的内容为： 1234567891011121">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-08-17T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-12-24T15:31:14.031Z">
+<meta property="article:author" content="Dku">
+<meta property="article:tag" content="kernel">
+<meta property="article:tag" content="linux">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <meta name="keywords" content="linux,kernel">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.33.1">
+
+
+  
+
+  
+
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dku","sameAs":[]},"dateCreated":"2025-08-18T00:00:00+08:00","dateModified":"2025-12-24T23:31:14+08:00","datePublished":"2025-08-18T00:00:00+08:00","description":"","headline":"杂记-不完整","mainEntityOfPage":{"@type":"WebPage","@id":"https://dkyou.github.io/2025/08/18/%E7%AE%80%E5%8D%95%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90/"},"publisher":{"@type":"Organization","name":"Dku","sameAs":[]},"url":"https://dkyou.github.io/2025/08/18/%E7%AE%80%E5%8D%95%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90/","keywords":"linux, kernel","thumbnailUrl":"https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/wallhaven-j3qq15.webp","image":1}</script>
+  
+</head>
+<body><div class="sitebg"><div class="siteblur"></div></div>
+
+<div class="l_body content" id="start" layout="post" type="tech" ><aside class="l_left"><div class="sidebg"></div><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大白鹅喝酒.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main">👀瞅啥呢！👀</div><div class="sub normal cap">今天又是摸鱼的一天！</div><div class="sub hover cap" style="opacity:0">可不摸鱼又干什么呢？</div></a></div></header>
+
+<div class="nav-area">
+
+<nav class="menu dis-select"><a class="nav-item active" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="文档" href="/wiki/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="探索" href="/explore/" style="color:#FA6400"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M20 12a8 8 0 1 1-16 0a8 8 0 0 1 16 0" opacity=".5"/><path fill="currentColor" d="M17.712 5.453c1.047-.193 2.006-.259 2.797-.152c.77.103 1.536.393 1.956 1.064c.446.714.312 1.542-.012 2.258c-.33.728-.918 1.499-1.672 2.268c-1.516 1.547-3.836 3.226-6.597 4.697c-2.763 1.472-5.495 2.484-7.694 2.92c-1.095.217-2.098.299-2.923.201c-.8-.095-1.6-.383-2.032-1.075c-.47-.752-.296-1.63.07-2.379c.375-.768 1.032-1.586 1.872-2.403L4 12.416c0 .219.083.71.168 1.146c.045.23.09.444.123.596c-.652.666-1.098 1.263-1.339 1.756c-.277.567-.208.825-.145.925c.072.116.305.305.937.38c.609.073 1.44.018 2.455-.183c2.02-.4 4.613-1.351 7.28-2.772c2.667-1.42 4.85-3.015 6.23-4.423c.694-.707 1.15-1.334 1.377-1.836c.233-.515.167-.75.107-.844c-.07-.112-.289-.294-.883-.374c-.542-.072-1.272-.041-2.163.112L16.87 5.656c.338-.101.658-.17.842-.203"/></svg></a><a class="nav-item" title="社交" href="/friends/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+
+<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/18/%E7%AE%80%E5%8D%95%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90/"><span class="title">杂记-不完整</span></a><a class="item title" href="/2025/12/12/win11+WSL+%E9%BC%A0%E6%A0%87%E5%85%89%E6%A0%87%E6%B6%88%E5%A4%B1%E8%A7%A3%E5%86%B3/"><span class="title">解决win11+WSL+鼠标光标消失</span></a><a class="item title" href="/2025/08/18/fastfetch/"><span class="title">fastfetch编译安装</span></a><a class="item title" href="/2025/08/18/pkg-config/"><span class="title">pkg-config 了解</span></a><a class="item title" href="/2025/08/18/gun_linux_unix_posix/"><span class="title">Unix+POSIX+GNU+Linux关系</span></a><a class="item title" href="/2025/08/18/bashrc%E8%A7%A3%E9%87%8A/"><span class="title">wsl bashrc解释</span></a><a class="item title" href="/2025/12/12/win11+WSL+vscode+clangd%E7%AE%80%E5%8D%95%E9%85%8D%E7%BD%AE/"><span class="title">win11+WSL+vscode+clangd简单配置</span></a><a class="item title" href="/2025/12/11/dts%20probe%E8%BF%87%E7%A8%8B/"><span class="title">dts probe过程</span></a><a class="item title" href="/2025/11/19/SDL%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85/"><span class="title">SDL源码编译安装</span></a><a class="item title" href="/2025/11/03/%E6%81%8B%E7%88%B1%E5%B0%8F%E7%9B%AE%E6%A0%87/"><span class="title">恋爱小目标进度</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="https://github.com/dkyou" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="mailto:2328727915@qq.com" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/gmail.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="https://space.bilibili.com/" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/bilibili.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="/atom.xml" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/rss.svg" height="20" style="opacity:0.9;"/></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top"><img class="lazy bg" data-src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/wallhaven-j3qq15.webp">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/linux/">linux</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-08-17T16:00:00.000Z">2025-08-18</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-12-24T15:31:14.031Z">2025-12-24</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>杂记-不完整</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h1 id="简单系统调用过程分析"><a href="#简单系统调用过程分析" class="headerlink" title="简单系统调用过程分析"></a>简单系统调用过程分析</h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>我写了一段C代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span>&#123;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;hello world!\n&quot;</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在终端执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">strace -o printf.log ./print_helloworld</span><br></pre></td></tr></table></figure>
+
+<p>终端中输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hello world!</span><br></pre></td></tr></table></figure>
+
+<p><code>printf.log</code>中的内容为：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">execve(<span class="string">&quot;./print_helloworld&quot;</span>, [<span class="string">&quot;./print_helloworld&quot;</span>], 0x7ffddeb59340 /* 37 vars */) = 0</span><br><span class="line">brk(NULL)                               = 0x55b56c23f000</span><br><span class="line">arch_prctl(0x3001 /* ARCH_??? */, 0x7ffd179dbd20) = -1 EINVAL (Invalid argument)</span><br><span class="line">mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f16cdaba000</span><br><span class="line">access(<span class="string">&quot;/etc/ld.so.preload&quot;</span>, R_OK)      = -1 ENOENT (No such file or directory)</span><br><span class="line">openat(AT_FDCWD, <span class="string">&quot;/etc/ld.so.cache&quot;</span>, O_RDONLY|O_CLOEXEC) = 3</span><br><span class="line">newfstatat(3, <span class="string">&quot;&quot;</span>, &#123;st_mode=S_IFREG|0644, st_size=34783, ...&#125;, AT_EMPTY_PATH) = 0</span><br><span class="line">mmap(NULL, 34783, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f16cdab1000</span><br><span class="line">close(3)                                = 0</span><br><span class="line">openat(AT_FDCWD, <span class="string">&quot;/lib/x86_64-linux-gnu/libc.so.6&quot;</span>, O_RDONLY|O_CLOEXEC) = 3</span><br><span class="line"><span class="built_in">read</span>(3, <span class="string">&quot;\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0P\237\2\0\0\0\0\0&quot;</span>..., 832) = 832</span><br><span class="line">pread64(3, <span class="string">&quot;\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0&quot;</span>..., 784, 64) = 784</span><br><span class="line">pread64(3, <span class="string">&quot;\4\0\0\0 \0\0\0\5\0\0\0GNU\0\2\0\0\300\4\0\0\0\3\0\0\0\0\0\0\0&quot;</span>..., 48, 848) = 48</span><br><span class="line">pread64(3, <span class="string">&quot;\4\0\0\0\24\0\0\0\3\0\0\0GNU\0I\17\357\204\3$\f\221\2039x\324\224\323\236S&quot;</span>..., 68, 896) = 68</span><br><span class="line">newfstatat(3, <span class="string">&quot;&quot;</span>, &#123;st_mode=S_IFREG|0755, st_size=2220400, ...&#125;, AT_EMPTY_PATH) = 0</span><br><span class="line">pread64(3, <span class="string">&quot;\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0&quot;</span>..., 784, 64) = 784</span><br><span class="line">mmap(NULL, 2264656, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f16cd888000</span><br><span class="line">mprotect(0x7f16cd8b0000, 2023424, PROT_NONE) = 0</span><br><span class="line">mmap(0x7f16cd8b0000, 1658880, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x28000) = 0x7f16cd8b0000</span><br><span class="line">mmap(0x7f16cda45000, 360448, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1bd000) = 0x7f16cda45000</span><br><span class="line">mmap(0x7f16cda9e000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x215000) = 0x7f16cda9e000</span><br><span class="line">mmap(0x7f16cdaa4000, 52816, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7f16cdaa4000</span><br><span class="line">close(3)                                = 0</span><br><span class="line">mmap(NULL, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f16cd885000</span><br><span class="line">arch_prctl(ARCH_SET_FS, 0x7f16cd885740) = 0</span><br><span class="line">set_tid_address(0x7f16cd885a10)         = 19390</span><br><span class="line">set_robust_list(0x7f16cd885a20, 24)     = 0</span><br><span class="line">rseq(0x7f16cd8860e0, 0x20, 0, 0x53053053) = 0</span><br><span class="line">mprotect(0x7f16cda9e000, 16384, PROT_READ) = 0</span><br><span class="line">mprotect(0x55b552fa8000, 4096, PROT_READ) = 0</span><br><span class="line">mprotect(0x7f16cdaf4000, 8192, PROT_READ) = 0</span><br><span class="line">prlimit64(0, RLIMIT_STACK, NULL, &#123;rlim_cur=8192*1024, rlim_max=RLIM64_INFINITY&#125;) = 0</span><br><span class="line">munmap(0x7f16cdab1000, 34783)           = 0</span><br><span class="line">newfstatat(1, <span class="string">&quot;&quot;</span>, &#123;st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0x5), ...&#125;, AT_EMPTY_PATH) = 0</span><br><span class="line">getrandom(<span class="string">&quot;\x26\xbc\x99\x15\xfc\x24\x0d\x5b&quot;</span>, 8, GRND_NONBLOCK) = 8</span><br><span class="line">brk(NULL)                               = 0x55b56c23f000</span><br><span class="line">brk(0x55b56c260000)                     = 0x55b56c260000</span><br><span class="line">write(1, <span class="string">&quot;hello world!\n&quot;</span>, 13)          = 13</span><br><span class="line">exit_group(0)                           = ?</span><br><span class="line">+++ exited with 0 +++</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="涉及到的系统调用"><a href="#涉及到的系统调用" class="headerlink" title="涉及到的系统调用"></a>涉及到的系统调用</h2><p>（1）涉及到strace 命令</p>
+<p>通过man strace可以看到他是一个跟踪系统调用和信号传递的工具</p>
+<hr>
+<p>It intercepts and records the system calls which are called by a process and the signals which are received by a process.  The name of each system call, its arguments and  its  return value are printed on standard error or to the file specified with the -o option.</p>
+<hr>
+<p>（2）这个案例中涉及一些系统调用</p>
+<ol>
+<li><p>arch_prctl</p>
+<p>用于设置架构特定线程状态的系统调用。它允许在 x86 和 x86-64 架构上执行特定的操作，如设置和获取 FS 和 GS 寄存器的基地址，以及启用或禁用 CPUID 指令。</p>
+</li>
+<li><p>mmap</p>
+</li>
+<li><p>execve</p>
+<p>允许进程用一个全新的程序替换当前运行的程序。这个过程中，旧程序的栈、数据和堆段会被新程序所替换。<em>execve</em>函数不会创建新进程，而是在原有进程的基础上执行另一个程序，进程ID保持不变。</p>
+</li>
+<li><p>access</p>
+</li>
+<li><p>openat</p>
+</li>
+</ol>
+<p>用于相对于指定目录文件描述符打开文件，是 <code>open</code> 函数的扩展版本，提供了更灵活的文件打开方式，支持相对路径操作，避免了某些竞态条件。</p>
+<ol>
+<li>newfstatat</li>
+<li>set_tid_address</li>
+<li>set_robust_list</li>
+<li>rseq</li>
+<li>brk</li>
+<li>write</li>
+<li>close</li>
+<li>exit_group</li>
+</ol>
+<h2 id="具体分析"><a href="#具体分析" class="headerlink" title="具体分析"></a>具体分析</h2><h3 id="1-程序启动-execve"><a href="#1-程序启动-execve" class="headerlink" title="1. 程序启动 (execve)"></a>1. 程序启动 (<code>execve</code>)</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">execve(&quot;./print_helloworld&quot;, [&quot;./print_helloworld&quot;], 0x7ffddeb59340 /* 37 vars */) = 0</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>execve</strong>：这是程序启动时的系统调用，用于执行可执行文件。<code>execve</code> 会替换当前进程的映像为指定的程序，这里是 <code>./print_helloworld</code>。</li>
+<li>它传递了参数 <code>[&quot;./print_helloworld&quot;]</code>，表示没有命令行参数传入。</li>
+<li><code>0x7ffddeb59340</code> 是进程环境变量的位置（堆栈中的内存位置）。</li>
+</ul>
+<h3 id="2-分配内存-brk-和-mmap"><a href="#2-分配内存-brk-和-mmap" class="headerlink" title="2. 分配内存 (brk 和 mmap)"></a>2. 分配内存 (<code>brk</code> 和 <code>mmap</code>)</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brk(NULL) = 0x55b56c23f000</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>brk</strong>：<code>brk</code> 系统调用是为了调整程序的堆内存边界，分配内存。这里它返回了一个地址，表明堆的开始位置。</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f16cdaba000</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>mmap</strong>：这个调用分配了一块 8192 字节的内存区域。<code>PROT_READ|PROT_WRITE</code> 表示这块内存可读可写，<code>MAP_PRIVATE|MAP_ANONYMOUS</code> 表示这是匿名内存（没有文件映射）。它返回了内存区域的起始地址。</li>
+</ul>
+<h3 id="3-加载动态链接库-openat-和-read"><a href="#3-加载动态链接库-openat-和-read" class="headerlink" title="3. 加载动态链接库 (openat 和 read)"></a>3. 加载动态链接库 (<code>openat</code> 和 <code>read</code>)</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">openat(AT_FDCWD, &quot;/etc/ld.so.cache&quot;, O_RDONLY|O_CLOEXEC) = 3</span><br><span class="line">read(3, &quot;\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0P\237\2\0\0\0\0\0&quot;..., 832) = 832</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>openat</strong>：打开共享库缓存文件 <code>/etc/ld.so.cache</code>，它包含了动态库路径的信息。<code>O_RDONLY</code> 表示只读模式，<code>O_CLOEXEC</code> 表示当执行 exec 系统调用时会自动关闭该文件。</li>
+<li><strong>read</strong>：从文件中读取数据，这里是读取到 ELF 格式的共享库文件的部分内容。</li>
+</ul>
+<h3 id="4-继续读取共享库信息-pread64"><a href="#4-继续读取共享库信息-pread64" class="headerlink" title="4. 继续读取共享库信息 (pread64)"></a>4. 继续读取共享库信息 (<code>pread64</code>)</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pread64(3, &quot;\6\0\0\0\4\0\0\0@&quot;, 784, 64) = 784</span><br><span class="line">pread64(3, &quot;\4\0\0\0 \0\0\0\5\0\0\0GNU\0\2\0\0\300\4\0\0\0\3\0\0\0\0\0\0\0&quot;, 48, 848) = 48</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>pread64</strong>：从文件描述符中读取共享库的特定偏移位置的数据。这部分通常用于解析 ELF 文件头，提取程序头信息、节头等数据。</li>
+</ul>
+<h3 id="5-加载-libc-库"><a href="#5-加载-libc-库" class="headerlink" title="5. 加载 libc 库"></a>5. 加载 libc 库</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">newfstatat(3, &quot;&quot;, &#123;st_mode=S_IFREG|0755, st_size=2220400, ...&#125;, AT_EMPTY_PATH) = 0</span><br><span class="line">pread64(3, &quot;\6\0\0\0\4\0\0\0@&quot;, 784, 64) = 784</span><br><span class="line">mmap(NULL, 2264656, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f16cd888000</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>mmap</strong>：加载共享库 <code>libc.so.6</code> 的内容到内存中，大小为 2264656 字节。该内存映射使用了 <code>PROT_READ</code>（只读）权限，以防止写入修改库内容。</li>
+</ul>
+<h3 id="6-保护库的只读区域-mprotect"><a href="#6-保护库的只读区域-mprotect" class="headerlink" title="6. 保护库的只读区域 (mprotect)"></a>6. 保护库的只读区域 (<code>mprotect</code>)</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mprotect(0x7f16cd8b0000, 2023424, PROT_NONE) = 0</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>mprotect</strong>：将库的一部分内存设置为不可访问（<code>PROT_NONE</code>），以保护代码区不被修改。</li>
+</ul>
+<h3 id="7-内存映射（执行区域）"><a href="#7-内存映射（执行区域）" class="headerlink" title="7. 内存映射（执行区域）"></a>7. 内存映射（执行区域）</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mmap(0x7f16cd8b0000, 1658880, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x28000) = 0x7f16cd8b0000</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>mmap</strong>：将库的代码部分映射到进程的地址空间，且此区域可执行（<code>PROT_EXEC</code>）。这使得程序能够执行共享库中的代码。</li>
+</ul>
+<h3 id="8-设置堆栈信息-arch-prctl-和-set-tid-address"><a href="#8-设置堆栈信息-arch-prctl-和-set-tid-address" class="headerlink" title="8. 设置堆栈信息 (arch_prctl 和 set_tid_address)"></a>8. 设置堆栈信息 (<code>arch_prctl</code> 和 <code>set_tid_address</code>)</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">arch_prctl(ARCH_SET_FS, 0x7f16cd885740) = 0</span><br><span class="line">set_tid_address(0x7f16cd885a10) = 19390</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>arch_prctl</strong>：设置与体系结构相关的特定寄存器。这通常用于线程的控制。</li>
+<li><strong>set_tid_address</strong>：设置当前线程的 ID 地址。</li>
+</ul>
+<h3 id="9-进程的内存保护和资源限制-mprotect-prlimit64"><a href="#9-进程的内存保护和资源限制-mprotect-prlimit64" class="headerlink" title="9. 进程的内存保护和资源限制 (mprotect, prlimit64)"></a>9. 进程的内存保护和资源限制 (<code>mprotect</code>, <code>prlimit64</code>)</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mprotect(0x7f16cda9e000, 16384, PROT_READ) = 0</span><br><span class="line">prlimit64(0, RLIMIT_STACK, NULL, &#123;rlim_cur=8192*1024, rlim_max=RLIM64_INFINITY&#125;) = 0</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>mprotect</strong>：对堆栈的内存进行保护，使其只读。</li>
+<li><strong>prlimit64</strong>：检查进程的栈内存限制，确保栈内存足够。</li>
+</ul>
+<h3 id="10-写入标准输出-write"><a href="#10-写入标准输出-write" class="headerlink" title="10. 写入标准输出 (write)"></a>10. 写入标准输出 (<code>write</code>)</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">write(1, &quot;hello world!\n&quot;, 13) = 13</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>write</strong>：调用 <code>write</code> 系统调用将数据输出到文件描述符 1（即标准输出）。它将 <code>hello world!\n</code> 输出到终端。</li>
+</ul>
+<h3 id="11-程序退出-exit-group"><a href="#11-程序退出-exit-group" class="headerlink" title="11. 程序退出 (exit_group)"></a>11. 程序退出 (<code>exit_group</code>)</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">exit_group(0) = ?</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>exit_group</strong>：这是进程退出时的系统调用，<code>0</code> 表示程序正常退出。</li>
+</ul>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>整个过程可以按以下步骤总结：</p>
+<ol>
+<li><strong>程序启动</strong>：<code>execve</code> 启动 <code>./print_helloworld</code> 程序。</li>
+<li><strong>内存分配</strong>：程序通过 <code>brk</code> 和 <code>mmap</code> 分配内存。</li>
+<li><strong>加载共享库</strong>：通过 <code>openat</code> 和 <code>read</code> 读取共享库，加载 <code>libc.so.6</code> 库，映射到进程内存中。</li>
+<li><strong>设置堆栈和线程</strong>：通过 <code>arch_prctl</code> 和 <code>set_tid_address</code> 设置线程和堆栈信息。</li>
+<li><strong>保护内存</strong>：通过 <code>mprotect</code> 保护程序的代码和数据区域，防止非法访问。</li>
+<li><strong>执行代码</strong>：通过 <code>mmap</code> 映射并执行共享库代码。</li>
+<li><strong>输出结果</strong>：通过 <code>write</code> 输出字符串 <code>hello world!\n</code> 到终端。</li>
+<li><strong>程序退出</strong>：程序调用 <code>exit_group</code> 正常退出。</li>
+</ol>
+<p><code>strace</code> 输出展示了系统调用的详细信息，揭示了程序如何通过操作系统接口加载库、分配内存、执行代码和输出结果的过程。</p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/392588996">(10 条消息) posix是什么都不知道，还好意思说你懂Linux？ - 知乎</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/490494243">(11 条消息) 系统调用与内存管理（sbrk、brk、mmap、munmap） - 知乎</a></p>
+<h2 id="关于init进程"><a href="#关于init进程" class="headerlink" title="关于init进程"></a>关于init进程</h2><p>可执行文件目录：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">dky@DESKTOP-57A415L:/$ ls -la init </span><br><span class="line">-rwxrwxrwx 1 root root 2260248 Nov 10  2024 init</span><br><span class="line">dky@DESKTOP-57A415L:/$ file init </span><br><span class="line">init: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, stripped</span><br></pre></td></tr></table></figure>
+
+<p>init是 Linux 系统启动的第一个用户态进程（PID 通常为 1），负责初始化系统环境、启动后续的服务进程。</p>
+<p>init对应的systemd源代码仓库</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://github.com/systemd/systemd.git</span><br></pre></td></tr></table></figure>
+
+<p>经过确认，wsl的init对应与WSL环境专用的初始化程序，其对应的代码仓库为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://github.com/microsoft/WSL.git</span><br></pre></td></tr></table></figure>
+
+<p>具体路径位于：<a target="_blank" rel="noopener" href="https://github.com/microsoft/WSL/blob/master/src/linux/init/main.cpp%EF%BC%8C%E5%8F%91%E7%8E%B0%E7%AB%9F%E7%84%B6%E6%98%AF%E7%94%A8cpp%E5%86%99%E7%9A%84%EF%BC%8C%E8%BF%98%E6%8C%BA%E7%A5%9E%E5%A5%87%E7%9A%84">https://github.com/microsoft/WSL/blob/master/src/linux/init/main.cpp，发现竟然是用cpp写的，还挺神奇的</a></p>
+<h2 id="查看gcc命令具体位置"><a href="#查看gcc命令具体位置" class="headerlink" title="查看gcc命令具体位置"></a>查看gcc命令具体位置</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">dky@DESKTOP-57A415L:~$ which gcc</span><br><span class="line">/usr/bin/gcc</span><br><span class="line">dky@DESKTOP-57A415L:~$ readlink -e /usr/bin/gcc</span><br><span class="line">/usr/bin/x86_64-linux-gnu-gcc-11</span><br></pre></td></tr></table></figure>
+
+<p>或者</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">dky@DESKTOP-57A415L:~$ which gcc</span><br><span class="line">/usr/bin/gcc</span><br><span class="line">dky@DESKTOP-57A415L:~$ file /usr/bin/gcc</span><br><span class="line">/usr/bin/gcc: symbolic link to gcc-11</span><br><span class="line">dky@DESKTOP-57A415L:~$ file /usr/bin/gcc-11</span><br><span class="line">/usr/bin/gcc-11: symbolic link to x86_64-linux-gnu-gcc-11</span><br></pre></td></tr></table></figure>
+
+<h2 id="查看gcc头文件库文件搜索路径"><a href="#查看gcc头文件库文件搜索路径" class="headerlink" title="查看gcc头文件库文件搜索路径"></a>查看gcc头文件库文件搜索路径</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -print-search-dirs</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo &#x27;main()&#123;&#125;&#x27;| gcc -E -v -</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -v -E -x c /dev/null</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -Wl,--verbose 2&gt;&amp;1 | grep -E &#x27;SEARCH_DIR|library search&#x27;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -Wl,--verbose 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+
+<h2 id="glibc安装"><a href="#glibc安装" class="headerlink" title="glibc安装"></a>glibc安装</h2><p>glibc下载地址：<a target="_blank" rel="noopener" href="https://ftp.gnu.org/gnu/glibc/?C=M;O=A">https://ftp.gnu.org/gnu/glibc/?C=M;O=A</a></p>
+<p>glibc是GNU发布的libc库，即c运行库。 glibc是linux系统中最底层的api，几乎其它任何运行库都会依赖于glibc。 glibc除了封装linux操作系统所提供的系统服务外，它本身也提供了许多其它一些必要功能服务的实现。</p>
+<p>glibc涉及的系统组件多，无法在超算平台上整体部署高版本glibc，如果需要高版本glibc，可通过源码自行安装。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">srun -p 64c512g -n 16 --pty /bin/bash</span><br><span class="line">mkdir -p $&#123;HOME&#125;/01.application/12.glibc &amp;&amp; cd $&#123;HOME&#125;/01.application/12.glibc</span><br><span class="line">wget http://ftp.gnu.org/gnu/glibc/glibc-2.29.tar.gz</span><br><span class="line">tar -zxvf glibc-2.29.tar.gz &amp;&amp; cd glibc-2.29</span><br><span class="line">mkdir build &amp;&amp; cd build</span><br><span class="line">../configure --prefix=$&#123;HOME&#125;/01.application/12.glibc/ --disable-sanity-checks</span><br><span class="line">make -j16</span><br><span class="line">make install</span><br><span class="line">cd $&#123;HOME&#125;/01.application/12.glibc/</span><br><span class="line">rm -rf glibc-2.29</span><br><span class="line">export PATH=$&#123;HOME&#125;/01.application/12.glibc/bin:$PATH</span><br><span class="line">ldd --version</span><br></pre></td></tr></table></figure>
+
+<p>参考：<a target="_blank" rel="noopener" href="https://docs.hpc.sjtu.edu.cn/app/compilers_and_languages/glibc.html">https://docs.hpc.sjtu.edu.cn/app/compilers_and_languages/glibc.html</a></p>
+<p>glibc编译</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">cd /home/dky/print</span><br><span class="line">rm -rf glibc-build</span><br><span class="line">mkdir glibc-build</span><br><span class="line">cd glibc-build</span><br><span class="line"></span><br><span class="line">../glibc-2.35/configure \</span><br><span class="line">  --prefix=/home/dky/print/glibc-prefix \</span><br><span class="line">  --disable-werror</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><code>--disable-werror</code> 很重要，否则很多 warning 会被当成 error 卡住</p>
+<p><code>--prefix</code> 只是“未来如果 install 会装到哪”，不执行 <code>make install</code> 就不会动系统。</p>
+<p>–prefix需要配置，否则默认为–prefix&#x3D;&#x2F;usr&#x2F;local，如果你把它装进 &#x2F;usr&#x2F;local 可能把系统搞坏”，执行configure时会直接拦住。</p>
+<p>只编译（不安装）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make -j&quot;$(nproc)&quot;</span><br></pre></td></tr></table></figure>
+
+<p> 给 clangd 用：生成 compile_commands.json</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bear -- make -j&quot;$(nproc)&quot; -k</span><br></pre></td></tr></table></figure>
+
+<p>然后把它链接到源码根目录：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ln -sf /home/dky/print/glibc-build/compile_commands.json \</span><br><span class="line">       /home/dky/print/glibc-2.35/compile_commands.json</span><br></pre></td></tr></table></figure>
+
+<p>（或在 VSCode clangd 参数里加：<code>--compile-commands-dir=/home/dky/print/glibc-build</code>）</p>
+<h2 id="查看glibc版本"><a href="#查看glibc版本" class="headerlink" title="查看glibc版本"></a>查看glibc版本</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ldd --version</span><br></pre></td></tr></table></figure>
+
+<p>运行结果</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">dky@DESKTOP-57A415L:~/print/glibc-2.42$ ldd --version</span><br><span class="line">ldd (Ubuntu GLIBC 2.35-0ubuntu3.1) 2.35</span><br><span class="line">Copyright (C) 2022 Free Software Foundation, Inc.</span><br><span class="line">This is free software; see the source for copying conditions.  There is NO</span><br><span class="line">warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</span><br><span class="line">Written by Roland McGrath and Ulrich Drepper.</span><br></pre></td></tr></table></figure>
+
+<p>GLIBC 的动态库是可以执行运行的, 运行将显示版本号以及版权信息，可以看到版本为：2.35</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/lib/x86_64-linux-gnu/libc.so.6</span><br></pre></td></tr></table></figure>
+
+<p>运行结果</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">dky@DESKTOP-57A415L:~/print/glibc-2.42$ /lib/x86_64-linux-gnu/libc.so.6 </span><br><span class="line">GNU C Library (Ubuntu GLIBC 2.35-0ubuntu3.8) stable release version 2.35.</span><br><span class="line">Copyright (C) 2022 Free Software Foundation, Inc.</span><br><span class="line">This is free software; see the source for copying conditions.</span><br><span class="line">There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A</span><br><span class="line">PARTICULAR PURPOSE.</span><br><span class="line">Compiled by GNU CC version 11.4.0.</span><br><span class="line">libc ABIs: UNIQUE IFUNC ABSOLUTE</span><br><span class="line">For bug reporting instructions, please see:</span><br><span class="line">&lt;https://bugs.launchpad.net/ubuntu/+source/glibc/+bugs&gt;.</span><br></pre></td></tr></table></figure>
+
+<p>然后到<a target="_blank" rel="noopener" href="http://ftp.gnu.org/pub/gnu/glibc/?C=M;O=A">Index of &#x2F;pub&#x2F;gnu&#x2F;glibc</a>网站上搜索2.35版本进行下载。找到以下版本进行下载</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">glibc-2.35.tar.gz	2022-02-03 01:35	34M	 </span><br></pre></td></tr></table></figure>
+
+<p>解压并进入对应文件夹</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">tar -zxvf glibc-2.35.tar.gz</span><br><span class="line">cd glibc-2.35</span><br></pre></td></tr></table></figure>
+
+
+
+<p>验证下载的glibc就是系统所用的glibc代码</p>
+<p>根据<code>echo &#39;main(){}&#39;| gcc -E -v -</code>查看得到头文件搜索路径，可以得到以下几个头文件搜索路径</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">dky@DESKTOP-57A415L:~/print$ echo &#x27;main()&#123;&#125;&#x27;| gcc -E -v -</span><br><span class="line">...</span><br><span class="line">#include &quot;...&quot; search starts here:</span><br><span class="line">#include &lt;...&gt; search starts here:</span><br><span class="line"> /usr/lib/gcc/x86_64-linux-gnu/11/include</span><br><span class="line"> /usr/local/include</span><br><span class="line"> /usr/include/x86_64-linux-gnu</span><br><span class="line"> /usr/include</span><br><span class="line">End of search list.</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>可以看到搜索路径都在<code>/usr/*</code>路径下，因此使用<code>find</code>搜索一个典型的头文件<code>stdio.h</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">dky@DESKTOP-57A415L:~$ find /usr -name stdio.h</span><br><span class="line">/usr/include/stdio.h</span><br><span class="line">/usr/include/c++/11/tr1/stdio.h</span><br><span class="line">/usr/include/x86_64-linux-gnu/bits/stdio.h</span><br></pre></td></tr></table></figure>
+
+<p>一共搜索出来3个<code>stdio.h</code>，但是可以确定的是对于C代码来说，使用的<code>stdio.h</code>就是<code>/usr/include/stdio.h</code></p>
+<p>在glibc-2.35中搜索stdio.h</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">dky@DESKTOP-57A415L:~/print/glibc-2.35$ find -name stdio.h</span><br><span class="line">./include/stdio.h      // 猜测提供给glibc内部使用</span><br><span class="line"></span><br><span class="line">./include/bits/stdio.h //只包含libio/bits/stdio.h</span><br><span class="line">./libio/bits/stdio.h   // 与/usr/include/x86_64-linux-gnu/bits/stdio.h 文件相同</span><br><span class="line"></span><br><span class="line">./libio/stdio.h        // 与 /usr/include/stdio.h 文件相同</span><br></pre></td></tr></table></figure>
+
+<p>一共有4个stdio.h</p>
+<p>首先认为&#x2F;usr&#x2F;include&#x2F;stdio.h就是.&#x2F;include&#x2F;stdio.h，但是很遗憾并不是，猜测这个stdio.h是提供给glibc内部接口使用的，看了下具体代码，全部是extern的一些print声明。</p>
+<p>接下来看第二个和第三个文件，发现第二个.&#x2F;include&#x2F;bits&#x2F;stdio.h里面只有一行代码<code>#include &lt;libio/bits/stdio.h&gt;</code>，即说明第二个文件和第三个文件是类同的，可以认为是同一个文件。又因为这俩文件都包含了bits目录，所以很自然的将.&#x2F;libio&#x2F;bits&#x2F;stdio.h 与 &#x2F;usr&#x2F;include&#x2F;x86_64-linux-gnu&#x2F;bits&#x2F;stdio.h对比，发现他俩的内容是一摸一样的。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dky@DESKTOP-57A415L:~/print/glibc-2.35$ cmp ./libio/bits/stdio.h /usr/include/x86_64-linux-gnu/bits/stdio.h</span><br></pre></td></tr></table></figure>
+
+<p>最后只剩下.&#x2F;libio&#x2F;stdio.h 了，将.&#x2F;libio&#x2F;stdio.h 与 &#x2F;usr&#x2F;include&#x2F;stdio.h使用cmp对比发现两者一模一样。当然也可以在vscode中点击【将已选择项目进行比较】来直观验证</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dky@DESKTOP-57A415L:~/print/glibc-2.35$ cmp /home/dky/print/glibc-2.35/libio/stdio.h /usr/include/stdio.h </span><br></pre></td></tr></table></figure>
+
+<p>结论就是：glibc-2.3&#x2F;libio&#x2F;stdio.h对应 &#x2F;usr&#x2F;include&#x2F;stdio.h</p>
+<p>想追踪printf怎么调用到C库的write，最后又如何调到write系统调用，搞了半天也没搞明白，放弃！</p>
+<h1 id="编译内核"><a href="#编译内核" class="headerlink" title="编译内核"></a>编译内核</h1><p>参考：<a target="_blank" rel="noopener" href="https://mazhen.tech/p/%E4%BB%8E%E6%BA%90%E7%A0%81%E6%9E%84%E5%BB%BA-linux-%E5%86%85%E6%A0%B8/">https://mazhen.tech/p/%E4%BB%8E%E6%BA%90%E7%A0%81%E6%9E%84%E5%BB%BA-linux-%E5%86%85%E6%A0%B8/</a></p>
+<p>官网上下载：<a target="_blank" rel="noopener" href="https://www.kernel.org/">https://www.kernel.org/</a></p>
+<p>点击最新版本下载：linux-6.18.1.tar.xz</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">tar -Jxvf linux-6.18.1.tar.xz</span><br><span class="line">cd linux-6.18.1</span><br></pre></td></tr></table></figure>
+
+<p>为本机WSL编译内核：</p>
+<p>查看本机信息：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">dky@DESKTOP-57A415L:~/linux_kernel/linux-6.18.1$ uname -m </span><br><span class="line">x86_64</span><br><span class="line">dky@DESKTOP-57A415L:~/linux_kernel/linux-6.18.1$ uname -r</span><br><span class="line">5.15.167.4-microsoft-standard-WSL2</span><br><span class="line">dky@DESKTOP-57A415L:~/linux_kernel/linux-6.18.1$ cat /proc/version </span><br><span class="line">Linux version 5.15.167.4-microsoft-standard-WSL2 (root@f9c826d3017f) (gcc (GCC) 11.2.0, GNU ld (GNU Binutils) 2.37) #1 SMP Tue Nov 5 00:21:55 UTC 2024</span><br><span class="line">dky@DESKTOP-57A415L:~/linux_kernel/linux-6.18.1$ dpkg --print-architecture 2&gt;/dev/null || true</span><br><span class="line">amd64</span><br><span class="line">dky@DESKTOP-57A415L:~/linux_kernel/linux-6.18.1$ lscpu | egrep &#x27;Architecture|Model name|Vendor ID&#x27; || true</span><br><span class="line">Architecture:                         x86_64</span><br><span class="line">Vendor ID:                            GenuineIntel</span><br><span class="line">Model name:                           12th Gen Intel(R) Core(TM) i5-12490F</span><br><span class="line">dky@DESKTOP-57A415L:~/linux_kernel/linux-6.18.1$ </span><br></pre></td></tr></table></figure>
+
+<p>可以看到机器架构是x86_64,</p>
+<p>清除交叉编译的环境污染：</p>
+<p>重置ARCH CROSS_COMPILE CC是因为我的wsl环境默认配置的交叉编译环境为multi_v7_defconfig</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 清掉交叉编译残留（只影响当前终端）</span><br><span class="line">unset ARCH CROSS_COMPILE CC HOSTCC LLVM</span><br><span class="line"></span><br><span class="line"># 清理源码树（把之前生成的 .config、临时文件等都清掉）</span><br><span class="line">make mrproper</span><br></pre></td></tr></table></figure>
+
+<p>执行make O&#x3D;..&#x2F;build-x86_64 ARCH&#x3D;x86_64</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># out-of-tree 构建（不污染源码目录）</span><br><span class="line">mkdir -p ../build-x86_64</span><br><span class="line"># 生成 x86_64 默认配置</span><br><span class="line">make O=../build-x86_64 ARCH=x86_64 x86_64_defconfig</span><br></pre></td></tr></table></figure>
+
+<p>具体输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">dky@DESKTOP-57A415L:~/linux_kernel/linux-6.18.1$ make O=../build-x86_64 ARCH=x86_64 x86_64_defconfig</span><br><span class="line">make[1]: Entering directory &#x27;/home/dky/linux_kernel/build-x86_64&#x27;</span><br><span class="line">  GEN     Makefile</span><br><span class="line">  HOSTCC  scripts/basic/fixdep</span><br><span class="line">  HOSTCC  scripts/kconfig/conf.o</span><br><span class="line">  HOSTCC  scripts/kconfig/confdata.o</span><br><span class="line">  HOSTCC  scripts/kconfig/expr.o</span><br><span class="line">  LEX     scripts/kconfig/lexer.lex.c</span><br><span class="line">  YACC    scripts/kconfig/parser.tab.[ch]</span><br><span class="line">  HOSTCC  scripts/kconfig/lexer.lex.o</span><br><span class="line">  HOSTCC  scripts/kconfig/menu.o</span><br><span class="line">  HOSTCC  scripts/kconfig/parser.tab.o</span><br><span class="line">  HOSTCC  scripts/kconfig/preprocess.o</span><br><span class="line">  HOSTCC  scripts/kconfig/symbol.o</span><br><span class="line">  HOSTCC  scripts/kconfig/util.o</span><br><span class="line">  HOSTLD  scripts/kconfig/conf</span><br><span class="line">#</span><br><span class="line"># configuration written to .config</span><br><span class="line">#</span><br><span class="line">make[1]: Leaving directory &#x27;/home/dky/linux_kernel/build-x86_64&#x27;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>编译：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># 编译</span><br><span class="line">make O=../build-x86_64 ARCH=x86_64 -j&quot;$(nproc)&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+<h1 id="“内核源码-compile-commands-json-VSCode-clangd”的最省事配置步骤"><a href="#“内核源码-compile-commands-json-VSCode-clangd”的最省事配置步骤" class="headerlink" title="“内核源码 + compile_commands.json + VSCode clangd”的最省事配置步骤"></a>“内核源码 + compile_commands.json + VSCode clangd”的最省事配置步骤</h1><p>下面给你一套**“最省事、最不容易踩坑”**的流程：内核源码（source tree）+ 单独构建目录（O&#x3D;）+ 生成 <code>compile_commands.json</code> + VSCode(WSL) + clangd。</p>
+<p>你的环境已经确认是 <strong>WSL2 + x86_64</strong>，所以全程按 x86_64 来。</p>
+<hr>
+<h2 id="0-装好必备工具（WSL-里）"><a href="#0-装好必备工具（WSL-里）" class="headerlink" title="0. 装好必备工具（WSL 里）"></a>0. 装好必备工具（WSL 里）</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo apt update</span><br><span class="line">sudo apt install -y clangd python3 bear build-essential flex bison libssl-dev libelf-dev pahole</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="1-推荐的目录布局（source-与-build-分开）"><a href="#1-推荐的目录布局（source-与-build-分开）" class="headerlink" title="1. 推荐的目录布局（source 与 build 分开）"></a>1. 推荐的目录布局（source 与 build 分开）</h2><p>假设你源码在：<br> <code>~/linux_kernel/linux-6.18.1</code></p>
+<p>我们用一个独立输出目录：<br> <code>~/linux_kernel/build-x86_64</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd ~/linux_kernel/linux-6.18.1</span><br><span class="line">mkdir -p ../build-x86_64</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="2-先把内核“准备好”让-clangd-能解析（生成必要头文件）"><a href="#2-先把内核“准备好”让-clangd-能解析（生成必要头文件）" class="headerlink" title="2. 先把内核“准备好”让 clangd 能解析（生成必要头文件）"></a>2. 先把内核“准备好”让 clangd 能解析（生成必要头文件）</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">cd ~/linux_kernel/linux-6.18.1</span><br><span class="line">unset ARCH CROSS_COMPILE CC HOSTCC LLVM</span><br><span class="line"></span><br><span class="line">make O=../build-x86_64 ARCH=x86_64 x86_64_defconfig</span><br><span class="line"></span><br><span class="line"># 这一步会生成 include/generated/* 等关键文件（clangd 解析需要）</span><br><span class="line">make O=../build-x86_64 ARCH=x86_64 prepare modules_prepare</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="3-生成-compile-commands-json（两种方式，选一种）"><a href="#3-生成-compile-commands-json（两种方式，选一种）" class="headerlink" title="3. 生成 compile_commands.json（两种方式，选一种）"></a>3. 生成 compile_commands.json（两种方式，选一种）</h2><h3 id="方案-A（最推荐）：用内核自带脚本生成"><a href="#方案-A（最推荐）：用内核自带脚本生成" class="headerlink" title="方案 A（最推荐）：用内核自带脚本生成"></a>方案 A（最推荐）：用内核自带脚本生成</h3><p>内核一般自带脚本（你 6.x 基本都有）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd ~/linux_kernel/linux-6.18.1</span><br><span class="line">ls scripts/clang-tools/gen_compile_commands.py</span><br></pre></td></tr></table></figure>
+
+<p>如果存在，就这样生成（会在当前目录生成 <code>compile_commands.json</code>）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python3 scripts/clang-tools/gen_compile_commands.py -d ../build-x86_64</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>如果你希望把 <code>compile_commands.json</code> 放到 build 目录，也可以生成后移动过去：</p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mv compile_commands.json ../build-x86_64/</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="方案-B（通吃）：用-bear-抓编译命令"><a href="#方案-B（通吃）：用-bear-抓编译命令" class="headerlink" title="方案 B（通吃）：用 bear 抓编译命令"></a>方案 B（通吃）：用 bear 抓编译命令</h3><p>如果你更信任 “实际编译过程”，用 bear：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd ~/linux_kernel/linux-6.18.1</span><br><span class="line">bear -- make O=../build-x86_64 ARCH=x86_64 -j&quot;$(nproc)&quot;</span><br></pre></td></tr></table></figure>
+
+<p>bear 会在你当前目录生成 <code>compile_commands.json</code>（同样可以 <code>mv</code> 到 build 目录）。</p>
+<hr>
+<h2 id="4-VSCode（Remote-WSL）里配置-clangd：一劳永逸"><a href="#4-VSCode（Remote-WSL）里配置-clangd：一劳永逸" class="headerlink" title="4. VSCode（Remote - WSL）里配置 clangd：一劳永逸"></a>4. VSCode（Remote - WSL）里配置 clangd：一劳永逸</h2><h3 id="4-1-安装-启用扩展"><a href="#4-1-安装-启用扩展" class="headerlink" title="4.1 安装&#x2F;启用扩展"></a>4.1 安装&#x2F;启用扩展</h3><ul>
+<li>安装 <strong>clangd</strong> 扩展（LLVM 官方那个）</li>
+<li>如果你装了 Microsoft 的 <strong>C&#x2F;C++</strong> 扩展：建议<strong>禁用</strong>它的 IntelliSense（否则经常抢解析）</li>
+</ul>
+<h3 id="4-2-在工程根目录写-vscode-settings-json"><a href="#4-2-在工程根目录写-vscode-settings-json" class="headerlink" title="4.2 在工程根目录写 .vscode/settings.json"></a>4.2 在工程根目录写 <code>.vscode/settings.json</code></h3><p>假设你把 <code>compile_commands.json</code> 放在 <code>../build-x86_64/</code>（推荐）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;clangd.arguments&quot;: [</span><br><span class="line">    &quot;--background-index&quot;,</span><br><span class="line">    &quot;--compile-commands-dir=/home/dky/linux_kernel/build-x86_64&quot;,</span><br><span class="line">    &quot;--header-insertion=never&quot;,</span><br><span class="line">    &quot;--clang-tidy=false&quot;,</span><br><span class="line">    &quot;-j=8&quot;</span><br><span class="line">  ],</span><br><span class="line"></span><br><span class="line">  &quot;C_Cpp.intelliSenseEngine&quot;: &quot;disabled&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>把路径按你真实用户名&#x2F;目录改一下。<br> <code>-j=8</code> 也可以换成你的 CPU 线程数。</p>
+</blockquote>
+<hr>
+<h2 id="5-常见坑位（你以后遇到基本就这几个）"><a href="#5-常见坑位（你以后遇到基本就这几个）" class="headerlink" title="5. 常见坑位（你以后遇到基本就这几个）"></a>5. 常见坑位（你以后遇到基本就这几个）</h2><ol>
+<li><strong>又出现 multi_v7_defconfig &#x2F; ARM</strong><br> 说明你某次终端里残留了 <code>ARCH=arm</code> &#x2F; <code>CROSS_COMPILE=...</code>。<br> 解决：</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">unset ARCH CROSS_COMPILE CC HOSTCC LLVM</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>clangd 报大量 “找不到 generated headers &#x2F; autoconf.h”<br> 通常是你没跑 <code>prepare modules_prepare</code>：</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make O=../build-x86_64 ARCH=x86_64 prepare modules_prepare</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>你换了 <code>.config</code> 之后（比如 menuconfig），clangd 解析又乱了<br> 重新跑一遍：</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">make O=../build-x86_64 ARCH=x86_64 olddefconfig</span><br><span class="line">make O=../build-x86_64 ARCH=x86_64 prepare modules_prepare</span><br><span class="line">python3 scripts/clang-tools/gen_compile_commands.py -d ../build-x86_64</span><br></pre></td></tr></table></figure>
+
+<hr>
+<p>如果你告诉我：你最终把 <code>compile_commands.json</code> 放在<strong>源码目录</strong>还是 <strong>build 目录</strong>，我可以给你一份完全匹配你路径的 <code>.vscode/settings.json</code>（直接复制粘贴即可）。</p>
+<p>compile_commands.json放在build目录</p>
+<p>好，那就按“<code>compile_commands.json</code> 在 <strong>build 目录</strong>”的最省事做法来（你基本只要照抄路径就行）。</p>
+<h2 id="1-生成与更新（放到-build-目录）"><a href="#1-生成与更新（放到-build-目录）" class="headerlink" title="1) 生成与更新（放到 build 目录）"></a>1) 生成与更新（放到 build 目录）</h2><p>在源码目录执行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">cd ~/linux_kernel/linux-6.18.1</span><br><span class="line">unset ARCH CROSS_COMPILE CC HOSTCC LLVM</span><br><span class="line"></span><br><span class="line"># 生成/更新配置与 generated 头文件（clangd 必需）</span><br><span class="line">make O=../build-x86_64 ARCH=x86_64 x86_64_defconfig</span><br><span class="line">make O=../build-x86_64 ARCH=x86_64 prepare modules_prepare</span><br><span class="line"></span><br><span class="line"># 生成 compile_commands.json（输出到 build 目录）</span><br><span class="line">python3 scripts/clang-tools/gen_compile_commands.py -d ../build-x86_64</span><br><span class="line">mv -f compile_commands.json ../build-x86_64/</span><br></pre></td></tr></table></figure>
+
+<p>验证一下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ls -l ../build-x86_64/compile_commands.json</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>以后改过 <code>.config</code> 或拉新代码后，只要重复 <code>prepare modules_prepare</code> + 重新生成 <code>compile_commands.json</code> 就行。</p>
+</blockquote>
+<hr>
+<h2 id="2-VSCode（WSL）配置-clangd（直接可用）"><a href="#2-VSCode（WSL）配置-clangd（直接可用）" class="headerlink" title="2) VSCode（WSL）配置 clangd（直接可用）"></a>2) VSCode（WSL）配置 clangd（直接可用）</h2><p>在<strong>源码根目录</strong>创建&#x2F;修改：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">.vscode/settings.json</span><br><span class="line">&#123;</span><br><span class="line">  &quot;clangd.arguments&quot;: [</span><br><span class="line">    &quot;--background-index&quot;,</span><br><span class="line">    &quot;--compile-commands-dir=/home/dky/linux_kernel/build-x86_64&quot;,</span><br><span class="line">    &quot;--header-insertion=never&quot;,</span><br><span class="line">    &quot;--clang-tidy=false&quot;,</span><br><span class="line">    &quot;-j=8&quot;</span><br><span class="line">  ],</span><br><span class="line"></span><br><span class="line">  &quot;C_Cpp.intelliSenseEngine&quot;: &quot;disabled&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>把这一路径按你真实路径改成对应的绝对路径即可（你现在的结构看起来就是 <code>/home/dky/linux_kernel/build-x86_64</code>）。</p>
+<hr>
+<h2 id="3-一眼判断-clangd-是否吃到-compile-commands"><a href="#3-一眼判断-clangd-是否吃到-compile-commands" class="headerlink" title="3) 一眼判断 clangd 是否吃到 compile_commands"></a>3) 一眼判断 clangd 是否吃到 compile_commands</h2><p>在 VSCode 里打开 <strong>View → Output → clangd</strong>，你应该能看到它加载 compile commands 的日志。</p>
+<p>如果你想命令行快速验证路径是否对（可选）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">realpath ~/linux_kernel/build-x86_64/compile_commands.json</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="4-最常见的“能跳一部分、但很多红线”"><a href="#4-最常见的“能跳一部分、但很多红线”" class="headerlink" title="4) 最常见的“能跳一部分、但很多红线”"></a>4) 最常见的“能跳一部分、但很多红线”</h2><p>一般是 build 目录里缺生成头文件。补一遍就好：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make O=~/linux_kernel/build-x86_64 ARCH=x86_64 prepare modules_prepare</span><br></pre></td></tr></table></figure>
+
+<hr>
+<p>如果你愿意贴一下 <code>realpath ~/linux_kernel/build-x86_64</code> 的输出（就一行），我可以把 settings.json 里的路径替你写成完全准确的一份。</p>
+</article>
+<div class="article-footer">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    
+
+</div>
+
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2025/08/18/fastfetch/">fastfetch编译安装</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2024/12/20/LVGL%E7%A7%BB%E6%A4%8D%E5%88%B0IMX6ULL/">LVGL移植到IMX6ULL笔记</a></div></section></div>
+
+<div class="related-wrap" id="related-posts">
+    <section class='header'>
+      <div class='title cap theme'>您可能感兴趣的文章</div>
+    </section>
+    <section class='body'>
+    <div class="related-posts"><a class="item" href="\2024\10\30\Cmake构建自动化编译环境\" title="Cmake构建自动化编译环境"><span class="title">Cmake构建自动化编译环境</span></a><a class="item" href="\2024\09\18\Linux嵌入式\" title="Linux嵌入式学习粗略笔记"><span class="title">Linux嵌入式学习粗略笔记</span></a><a class="item" href="\2024\09\20\Linux汇编基础\" title="Linux汇编基础"><span class="title">Linux汇编基础</span></a><a class="item" href="\2024\10\18\Makefile总结及通用模板使用\" title="Makefile总结及通用模板使用"><span class="title">Makefile总结及通用模板使用</span></a><a class="item" href="\2025\08\18\fastfetch\" title="fastfetch编译安装"><span class="title">fastfetch编译安装</span></a></div></section></div>
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="sitemap" style="column-count:2;"><div class="sitemap-group"><span class="fs15">导航</span><a href="/">首页</a><a href="/archives/">归档</a><a href="/categories/">分类</a><a href="/tags/">标签</a><a href="/atom.xml">RSS</a></div><div class="sitemap-group"><span class="fs15">关于</span><a href="/about/">关于我</a><a href="/friends/">友链</a><a href="/message/">留言板</a></div></div><div class="text"><div align="center" style="color:#666; font-size:14px; line-height:1.85;">
+  <p>© 2023–2025 <a target="_blank" rel="noopener" href="https://github.com/dkyou" style="color:#333; text-decoration:none;">Dkyou</a></p>
+  <p>Powered by <a target="_blank" rel="noopener" href="https://hexo.io" style="color:#333;">Hexo</a> · Theme <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar" style="color:#333;">Stellar</a></p>
+  <p>本站文章（除特别说明外）遵循
+    <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" style="color:#333;">CC BY-NC-SA 4.0</a>。
+  </p>
+</div>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%AE%80%E5%8D%95%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90"><span class="toc-text">简单系统调用过程分析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B6%89%E5%8F%8A%E5%88%B0%E7%9A%84%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8"><span class="toc-text">涉及到的系统调用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E5%88%86%E6%9E%90"><span class="toc-text">具体分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E7%A8%8B%E5%BA%8F%E5%90%AF%E5%8A%A8-execve"><span class="toc-text">1. 程序启动 (execve)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%88%86%E9%85%8D%E5%86%85%E5%AD%98-brk-%E5%92%8C-mmap"><span class="toc-text">2. 分配内存 (brk 和 mmap)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%8A%A0%E8%BD%BD%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93-openat-%E5%92%8C-read"><span class="toc-text">3. 加载动态链接库 (openat 和 read)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E7%BB%A7%E7%BB%AD%E8%AF%BB%E5%8F%96%E5%85%B1%E4%BA%AB%E5%BA%93%E4%BF%A1%E6%81%AF-pread64"><span class="toc-text">4. 继续读取共享库信息 (pread64)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E5%8A%A0%E8%BD%BD-libc-%E5%BA%93"><span class="toc-text">5. 加载 libc 库</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-%E4%BF%9D%E6%8A%A4%E5%BA%93%E7%9A%84%E5%8F%AA%E8%AF%BB%E5%8C%BA%E5%9F%9F-mprotect"><span class="toc-text">6. 保护库的只读区域 (mprotect)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-%E5%86%85%E5%AD%98%E6%98%A0%E5%B0%84%EF%BC%88%E6%89%A7%E8%A1%8C%E5%8C%BA%E5%9F%9F%EF%BC%89"><span class="toc-text">7. 内存映射（执行区域）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-%E8%AE%BE%E7%BD%AE%E5%A0%86%E6%A0%88%E4%BF%A1%E6%81%AF-arch-prctl-%E5%92%8C-set-tid-address"><span class="toc-text">8. 设置堆栈信息 (arch_prctl 和 set_tid_address)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%86%85%E5%AD%98%E4%BF%9D%E6%8A%A4%E5%92%8C%E8%B5%84%E6%BA%90%E9%99%90%E5%88%B6-mprotect-prlimit64"><span class="toc-text">9. 进程的内存保护和资源限制 (mprotect, prlimit64)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-%E5%86%99%E5%85%A5%E6%A0%87%E5%87%86%E8%BE%93%E5%87%BA-write"><span class="toc-text">10. 写入标准输出 (write)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#11-%E7%A8%8B%E5%BA%8F%E9%80%80%E5%87%BA-exit-group"><span class="toc-text">11. 程序退出 (exit_group)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B3%E4%BA%8Einit%E8%BF%9B%E7%A8%8B"><span class="toc-text">关于init进程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9F%A5%E7%9C%8Bgcc%E5%91%BD%E4%BB%A4%E5%85%B7%E4%BD%93%E4%BD%8D%E7%BD%AE"><span class="toc-text">查看gcc命令具体位置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9F%A5%E7%9C%8Bgcc%E5%A4%B4%E6%96%87%E4%BB%B6%E5%BA%93%E6%96%87%E4%BB%B6%E6%90%9C%E7%B4%A2%E8%B7%AF%E5%BE%84"><span class="toc-text">查看gcc头文件库文件搜索路径</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#glibc%E5%AE%89%E8%A3%85"><span class="toc-text">glibc安装</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9F%A5%E7%9C%8Bglibc%E7%89%88%E6%9C%AC"><span class="toc-text">查看glibc版本</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%BC%96%E8%AF%91%E5%86%85%E6%A0%B8"><span class="toc-text">编译内核</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E2%80%9C%E5%86%85%E6%A0%B8%E6%BA%90%E7%A0%81-compile-commands-json-VSCode-clangd%E2%80%9D%E7%9A%84%E6%9C%80%E7%9C%81%E4%BA%8B%E9%85%8D%E7%BD%AE%E6%AD%A5%E9%AA%A4"><span class="toc-text">“内核源码 + compile_commands.json + VSCode clangd”的最省事配置步骤</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#0-%E8%A3%85%E5%A5%BD%E5%BF%85%E5%A4%87%E5%B7%A5%E5%85%B7%EF%BC%88WSL-%E9%87%8C%EF%BC%89"><span class="toc-text">0. 装好必备工具（WSL 里）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%8E%A8%E8%8D%90%E7%9A%84%E7%9B%AE%E5%BD%95%E5%B8%83%E5%B1%80%EF%BC%88source-%E4%B8%8E-build-%E5%88%86%E5%BC%80%EF%BC%89"><span class="toc-text">1. 推荐的目录布局（source 与 build 分开）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%85%88%E6%8A%8A%E5%86%85%E6%A0%B8%E2%80%9C%E5%87%86%E5%A4%87%E5%A5%BD%E2%80%9D%E8%AE%A9-clangd-%E8%83%BD%E8%A7%A3%E6%9E%90%EF%BC%88%E7%94%9F%E6%88%90%E5%BF%85%E8%A6%81%E5%A4%B4%E6%96%87%E4%BB%B6%EF%BC%89"><span class="toc-text">2. 先把内核“准备好”让 clangd 能解析（生成必要头文件）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%94%9F%E6%88%90-compile-commands-json%EF%BC%88%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%8C%E9%80%89%E4%B8%80%E7%A7%8D%EF%BC%89"><span class="toc-text">3. 生成 compile_commands.json（两种方式，选一种）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%B9%E6%A1%88-A%EF%BC%88%E6%9C%80%E6%8E%A8%E8%8D%90%EF%BC%89%EF%BC%9A%E7%94%A8%E5%86%85%E6%A0%B8%E8%87%AA%E5%B8%A6%E8%84%9A%E6%9C%AC%E7%94%9F%E6%88%90"><span class="toc-text">方案 A（最推荐）：用内核自带脚本生成</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%B9%E6%A1%88-B%EF%BC%88%E9%80%9A%E5%90%83%EF%BC%89%EF%BC%9A%E7%94%A8-bear-%E6%8A%93%E7%BC%96%E8%AF%91%E5%91%BD%E4%BB%A4"><span class="toc-text">方案 B（通吃）：用 bear 抓编译命令</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-VSCode%EF%BC%88Remote-WSL%EF%BC%89%E9%87%8C%E9%85%8D%E7%BD%AE-clangd%EF%BC%9A%E4%B8%80%E5%8A%B3%E6%B0%B8%E9%80%B8"><span class="toc-text">4. VSCode（Remote - WSL）里配置 clangd：一劳永逸</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%AE%89%E8%A3%85-%E5%90%AF%E7%94%A8%E6%89%A9%E5%B1%95"><span class="toc-text">4.1 安装&#x2F;启用扩展</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%9C%A8%E5%B7%A5%E7%A8%8B%E6%A0%B9%E7%9B%AE%E5%BD%95%E5%86%99-vscode-settings-json"><span class="toc-text">4.2 在工程根目录写 .vscode&#x2F;settings.json</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%B8%B8%E8%A7%81%E5%9D%91%E4%BD%8D%EF%BC%88%E4%BD%A0%E4%BB%A5%E5%90%8E%E9%81%87%E5%88%B0%E5%9F%BA%E6%9C%AC%E5%B0%B1%E8%BF%99%E5%87%A0%E4%B8%AA%EF%BC%89"><span class="toc-text">5. 常见坑位（你以后遇到基本就这几个）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E7%94%9F%E6%88%90%E4%B8%8E%E6%9B%B4%E6%96%B0%EF%BC%88%E6%94%BE%E5%88%B0-build-%E7%9B%AE%E5%BD%95%EF%BC%89"><span class="toc-text">1) 生成与更新（放到 build 目录）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-VSCode%EF%BC%88WSL%EF%BC%89%E9%85%8D%E7%BD%AE-clangd%EF%BC%88%E7%9B%B4%E6%8E%A5%E5%8F%AF%E7%94%A8%EF%BC%89"><span class="toc-text">2) VSCode（WSL）配置 clangd（直接可用）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E4%B8%80%E7%9C%BC%E5%88%A4%E6%96%AD-clangd-%E6%98%AF%E5%90%A6%E5%90%83%E5%88%B0-compile-commands"><span class="toc-text">3) 一眼判断 clangd 是否吃到 compile_commands</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E6%9C%80%E5%B8%B8%E8%A7%81%E7%9A%84%E2%80%9C%E8%83%BD%E8%B7%B3%E4%B8%80%E9%83%A8%E5%88%86%E3%80%81%E4%BD%86%E5%BE%88%E5%A4%9A%E7%BA%A2%E7%BA%BF%E2%80%9D"><span class="toc-text">4) 最常见的“能跳一部分、但很多红线”</span></a></li></ol></li></ol></div><div class="widget-footer"><a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/><path d="M7 3.338A9.95 9.95 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5"/></g></svg><span>回到顶部</span></a></div></widget>
+
+
+</div></aside><div class='float-panel'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+
+
+<script type="text/javascript">
+  window.canonical = {"originalHost":null,"officialHosts":["localhost"],"encoded":""};
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+    tag_plugins: {
+      chat: Object.assign({"api":"https://siteinfo.listentothewind.cn/api/v1"}),
+    }
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":null,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+    loading: `https://api.iconify.design/eos-icons:three-dots-loading.svg?color=%231cd0fd`,
+  };
+  const deps = {
+    jquery: `https://gcore.jsdelivr.net/npm/jquery@3.7/dist/jquery.min.js`,
+    marked: `https://gcore.jsdelivr.net/npm/marked@13.0/lib/marked.umd.min.js`,
+    lazyload: `/%5Bobject%20Object%5D`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  
+  function RunItem() {
+    this.list = []; // 存放回调函数
+    this.start = () => {
+      for (var i = 0; i < this.list.length; i++) {
+        this.list[i].run();
+      }
+    };
+    this.push = (fn, name, setRequestAnimationFrame = true) => {
+      let myfn = fn
+      if (setRequestAnimationFrame) {
+        myfn = () => {
+          utils.requestAnimationFrame(fn)
+        }
+      }
+      var f = new Item(myfn, name);
+      this.list.push(f);
+    };
+    this.remove = (name) => {
+      for (let index = 0; index < this.list.length; index++) {
+        const e = this.list[index];
+        if (e.name == name) {
+          this.list.splice(index, 1);
+        }
+      }
+    }
+    // 构造一个可以run的对象
+    function Item(fn, name) {
+      // 函数名称
+      this.name = name || fn.name;
+      // run方法
+      this.run = () => {
+        try {
+          fn()
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    }
+  }
+
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')) {
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function () {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      const maxRetry = 3;
+      let retryCount = 0;
+
+      return new Promise((resolve, reject) => {
+        const load = () => {
+          utils.onLoading?.(el);
+
+          let timedOut = false;
+          const timeout = setTimeout(() => {
+            timedOut = true;
+            console.warn('[request] 超时:', url);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject('请求超时');
+            } else {
+              setTimeout(load, 1000);
+            }
+          }, 5000);
+
+          fetch(url).then(resp => {
+            if (timedOut) return;
+            clearTimeout(timeout);
+
+            if (!resp.ok) throw new Error('响应失败');
+            return resp;
+          }).then(data => {
+            if (timedOut) return;
+            utils.onLoadSuccess?.(el);
+            callback(data);
+            resolve(data);
+          }).catch(err => {
+            clearTimeout(timeout);
+            console.warn('[request] 错误:', err);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject(err);
+            } else {
+              setTimeout(load, 1000);
+            }
+          });
+        };
+
+        load();
+      });
+    },
+    requestWithoutLoading: (url, options = {}, maxRetry = 2, timeout = 5000) => {
+      return new Promise((resolve, reject) => {
+        let retryCount = 0;
+
+        const tryRequest = () => {
+          let timedOut = false;
+          const timer = setTimeout(() => {
+            timedOut = true;
+            if (++retryCount > maxRetry) reject('timeout');
+            else tryRequest();
+          }, timeout);
+
+          fetch(url, options)
+            .then(resp => {
+              clearTimeout(timer);
+              if (!resp.ok) throw new Error('bad response');
+              resolve(resp);
+            })
+            .catch(err => {
+              clearTimeout(timer);
+              if (++retryCount > maxRetry) reject(err);
+              else setTimeout(tryRequest, 500);
+            });
+        };
+
+        tryRequest();
+      });
+    },
+    /********************** requestAnimationFrame ********************************/
+    // 1、requestAnimationFrame 会把每一帧中的所有 DOM 操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
+    // 2、在隐藏或不可见的元素中，requestAnimationFrame 将不会进行重绘或回流，这当然就意味着更少的的 cpu，gpu 和内存使用量。
+    requestAnimationFrame: (fn) => {
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+      }
+      window.requestAnimationFrame(fn)
+    },
+    dark: {},
+  };
+
+  // utils.dark.mode 当前模式 dark or light
+  // utils.dark.toggle() 暗黑模式触发器
+  // utils.dark.push(callBack[,"callBackName"]) 传入触发器回调函数
+  utils.dark.method = {
+    toggle: new RunItem(),
+  };
+  utils.dark = Object.assign(utils.dark, {
+    push: utils.dark.method.toggle.push,
+  });
+</script>
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+<script async src="https://gcore.jsdelivr.net/npm/vanilla-lazyload@19.1/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+    callback_loaded: (el) => {
+      el.classList.add('loaded');
+      const wrapper = el.closest('.lazy-box');
+      const icon = wrapper?.querySelector('.lazy-icon');
+      if (icon) icon.remove();
+    }
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+
+  window.wrapLazyloadImages = (container) => {
+    if (typeof container === 'string') {
+      container = document.querySelector(container);
+    }
+    if (!container) return;
+    
+    const images = container.querySelectorAll('img');
+    images.forEach((img) => {
+      if (img.classList.contains('lazy')) return;
+
+      const src = img.getAttribute('src');
+      if (!src) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'lazy-box';
+
+      const newImg = img.cloneNode();
+      newImg.removeAttribute('src');
+      newImg.setAttribute('data-src', src);
+      newImg.classList.add('lazy');
+
+      const icon = document.createElement('div');
+      icon.className = 'lazy-icon';
+      if (def.loading) {
+        icon.style.backgroundImage = `url("${def.loading}")`;
+      }
+
+      wrapper.appendChild(newImg);
+      wrapper.appendChild(icon);
+
+      img.replaceWith(wrapper);
+    });
+
+    // 通知 LazyLoad 更新
+    if (window.lazyLoadInstance?.update) {
+      window.lazyLoadInstance.update();
+    }
+  }
+  
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.33.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    // applyThemeToGiscus(theme)
+  }
+
+  // FIXME: 这会导致无法使用 preferred_color_scheme 以外的主题
+  const applyThemeToGiscus = (theme) => {
+    // theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+    utils.dark.mode = newTheme === 'auto' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : newTheme;
+    utils.dark.method.toggle.start();
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    } else {
+      utils.dark.mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    utils.dark.method.toggle.start();
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"rating":{"js":"/js/services/rating.js","api":"https://star-vote.xaox.cc/api/rating"},"vote":{"js":"/js/services/vote.js","api":"https://star-vote.xaox.cc/api/vote"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"friends_and_posts":{"js":"/js/services/friends_and_posts.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"voice":{"js":"/js/plugins/voice.js"},"video":{"js":"/js/plugins/video.js"},"download-file":{"js":"/js/plugins/download-file.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"},"contributors":{"edit_this_page":{"_posts/":null,"wiki/stellar/":"https://github.com/xaoxuu/hexo-theme-stellar-docs/blob/main/"},"js":"/js/services/contributors.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else if (id == 'voice') {
+        ctx.voiceAudios = document.querySelectorAll('.voice>audio');
+        if (ctx.voiceAudios?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            createVoiceDom(ctx.voiceAudios);
+          });
+        }
+      } else if (id == 'video') {
+        ctx.videos = document.querySelectorAll('.video>video');
+        if (ctx.videos?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            videoEvents(ctx.videos);
+          });
+        }
+      } else if (id == 'download-file') {
+        ctx.files = document.querySelectorAll('.file');
+        if (ctx.files?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            downloadFileEvent(ctx.files);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+
+    // chat iphone time
+    let phoneTimes = document.querySelectorAll('.chat .status-bar .time');
+
+    if (phoneTimes.length > 0) {
+      NowTime();
+      var date = new Date();
+      var sec = date.getSeconds();
+      var firstAdjustInterval = setInterval(firstAdjustTime, 1000 * (60 - sec));
+    }
+
+    function firstAdjustTime() {
+      NowTime();
+      clearInterval(firstAdjustInterval);
+      setInterval(NowTime, 1000 * 60);
+    }
+
+    function NowTime() {
+      for (let i = 0; i < phoneTimes.length; ++i) {
+        var timeSpan = phoneTimes[i];
+        var date = new Date();
+        var hour = date.getHours();
+        var min = date.getMinutes();
+        timeSpan.innerHTML = check(hour) + ":" + check(min);
+      }
+    };
+
+    function check(val) {
+      if (val < 10) {
+        return ("0" + val);
+      }
+      return (val);
+    }
+
+    // chat quote
+    const chat_quote_obverser = new IntersectionObserver((entries, observer) => {
+      entries.filter((entry) => { return entry.isIntersecting }).sort((a, b) => a.intersectionRect.y !== b.intersectionRect.y ? a.intersectionRect.y - b.intersectionRect.y : a.intersectionRect.x - b.intersectionRect.x).forEach((entry, index) => {
+          observer.unobserve(entry.target);
+          setTimeout(() => {
+            entry.target.classList.add('quote-blink');
+            setTimeout(() => {
+              entry.target.classList.remove('quote-blink');
+            }, 1000);
+          }, Math.max(100, 16) * (index + 1));
+        });
+    });
+
+    var chatQuotes = document.querySelectorAll(".chat .talk .quote");
+    chatQuotes.forEach((quote) => {
+      quote.addEventListener('click', function () {
+        var chatCellDom = document.getElementById("quote-" + quote.getAttribute("quotedCellTag"));
+        if (chatCellDom) {
+          var chatDiv = chatCellDom.parentElement;
+          var mid = chatDiv.clientHeight / 2;
+          var offsetTop = chatCellDom.offsetTop;
+          if (offsetTop > mid - chatCellDom.clientHeight / 2) {
+            chatDiv.scrollTo({
+              top: chatCellDom.offsetTop - mid + chatCellDom.clientHeight / 2,
+              behavior: "smooth"
+            });
+          } else {
+            chatDiv.scrollTo({
+              top: 0,
+              behavior: "smooth"
+            });
+          }
+          chat_quote_obverser.observe(chatCellDom);
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://gcore.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error), .with-fancybox .atk-content img:not([atk-emoticon])';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const memos = document.getElementsByClassName('ds-memos');
+    if (memos != undefined && memos.length > 0) {
+      needFancybox = true;
+    }
+    const fancybox = document.getElementsByClassName('with-fancybox');
+    if (fancybox != undefined && fancybox.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `不能复制哦~`,
+        success_text: `竟没骗到你！复制成功`,
+        toast: `又被你小子复制了！🌈`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
