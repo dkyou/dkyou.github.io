@@ -1,0 +1,1486 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.33.1" theme-name="Stellar" theme-version="1.33.1">
+  
+  
+  <meta name="generator" content="Hexo 8.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  <title>芯片启动流程 - 又是摸鱼的一天</title>
+
+  
+    <meta name="description" content="多数 SoC 的启动链是： 上电复位 → BootROM（选启动介质+搬运下一阶段到 SRAM）→ SPL&#x2F;BL2&#x2F;FSBL（初始化&#x2F;训练 DDR）→ U-Boot（驱动+加载 kernel&#x2F;dtb&#x2F;initrd）→ Linux kernel（初始化+启动用户态） BootROM 只做最小初始化并把 SPL 从启动介质搬到片内 SRAM 执行；S">
+<meta property="og:type" content="article">
+<meta property="og:title" content="芯片启动流程">
+<meta property="og:url" content="https://dkyou.github.io/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E8%8A%AF%E7%89%87%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">
+<meta property="og:site_name" content="又是摸鱼的一天">
+<meta property="og:description" content="多数 SoC 的启动链是： 上电复位 → BootROM（选启动介质+搬运下一阶段到 SRAM）→ SPL&#x2F;BL2&#x2F;FSBL（初始化&#x2F;训练 DDR）→ U-Boot（驱动+加载 kernel&#x2F;dtb&#x2F;initrd）→ Linux kernel（初始化+启动用户态） BootROM 只做最小初始化并把 SPL 从启动介质搬到片内 SRAM 执行；S">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-01-01T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-01-06T15:11:26.750Z">
+<meta property="article:author" content="Dku">
+<meta property="article:tag" content="bootROM">
+<meta property="article:tag" content="uboot">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <meta name="keywords" content="uboot,bootROM">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.33.1">
+
+
+  
+
+  
+
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dku","sameAs":[]},"dateCreated":"2026-01-02T00:00:00+08:00","dateModified":"2026-01-06T23:11:26+08:00","datePublished":"2026-01-02T00:00:00+08:00","description":"","headline":"芯片启动流程","mainEntityOfPage":{"@type":"WebPage","@id":"https://dkyou.github.io/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E8%8A%AF%E7%89%87%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/"},"publisher":{"@type":"Organization","name":"Dku","sameAs":[]},"url":"https://dkyou.github.io/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E8%8A%AF%E7%89%87%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/","keywords":"uboot, bootROM","thumbnailUrl":"https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/linedog.png","image":1}</script>
+  
+</head>
+<body><div class="sitebg"><div class="siteblur"></div></div>
+
+<div class="l_body content" id="start" layout="post" type="tech" ><aside class="l_left"><div class="sidebg"></div><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大白鹅喝酒.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main">👀瞅啥呢！👀</div><div class="sub normal cap">今天又是摸鱼的一天！</div><div class="sub hover cap" style="opacity:0">可不摸鱼又干什么呢？</div></a></div></header>
+
+<div class="nav-area">
+
+<nav class="menu dis-select"><a class="nav-item active" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="文档" href="/wiki/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="探索" href="/explore/" style="color:#FA6400"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M20 12a8 8 0 1 1-16 0a8 8 0 0 1 16 0" opacity=".5"/><path fill="currentColor" d="M17.712 5.453c1.047-.193 2.006-.259 2.797-.152c.77.103 1.536.393 1.956 1.064c.446.714.312 1.542-.012 2.258c-.33.728-.918 1.499-1.672 2.268c-1.516 1.547-3.836 3.226-6.597 4.697c-2.763 1.472-5.495 2.484-7.694 2.92c-1.095.217-2.098.299-2.923.201c-.8-.095-1.6-.383-2.032-1.075c-.47-.752-.296-1.63.07-2.379c.375-.768 1.032-1.586 1.872-2.403L4 12.416c0 .219.083.71.168 1.146c.045.23.09.444.123.596c-.652.666-1.098 1.263-1.339 1.756c-.277.567-.208.825-.145.925c.072.116.305.305.937.38c.609.073 1.44.018 2.455-.183c2.02-.4 4.613-1.351 7.28-2.772c2.667-1.42 4.85-3.015 6.23-4.423c.694-.707 1.15-1.334 1.377-1.836c.233-.515.167-.75.107-.844c-.07-.112-.289-.294-.883-.374c-.542-.072-1.272-.041-2.163.112L16.87 5.656c.338-.101.658-.17.842-.203"/></svg></a><a class="nav-item" title="社交" href="/friends/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+
+<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E5%B5%8C%E5%85%A5%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84/"><span class="title">嵌入式系统架构</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E8%8A%AF%E7%89%87%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/"><span class="title">芯片启动流程</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/buildroot%E6%89%AB%E7%9B%B2/"><span class="title">buildroot扫盲</span></a><a class="item title" href="/2026/01/02/%E9%85%8D%E7%BD%AEWSL%E5%86%85%E5%AD%98/"><span class="title">配置WSL内存和swap</span></a><a class="item title" href="/2025/08/18/%E7%AE%80%E5%8D%95%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90/"><span class="title">杂项笔记-不完整</span></a><a class="item title" href="/2026/01/02/%E9%93%BE%E8%A1%A8%E7%9A%84%E4%B8%80%E4%BA%9B%E6%8A%80%E5%B7%A7/"><span class="title">链表的一些技巧</span></a><a class="item title" href="/2026/01/02/%E7%A6%81%E6%AD%A2%E6%8A%8A%20Windows%20PATH%20%E6%B3%A8%E5%85%A5%E5%88%B0%20WSL/"><span class="title">禁止把 Windows PATH 注入到 WSL</span></a><a class="item title" href="/2025/12/12/win11+WSL+%E9%BC%A0%E6%A0%87%E5%85%89%E6%A0%87%E6%B6%88%E5%A4%B1%E8%A7%A3%E5%86%B3/"><span class="title">解决win11+WSL+鼠标光标消失</span></a><a class="item title" href="/2025/08/18/fastfetch/"><span class="title">fastfetch编译安装</span></a><a class="item title" href="/2025/08/18/pkg-config/"><span class="title">pkg-config 了解</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="https://github.com/dkyou" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="mailto:2328727915@qq.com" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/gmail.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="https://space.bilibili.com/" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/bilibili.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="/atom.xml" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/rss.svg" height="20" style="opacity:0.9;"/></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top"><img class="lazy bg" data-src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/linedog.png">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/UBOOT/">UBOOT</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2026-01-01T16:00:00.000Z">2026-01-02</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2026-01-06T15:11:26.750Z">2026-01-06</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>芯片启动流程</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><hr>
+<p>多数 SoC 的启动链是：</p>
+<p>上电复位 → BootROM（选启动介质+搬运下一阶段到 SRAM）→ SPL&#x2F;BL2&#x2F;FSBL（初始化&#x2F;训练 DDR）→ U-Boot（驱动+加载 kernel&#x2F;dtb&#x2F;initrd）→ Linux kernel（初始化+启动用户态）</p>
+<p>BootROM 只做最小初始化并把 SPL 从启动介质搬到片内 SRAM 执行；SPL 在 SRAM 中完成 DDR 初始化&#x2F;训练（并可完善启动介质接口），然后把更大的 U-Boot proper 搬到 DDR 运行。</p>
+<h1 id="芯片启动流程解析（按阶段理解）"><a href="#芯片启动流程解析（按阶段理解）" class="headerlink" title="芯片启动流程解析（按阶段理解）"></a>芯片启动流程解析（按阶段理解）</h1><h2 id="0-结论"><a href="#0-结论" class="headerlink" title="0. 结论"></a>0. 结论</h2><p>很多人会把启动简化成“BootROM → U-Boot → Linux”，但在绝大多数现代 SoC 上，真实链路更接近：</p>
+<p><strong>上电复位 → BootROM（片内 ROM） → 第一阶段装载器（SPL&#x2F;FSBL&#x2F;BL2&#x2F;Preloader，在 SRAM） → 第二阶段引导器（U-Boot proper&#x2F;UEFI，在 DDR） → Linux kernel（在 DDR） → 挂载 rootfs（在存储上）</strong></p>
+<blockquote>
+<p>关键点：<strong>BootROM 只做“最小启动”并把下一段小程序搬进 SRAM；DDR 初始化&#x2F;训练通常由中间那段“第一阶段装载器”完成；U-Boot proper 通常是 DDR 可用后才运行的完整引导器。</strong></p>
+</blockquote>
+<p><strong>完整的一般描述</strong></p>
+<p>芯片上电并完成电源稳定后，复位释放，CPU 从复位向量（reset vector）开始取指执行。多数 SoC 会首先进入片内固化的 BootROM（Boot ROM code）。BootROM 的职责通常是完成最小化的启动准备：读取启动配置（如 boot mode&#x2F;strap&#x2F;efuse），初始化足以读取启动介质所需的最小硬件（如时钟&#x2F;引脚&#x2F;启动介质接口的基础配置），并从指定启动介质（SPI NOR&#x2F;eMMC&#x2F;SD&#x2F;NAND&#x2F;USB&#x2F;UART 等）读取下一阶段启动镜像，将其加载到片内 SRAM（片上静态 RAM，不是 DDR）并跳转执行。</p>
+<p>下一阶段启动程序通常称为 SPL&#x2F;BL2&#x2F;FSBL（不同平台命名不同）。它运行在 SRAM 中，负责完成更完整的底层初始化，尤其是外部 DDR 的初始化，使 DDR 具备可靠读写能力。随后，该阶段会把更大、更完整的引导加载器（例如 U-Boot proper，或在安全启动链中把 TF-A&#x2F;OP-TEE&#x2F;U-Boot 等后续阶段）加载到 DDR 中并移交控制权。</p>
+<p>进入 U-Boot proper 后，系统会建立完整的运行环境（如重定位、清 BSS、设置栈、初始化必要外设与驱动、解析环境变量&#x2F;启动脚本），并从存储介质加载 Linux 内核镜像、设备树（DTB）（以及可选的 initrd）到 DDR 的合适内存区域，设置内核启动参数，然后跳转到内核入口地址。自此 Linux 内核接管 CPU，完成内核初始化并启动用户空间（init&#x2F;systemd 等），系统进入正常运行。</p>
+<hr>
+<h2 id="1-启动涉及的存储区域和加载动作"><a href="#1-启动涉及的存储区域和加载动作" class="headerlink" title="1. 启动涉及的存储区域和加载动作"></a>1. 启动涉及的存储区域和加载动作</h2><h3 id="四个关键存储区域"><a href="#四个关键存储区域" class="headerlink" title="四个关键存储区域"></a>四个关键存储区域</h3><ol>
+<li><strong>片内 ROM</strong>：BootROM 固化在这里，CPU 复位后最先取指</li>
+<li><strong>片内 SRAM（或 Cache-as-RAM）</strong>：启动早期可用的 RAM（栈&#x2F;临时数据&#x2F;小程序运行地），<strong>不是 DDR</strong></li>
+<li><strong>外部非易失存储</strong>：SPI NOR &#x2F; eMMC &#x2F; SD &#x2F; NAND &#x2F; UFS &#x2F; USB 等，保存各阶段固件&#x2F;镜像</li>
+<li><strong>外部 DDR</strong>：容量大，但必须先初始化&#x2F;训练才可靠可用</li>
+</ol>
+<h3 id="三类关键加载动作"><a href="#三类关键加载动作" class="headerlink" title="三类关键加载动作"></a>三类关键加载动作</h3><ul>
+<li><strong>执行（取指）</strong>：CPU 从 PC 指向的地址空间取指执行</li>
+<li><strong>加载&#x2F;搬运（copy&#x2F;load）</strong>：把二进制从存储读出，复制到 SRAM 或 DDR</li>
+<li><strong>移交（jump&#x2F;handoff）</strong>：跳转到已加载镜像入口，让它开始执行</li>
+</ul>
+<blockquote>
+<p>所谓“加载某段代码”，本质就是：<strong>读出 → 放到可执行的内存地址 → 跳过去。</strong></p>
+</blockquote>
+<hr>
+<h2 id="2-分阶段详解：谁加载谁、从哪到哪、在哪执行"><a href="#2-分阶段详解：谁加载谁、从哪到哪、在哪执行" class="headerlink" title="2. 分阶段详解：谁加载谁、从哪到哪、在哪执行"></a>2. 分阶段详解：谁加载谁、从哪到哪、在哪执行</h2><h3 id="Stage-0：上电复位-→-BootROM-执行（片内-ROM）"><a href="#Stage-0：上电复位-→-BootROM-执行（片内-ROM）" class="headerlink" title="Stage 0：上电复位 → BootROM 执行（片内 ROM）"></a>Stage 0：上电复位 → BootROM 执行（片内 ROM）</h3><ul>
+<li><strong>代码来源</strong>：芯片内部固化的 BootROM，原厂固化的</li>
+<li><strong>执行位置</strong>：片内 ROM（取指）</li>
+<li><strong>BootROM做什么（通常情况）</strong>：<ol>
+<li>读取启动配置（boot mode&#x2F;strap&#x2F;efuse）</li>
+<li>初始化“足够读取启动介质”的最小硬件（例如基础时钟&#x2F;引脚&#x2F;存储控制器最小读能力）</li>
+<li>从指定启动介质中读取“下一阶段启动镜像”（第一阶段装载器）</li>
+<li><strong>把它加载到片内 SRAM（或 Cache-as-RAM）并跳转执行</strong></li>
+</ol>
+</li>
+</ul>
+<blockquote>
+<p>注意：BootROM 通常很小、不可更新，因此<strong>通常不承担复杂的 DDR 训练</strong>（当然少数平台例外，但不是通用规律）。</p>
+</blockquote>
+<hr>
+<h3 id="Stage-1：第一阶段装载器（SPL-FSBL-BL2-Preloader）执行（片内-SRAM）"><a href="#Stage-1：第一阶段装载器（SPL-FSBL-BL2-Preloader）执行（片内-SRAM）" class="headerlink" title="Stage 1：第一阶段装载器（SPL&#x2F;FSBL&#x2F;BL2&#x2F;Preloader）执行（片内 SRAM）"></a>Stage 1：第一阶段装载器（SPL&#x2F;FSBL&#x2F;BL2&#x2F;Preloader）执行（片内 SRAM）</h3><p>这是容易忽略、但极关键的“中间层”。</p>
+<ul>
+<li><strong>常见名字</strong>（不同生态叫法不同，本质相同）：<ul>
+<li>U-Boot 体系：<strong>TPL &#x2F; SPL</strong></li>
+<li>厂商体系：<strong>FSBL &#x2F; Preloader</strong></li>
+<li>TF-A 体系里常见：<strong>BL2</strong>（作为可信装载阶段之一）</li>
+</ul>
+</li>
+<li><strong>代码来源</strong>：外部存储（flash&#x2F;eMMC&#x2F;SD…），由 BootROM 读出</li>
+<li><strong>执行位置</strong>：通常在 <strong>片内 SRAM</strong>（因为 DDR 还不可用）</li>
+<li><strong>核心任务（最典型、最通用）</strong>：<ol>
+<li><strong>初始化&#x2F;训练 DDR</strong>（DDR bring-up）</li>
+<li>可能会把启动介质接口配置得更完善&#x2F;更高速（例如切换更高频率&#x2F;更宽总线）以便读取更大的后续镜像</li>
+<li>从外部存储读取“更大、更完整的下一阶段”（第二阶段引导器&#x2F;安全固件等）</li>
+<li><strong>把后续镜像加载到 DDR，并跳转移交</strong></li>
+</ol>
+</li>
+</ul>
+<blockquote>
+<p>可以把这一层理解成：<strong>“让 DDR 第一次真正可用”的那段小程序</strong>。没有它，后续大的 U-Boot&#x2F;UEFI 往往没法运行。</p>
+</blockquote>
+<hr>
+<h3 id="Stage-2：第二阶段引导器（U-Boot-proper-UEFI-BL33）执行（DDR）"><a href="#Stage-2：第二阶段引导器（U-Boot-proper-UEFI-BL33）执行（DDR）" class="headerlink" title="Stage 2：第二阶段引导器（U-Boot proper &#x2F; UEFI &#x2F; BL33）执行（DDR）"></a>Stage 2：第二阶段引导器（U-Boot proper &#x2F; UEFI &#x2F; BL33）执行（DDR）</h3><ul>
+<li><strong>代码来源</strong>：通常由 Stage 1 从外部存储读出并放入 DDR</li>
+<li><strong>执行位置</strong>：<strong>DDR</strong></li>
+<li><strong>主要任务</strong>：<ol>
+<li>建立更完整的运行环境（重定位、清 BSS、栈&#x2F;全局数据等）</li>
+<li>初始化更多外设与驱动（存储、串口、网络、USB…）</li>
+<li>选择启动配置（环境变量&#x2F;脚本&#x2F;extlinux 等）</li>
+<li>从外部存储加载 Linux 启动三件套到 DDR：<ul>
+<li><strong>Kernel</strong>：<code>Image</code>(ARM64) &#x2F; <code>zImage</code>(ARM32) &#x2F; <code>uImage</code>(旧格式)</li>
+<li><strong>DTB</strong>：<code>*.dtb</code></li>
+<li><strong>initrd&#x2F;initramfs（可选）</strong></li>
+</ul>
+</li>
+<li>设置内核启动参数并跳转到内核入口（<code>booti/bootz/bootm</code>）</li>
+</ol>
+</li>
+</ul>
+<hr>
+<h3 id="Stage-3：Linux-内核执行（DDR）→-挂载-rootfs（存储-网络）"><a href="#Stage-3：Linux-内核执行（DDR）→-挂载-rootfs（存储-网络）" class="headerlink" title="Stage 3：Linux 内核执行（DDR）→ 挂载 rootfs（存储&#x2F;网络）"></a>Stage 3：Linux 内核执行（DDR）→ 挂载 rootfs（存储&#x2F;网络）</h3><ul>
+<li><strong>内核执行位置</strong>：DDR（可能先解压&#x2F;重定位到 DDR 的另一段区域）</li>
+<li><strong>内核做什么</strong>：<ol>
+<li>建立内存管理（MMU）、初始化调度&#x2F;中断&#x2F;驱动子系统等</li>
+<li>使用 DTB 识别硬件并加载驱动</li>
+<li>挂载根文件系统（rootfs）并启动用户态（init&#x2F;systemd）</li>
+</ol>
+</li>
+</ul>
+<blockquote>
+<p>重要区分：</p>
+<ul>
+<li><strong>U-Boot 一般只把 kernel&#x2F;dtb&#x2F;initrd 搬进 DDR</strong></li>
+<li><strong>rootfs 通常不是被 U-Boot 整体搬进 DDR，而是由内核去挂载存储上的文件系统</strong>（除非走纯 initramfs 的“全内存根”模式）。</li>
+</ul>
+</blockquote>
+<hr>
+<h2 id="3-安全启动（Secure-Boot）"><a href="#3-安全启动（Secure-Boot）" class="headerlink" title="3. 安全启动（Secure Boot）"></a>3. 安全启动（Secure Boot）</h2><p>如果启用安全启动，启动链条中会多一个动作：<strong>“验证后再加载&#x2F;跳转”</strong>。通常表现为：</p>
+<ul>
+<li>BootROM 或早期装载器利用 efuse&#x2F;OTP 中的根信任信息</li>
+<li>对下一阶段镜像做签名&#x2F;哈希校验</li>
+<li><strong>校验通过才允许继续执行下一阶段</strong><br> 这不会改变“ROM→SRAM→DDR→Kernel”的基本结构，只是每一跳更严格。</li>
+</ul>
+<hr>
+<h2 id="4-常见“镜像文件”逐个对号入座"><a href="#4-常见“镜像文件”逐个对号入座" class="headerlink" title="4. 常见“镜像文件”逐个对号入座"></a>4. 常见“镜像文件”逐个对号入座</h2><p>不同平台文件名不同，但功能角色可以按下表映射：</p>
+<h3 id="4-1-第一阶段装载器（SRAM-里跑）"><a href="#4-1-第一阶段装载器（SRAM-里跑）" class="headerlink" title="4.1 第一阶段装载器（SRAM 里跑）"></a>4.1 第一阶段装载器（SRAM 里跑）</h3><ul>
+<li>可能文件名：<code>spl.bin</code> &#x2F; <code>u-boot-spl.bin</code> &#x2F; <code>tpl.bin</code> &#x2F; <code>fsbl.bin</code> &#x2F; <code>preloader.bin</code> &#x2F; <code>bl2.bin</code> &#x2F; <code>idbloader.img</code>（厂商差异）</li>
+<li><strong>谁加载</strong>：BootROM</li>
+<li><strong>加载到</strong>：SRAM</li>
+<li><strong>做什么</strong>：DDR 初始化&#x2F;训练，加载第二阶段到 DDR</li>
+</ul>
+<h3 id="4-2-第二阶段引导器（DDR-里跑）"><a href="#4-2-第二阶段引导器（DDR-里跑）" class="headerlink" title="4.2 第二阶段引导器（DDR 里跑）"></a>4.2 第二阶段引导器（DDR 里跑）</h3><ul>
+<li>可能文件名：<code>u-boot.bin</code> &#x2F; <code>u-boot.img</code> &#x2F; <code>u-boot.itb</code>（FIT 打包）</li>
+<li><strong>谁加载</strong>：第一阶段装载器（或配合 TF-A 链路）</li>
+<li><strong>加载到</strong>：DDR</li>
+<li><strong>做什么</strong>：加载 kernel&#x2F;dtb&#x2F;initrd，并跳内核</li>
+</ul>
+<h3 id="4-3-Linux-三件套（被-U-Boot-放进-DDR）"><a href="#4-3-Linux-三件套（被-U-Boot-放进-DDR）" class="headerlink" title="4.3 Linux 三件套（被 U-Boot 放进 DDR）"></a>4.3 Linux 三件套（被 U-Boot 放进 DDR）</h3><ul>
+<li><code>Image</code> &#x2F; <code>zImage</code> &#x2F; <code>uImage</code>（kernel）</li>
+<li><code>*.dtb</code>（设备树）</li>
+<li><code>initrd</code> &#x2F; <code>initramfs.img</code>（可选的）</li>
+</ul>
+<h3 id="4-4-RootFS（通常由内核挂载，而非-U-Boot-搬运）"><a href="#4-4-RootFS（通常由内核挂载，而非-U-Boot-搬运）" class="headerlink" title="4.4 RootFS（通常由内核挂载，而非 U-Boot 搬运）"></a>4.4 RootFS（通常由内核挂载，而非 U-Boot 搬运）</h3><ul>
+<li><code>rootfs.ext4</code> &#x2F; <code>rootfs.squashfs</code> &#x2F; <code>rootfs.ubi</code> &#x2F; <code>rootfs.ubifs</code> 等</li>
+</ul>
+<hr>
+<h2 id="5-总结"><a href="#5-总结" class="headerlink" title="5. 总结"></a>5. 总结</h2><blockquote>
+<p>CPU 复位后执行片内 BootROM；BootROM 依据启动模式从外部存储读取第一阶段装载器并放入片内 SRAM 运行；第一阶段装载器在 SRAM 中完成 DDR 初始化&#x2F;训练后，把更大的第二阶段引导器（如 U-Boot proper&#x2F;或配套安全固件）加载到 DDR 并移交；第二阶段引导器从存储加载 kernel+dtb(+initrd) 到 DDR 并跳转到内核；内核在 DDR 中初始化系统并挂载存储上的 rootfs，启动用户态进入正常运行。</p>
+</blockquote>
+<hr>
+<h1 id="芯片启动流程解析（按照上电启动时间线理解）"><a href="#芯片启动流程解析（按照上电启动时间线理解）" class="headerlink" title="芯片启动流程解析（按照上电启动时间线理解）"></a>芯片启动流程解析（按照上电启动时间线理解）</h1><p>CPU 在哪里取指（PC&#x2F;执行位置）**、<strong>栈在哪里</strong>、<strong>数据缓冲在哪里</strong>、**是谁&#x2F;通过哪个控制器把代码从哪搬到哪</p>
+<blockquote>
+<p>约定：</p>
+<ul>
+<li><strong>ROM</strong> &#x3D; 片内 BootROM（不可写）</li>
+<li><strong>SRAM</strong> &#x3D; 片内静态 RAM（可写，容量小）</li>
+<li><strong>DDR</strong> &#x3D; 外部内存（需初始化后才可靠）</li>
+<li><strong>Boot Device</strong> &#x3D; 启动介质（SPI NOR &#x2F; eMMC &#x2F; SD &#x2F; NAND &#x2F; USB…）</li>
+</ul>
+</blockquote>
+<hr>
+<h2 id="T0：电源稳定、复位释放"><a href="#T0：电源稳定、复位释放" class="headerlink" title="T0：电源稳定、复位释放"></a>T0：电源稳定、复位释放</h2><ul>
+<li><strong>CPU 取指地址</strong>：还没开始“正常执行”（仍在 reset &#x2F; 等待复位释放）</li>
+<li><strong>栈</strong>：无</li>
+<li><strong>缓冲</strong>：无</li>
+<li><strong>加载控制器</strong>：无</li>
+<li><strong>发生了什么</strong>：电源&#x2F;时钟域逐步稳定，复位信号被解除，CPU 准备从 reset vector 取第一条指令</li>
+</ul>
+<hr>
+<h2 id="T1：CPU-执行第一条指令（进入-BootROM）"><a href="#T1：CPU-执行第一条指令（进入-BootROM）" class="headerlink" title="T1：CPU 执行第一条指令（进入 BootROM）"></a>T1：CPU 执行第一条指令（进入 BootROM）</h2><ul>
+<li><strong>CPU 取指（PC）</strong>：指向片内 <strong>ROM 的 reset vector</strong>（固定地址，厂商设计决定）</li>
+<li><strong>栈</strong>：通常马上设置到 <strong>SRAM</strong> 的某个顶端（BootROM 会挑一段 SRAM 当栈）</li>
+<li><strong>缓冲</strong>：在 <strong>SRAM</strong>（BootROM 需要可写空间做读写&#x2F;校验缓冲）</li>
+<li><strong>加载控制器</strong>：暂无（还在初始化阶段）</li>
+<li><strong>发生了什么</strong>：BootROM 开始运行，做最基础的硬件 bring-up（最小化）</li>
+</ul>
+<blockquote>
+<p>画面：CPU 在 ROM 里跑，但“写东西”都写到 SRAM（因为 ROM 不能写）。</p>
+</blockquote>
+<hr>
+<h2 id="T2：BootROM-读取启动模式，决定启动介质"><a href="#T2：BootROM-读取启动模式，决定启动介质" class="headerlink" title="T2：BootROM 读取启动模式，决定启动介质"></a>T2：BootROM 读取启动模式，决定启动介质</h2><ul>
+<li><strong>CPU 取指</strong>：仍在 <strong>ROM</strong></li>
+<li><strong>栈&#x2F;缓冲</strong>：仍在 <strong>SRAM</strong></li>
+<li><strong>加载控制器</strong>：开始触碰“启动选择相关逻辑”</li>
+<li><strong>发生了什么</strong>：BootROM 读取 strap 引脚&#x2F;efuse&#x2F;寄存器，确定从哪启动：SPI&#x2F;eMMC&#x2F;SD&#x2F;NAND&#x2F;USB&#x2F;UART…</li>
+</ul>
+<hr>
+<h2 id="T3：BootROM-初始化“启动介质控制器”的最小读能力"><a href="#T3：BootROM-初始化“启动介质控制器”的最小读能力" class="headerlink" title="T3：BootROM 初始化“启动介质控制器”的最小读能力"></a>T3：BootROM 初始化“启动介质控制器”的最小读能力</h2><p>这一步很关键：BootROM 不会把所有外设都初始化，只初始化“能读出下一段代码”的那一点点。</p>
+<ul>
+<li><strong>CPU 取指</strong>：ROM</li>
+<li><strong>栈</strong>：SRAM</li>
+<li><strong>缓冲</strong>：SRAM（读出来的数据先落这里）</li>
+<li><strong>加载控制器</strong>：取决于启动介质<ul>
+<li>SPI 启动：初始化 <strong>SPI&#x2F;QSPI 控制器</strong>（能发读命令、基本时序）</li>
+<li>eMMC&#x2F;SD 启动：初始化 <strong>SDHCI&#x2F;eMMC 控制器</strong>（能读固定扇区）</li>
+<li>NAND 启动：初始化 <strong>NAND 控制器 + 基础 ECC&#x2F;坏块处理（最小）</strong></li>
+<li>USB&#x2F;UART：初始化对应 <strong>USB device&#x2F;UART 下载控制逻辑</strong></li>
+</ul>
+</li>
+<li><strong>发生了什么</strong>：控制器刚“能读”就行，不追求性能&#x2F;完整协议栈</li>
+</ul>
+<hr>
+<h2 id="T4：BootROM-从启动介质读取“第一阶段装载器”到-SRAM"><a href="#T4：BootROM-从启动介质读取“第一阶段装载器”到-SRAM" class="headerlink" title="T4：BootROM 从启动介质读取“第一阶段装载器”到 SRAM"></a>T4：BootROM 从启动介质读取“第一阶段装载器”到 SRAM</h2><ul>
+<li><strong>CPU 取指</strong>：ROM（BootROM 代码）</li>
+<li><strong>栈</strong>：SRAM</li>
+<li><strong>缓冲</strong>：SRAM（读入缓冲 + 校验缓冲）</li>
+<li><strong>加载发生在哪个控制器</strong>：就是选中的启动介质控制器<ul>
+<li>例如：SPI 控制器发读 → 数据进片内缓冲&#x2F;通过总线写入 SRAM</li>
+<li>例如：eMMC 控制器 DMA&#x2F;PIO 读扇区 → 写入 SRAM</li>
+</ul>
+</li>
+<li><strong>搬运路径（概念化）</strong>：<br> <strong>Boot Device（外部存储） →（启动介质控制器）→ SRAM</strong></li>
+<li><strong>发生了什么</strong>：BootROM 把 SPL&#x2F;FSBL&#x2F;BL2 这段“小程序”装进 SRAM</li>
+</ul>
+<blockquote>
+<p>这一步就是之前理解的“搬运到 SRAM”。</p>
+</blockquote>
+<hr>
+<h2 id="T5：BootROM（可选）校验-解密第一阶段装载器，然后跳转"><a href="#T5：BootROM（可选）校验-解密第一阶段装载器，然后跳转" class="headerlink" title="T5：BootROM（可选）校验&#x2F;解密第一阶段装载器，然后跳转"></a>T5：BootROM（可选）校验&#x2F;解密第一阶段装载器，然后跳转</h2><ul>
+<li><strong>CPU 取指</strong>：ROM</li>
+<li><strong>栈&#x2F;缓冲</strong>：SRAM</li>
+<li><strong>加载控制器</strong>：同上</li>
+<li><strong>发生了什么</strong>：<ul>
+<li>若有 secure boot：BootROM 在 SRAM 缓冲区里做签名&#x2F;哈希校验，或解密</li>
+<li>然后设置入口地址 → <strong>跳转到 SRAM 中的第一阶段装载器入口</strong></li>
+</ul>
+</li>
+<li><strong>控制权移交</strong>：PC 改为 SRAM 中的入口地址</li>
+</ul>
+<hr>
+<h2 id="T6：第一阶段装载器开始执行（SPL-FSBL-BL2-在-SRAM）"><a href="#T6：第一阶段装载器开始执行（SPL-FSBL-BL2-在-SRAM）" class="headerlink" title="T6：第一阶段装载器开始执行（SPL&#x2F;FSBL&#x2F;BL2 在 SRAM）"></a>T6：第一阶段装载器开始执行（SPL&#x2F;FSBL&#x2F;BL2 在 SRAM）</h2><ul>
+<li><strong>CPU 取指</strong>：<strong>SRAM</strong>（现在 CPU 真正在 SRAM 里跑）</li>
+<li><strong>栈</strong>：仍在 SRAM（通常换一个更合适的栈位置）</li>
+<li><strong>缓冲</strong>：SRAM（继续做临时缓冲）</li>
+<li><strong>加载控制器</strong>：可能重新初始化时钟&#x2F;PLL、复用引脚等，为后续 DDR&#x2F;高速读做准备</li>
+<li><strong>发生了什么</strong>：进入“可更新代码”阶段，开始干 DDR bring-up 这种板级强相关的事</li>
+</ul>
+<hr>
+<h2 id="T7：第一阶段装载器初始化-训练-DDR（关键转折点）"><a href="#T7：第一阶段装载器初始化-训练-DDR（关键转折点）" class="headerlink" title="T7：第一阶段装载器初始化&#x2F;训练 DDR（关键转折点）"></a>T7：第一阶段装载器初始化&#x2F;训练 DDR（关键转折点）</h2><ul>
+<li><strong>CPU 取指</strong>：SRAM（DDR 未可靠前必须如此）</li>
+<li><strong>栈</strong>：SRAM</li>
+<li><strong>缓冲</strong>：SRAM（训练数据、临时表格）</li>
+<li><strong>控制器</strong>：<strong>DDR 控制器 + DDR PHY</strong></li>
+<li><strong>发生了什么</strong>：<ul>
+<li>配置 DDR 控制器寄存器</li>
+<li>DDR PHY 初始化&#x2F;训练（读写延迟、校准等）</li>
+<li>做内存测试&#x2F;训练收敛（平台差异大）</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>这一段为什么不放 BootROM：复杂、板级差异大、需要更新迭代。</p>
+</blockquote>
+<hr>
+<h2 id="T8：DDR-可用后，第一阶段装载器把“工作区-堆-缓冲”迁到-DDR（常见做法）"><a href="#T8：DDR-可用后，第一阶段装载器把“工作区-堆-缓冲”迁到-DDR（常见做法）" class="headerlink" title="T8：DDR 可用后，第一阶段装载器把“工作区&#x2F;堆&#x2F;缓冲”迁到 DDR（常见做法）"></a>T8：DDR 可用后，第一阶段装载器把“工作区&#x2F;堆&#x2F;缓冲”迁到 DDR（常见做法）</h2><ul>
+<li><strong>CPU 取指</strong>：仍在 SRAM（此刻还没跳走）</li>
+<li><strong>栈</strong>：可能开始切到 DDR（不少实现会把栈迁到 DDR，方便做大搬运）</li>
+<li><strong>缓冲</strong>：逐渐迁到 DDR（因为 DDR 大）</li>
+<li><strong>控制器</strong>：仍会用启动介质控制器（SPI&#x2F;eMMC&#x2F;NAND…）</li>
+<li><strong>发生了什么</strong>：为加载“大块的第二阶段引导器”做准备（搬运更快、缓冲更大）</li>
+</ul>
+<hr>
+<h2 id="T9：第一阶段装载器从启动介质加载第二阶段引导器到-DDR"><a href="#T9：第一阶段装载器从启动介质加载第二阶段引导器到-DDR" class="headerlink" title="T9：第一阶段装载器从启动介质加载第二阶段引导器到 DDR"></a>T9：第一阶段装载器从启动介质加载第二阶段引导器到 DDR</h2><ul>
+<li><strong>CPU 取指</strong>：SRAM（执行搬运代码）</li>
+<li><strong>栈</strong>：常见是 DDR（也可能仍 SRAM）</li>
+<li><strong>缓冲</strong>：DDR（大缓冲）</li>
+<li><strong>加载发生在哪个控制器</strong>：启动介质控制器（SPI&#x2F;eMMC&#x2F;NAND&#x2F;USB…）</li>
+<li><strong>搬运路径</strong>：<br> <strong>Boot Device →（存储控制器）→ DDR</strong></li>
+<li><strong>载荷通常是什么</strong>：<ul>
+<li><strong>U-Boot proper</strong></li>
+<li>（可选）TF-A BL31 &#x2F; OP-TEE 等安全固件</li>
+<li>或者一个 FIT 包（<code>*.itb</code>）里面打包了以上多个组件</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="T10：跳转到第二阶段引导器（U-Boot-proper-在-DDR）"><a href="#T10：跳转到第二阶段引导器（U-Boot-proper-在-DDR）" class="headerlink" title="T10：跳转到第二阶段引导器（U-Boot proper 在 DDR）"></a>T10：跳转到第二阶段引导器（U-Boot proper 在 DDR）</h2><ul>
+<li><strong>CPU 取指</strong>：<strong>DDR</strong>（PC 指向 DDR 的 U-Boot 入口）</li>
+<li><strong>栈</strong>：DDR</li>
+<li><strong>缓冲</strong>：DDR</li>
+<li><strong>控制器</strong>：U-Boot 开始初始化更多驱动（串口、存储、网络、USB…）</li>
+<li><strong>发生了什么</strong>：现在进入“功能完整的引导器环境”（可交互、可脚本化）</li>
+</ul>
+<hr>
+<h2 id="T11：U-Boot-加载-Linux-启动三件套到-DDR"><a href="#T11：U-Boot-加载-Linux-启动三件套到-DDR" class="headerlink" title="T11：U-Boot 加载 Linux 启动三件套到 DDR"></a>T11：U-Boot 加载 Linux 启动三件套到 DDR</h2><ul>
+<li><strong>CPU 取指</strong>：DDR（U-Boot 代码）</li>
+<li><strong>栈</strong>：DDR</li>
+<li><strong>缓冲</strong>：DDR（文件读缓冲、解压缓冲）</li>
+<li><strong>加载发生在哪个控制器</strong>：取决于启动方式<ul>
+<li>从 eMMC&#x2F;SD 分区读：eMMC&#x2F;SD 控制器</li>
+<li>从 SPI NOR 读：SPI&#x2F;QSPI 控制器（可能 XIP&#x2F;也可能 copy）</li>
+<li>从 NAND&#x2F;UBI 读：NAND 控制器 + UBI 层</li>
+<li>从网络 TFTP&#x2F;NFS：网卡 MAC&#x2F;PHY</li>
+</ul>
+</li>
+<li><strong>搬运路径</strong>：<br> <strong>Boot Device&#x2F;Network →（对应控制器&#x2F;驱动）→ DDR</strong></li>
+<li><strong>U-Boot 放到 DDR 的东西</strong>：<ul>
+<li><code>Image/zImage/uImage</code>（kernel）</li>
+<li><code>*.dtb</code>（设备树）</li>
+<li><code>initrd/initramfs</code>（可选）</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="T12：U-Boot-设置启动参数并跳转内核"><a href="#T12：U-Boot-设置启动参数并跳转内核" class="headerlink" title="T12：U-Boot 设置启动参数并跳转内核"></a>T12：U-Boot 设置启动参数并跳转内核</h2><ul>
+<li><strong>CPU 取指</strong>：DDR（U-Boot）</li>
+<li><strong>栈&#x2F;缓冲</strong>：DDR</li>
+<li><strong>发生了什么</strong>：<ul>
+<li>准备寄存器状态&#x2F;CPU 模式</li>
+<li>传递 DTB 地址、initrd 地址、bootargs</li>
+<li>执行 <code>booti/bootz/bootm</code> → 跳到内核入口</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="T13：Linux-内核执行并完成自身初始化"><a href="#T13：Linux-内核执行并完成自身初始化" class="headerlink" title="T13：Linux 内核执行并完成自身初始化"></a>T13：Linux 内核执行并完成自身初始化</h2><ul>
+<li><strong>CPU 取指</strong>：DDR（内核入口）</li>
+<li><strong>栈</strong>：内核会切换到自己的栈（仍在 DDR）</li>
+<li><strong>缓冲</strong>：内核管理的内存（DDR）</li>
+<li><strong>控制器</strong>：内核逐步初始化各类驱动与子系统</li>
+<li><strong>发生了什么</strong>：<ul>
+<li>建立 MMU、页表</li>
+<li>解压（如果是压缩内核）</li>
+<li>解析 DTB、探测设备</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="T14：内核挂载-rootfs-并启动用户态"><a href="#T14：内核挂载-rootfs-并启动用户态" class="headerlink" title="T14：内核挂载 rootfs 并启动用户态"></a>T14：内核挂载 rootfs 并启动用户态</h2><ul>
+<li><strong>CPU 取指</strong>：DDR</li>
+<li><strong>rootfs 在哪</strong>：<ul>
+<li>常见：仍在 eMMC&#x2F;SD&#x2F;NAND 上，由内核挂载</li>
+<li>或者：initramfs（rootfs 已在 DDR 内存中）</li>
+</ul>
+</li>
+<li><strong>发生了什么</strong>：启动 <code>init/systemd</code>，系统进入正常运行</li>
+</ul>
+<hr>
+<h2 id="T15：总结"><a href="#T15：总结" class="headerlink" title="T15：总结"></a>T15：总结</h2><ol>
+<li><strong>BootROM 在 ROM 取指</strong>，但<strong>栈&#x2F;缓冲必须在 SRAM</strong>（ROM 不可写）</li>
+<li><strong>SPL 在 SRAM 取指</strong>，因为它要把 DDR 拉起来（DDR 未就绪前不能依赖 DDR）</li>
+<li><strong>U-Boot proper 在 DDR 取指</strong>，因为它大、功能多</li>
+<li>任何“加载”都可视为：<br> <strong>启动介质 →（对应控制器）→ SRAM&#x2F;DDR</strong>，然后<strong>跳转</strong></li>
+</ol>
+<h1 id="芯片启动流程解析（按不同阶段使用的固件名称理解）"><a href="#芯片启动流程解析（按不同阶段使用的固件名称理解）" class="headerlink" title="芯片启动流程解析（按不同阶段使用的固件名称理解）"></a>芯片启动流程解析（按不同阶段使用的固件名称理解）</h1><p>启动过程按照上述说明的流程</p>
+<p><strong>BootROM（片内 ROM）</strong><br> → 加载 <strong>第一阶段装载器（SPL&#x2F;FSBL&#x2F;BL2&#x2F;Preloader 等，小）</strong> 到 <strong>SRAM</strong> 执行<br> → 第一阶段初始化 <strong>DDR</strong><br> → 加载 <strong>第二阶段引导器（U-Boot proper&#x2F;UEFI 等，大）</strong> 到 <strong>DDR</strong> 执行<br> → 第二阶段加载 <strong>Kernel + DTB (+ initrd)</strong> 到 <strong>DDR</strong><br> → 跳转 <strong>Linux 内核</strong><br> → 内核挂载 <strong>rootfs</strong>（存储上的文件系统&#x2F;分区）并启动用户态</p>
+<blockquote>
+<p>关键：最终看到的“镜像文件”，本质就是这条链路里每一跳要用到的“载荷”。</p>
+</blockquote>
+<hr>
+<h2 id="1-常见文件名-→-属于哪一阶段-→-跑在哪-→-谁加载谁"><a href="#1-常见文件名-→-属于哪一阶段-→-跑在哪-→-谁加载谁" class="headerlink" title="1) 常见文件名 → 属于哪一阶段 → 跑在哪 → 谁加载谁"></a>1) 常见文件名 → 属于哪一阶段 → 跑在哪 → 谁加载谁</h2><blockquote>
+<p>说明：下面是“名字族谱”，项目里文件名可能不同，但功能位置一致。</p>
+</blockquote>
+<h3 id="A-BootROM-相关（一般拿不到文件）"><a href="#A-BootROM-相关（一般拿不到文件）" class="headerlink" title="A. BootROM 相关（一般拿不到文件）"></a>A. BootROM 相关（一般拿不到文件）</h3><table>
+<thead>
+<tr>
+<th>常见名字</th>
+<th>属于哪一阶段</th>
+<th>代码在哪里跑</th>
+<th>谁加载它</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BootROM &#x2F; iROM &#x2F; BROM &#x2F; PBL</td>
+<td><strong>阶段0</strong>（固化 ROM）</td>
+<td>片内 ROM（取指）+ 少量 SRAM 作栈</td>
+<td><strong>没人加载</strong>，复位后直接执行</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="B-第一阶段装载器"><a href="#B-第一阶段装载器" class="headerlink" title="B. 第一阶段装载器"></a>B. 第一阶段装载器</h3><table>
+<thead>
+<tr>
+<th>常见名字（生态差异很大）</th>
+<th>属于哪一阶段</th>
+<th>典型运行内存</th>
+<th>谁把它从哪加载到哪</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>spl.bin</code> &#x2F; <code>u-boot-spl.bin</code> &#x2F; <code>u-boot-tpl.bin</code></td>
+<td><strong>阶段1</strong>（SPL&#x2F;TPL）</td>
+<td><strong>SRAM</strong>（或 Cache-as-RAM）</td>
+<td>BootROM：从 SPI&#x2F;eMMC&#x2F;SD&#x2F;NAND 读出 → 放到 SRAM → 跳转</td>
+</tr>
+<tr>
+<td><code>fsbl.bin</code> &#x2F; <code>bl2.bin</code> &#x2F; <code>preloader.bin</code> &#x2F; <code>idbloader.img</code>（厂商叫法）</td>
+<td><strong>阶段1</strong>（FSBL&#x2F;BL2&#x2F;Preloader）</td>
+<td><strong>SRAM</strong>（或少量片内 RAM）</td>
+<td>BootROM：从启动介质读出 → 放到 SRAM → 跳转</td>
+</tr>
+</tbody></table>
+<p><strong>这层通常做什么：</strong></p>
+<ul>
+<li>DDR 初始化&#x2F;训练（最关键）</li>
+<li>把启动介质接口配置得更完整&#x2F;更快（可选）</li>
+<li>把后续更大的引导器（U-Boot proper&#x2F;TF-A&#x2F;UEFI）搬到 DDR</li>
+</ul>
+<hr>
+<h3 id="C-安全固件（可选，但越来越常见，尤其-ARMv8）"><a href="#C-安全固件（可选，但越来越常见，尤其-ARMv8）" class="headerlink" title="C. 安全固件（可选，但越来越常见，尤其 ARMv8）"></a>C. 安全固件（可选，但越来越常见，尤其 ARMv8）</h3><table>
+<thead>
+<tr>
+<th>常见名字</th>
+<th>属于哪一阶段</th>
+<th>典型运行内存</th>
+<th>谁加载它</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>bl31.bin</code>（TF-A）、<code>atf.bin</code></td>
+<td><strong>常驻固件</strong>（EL3）</td>
+<td>Secure SRAM&#x2F;secure DRAM（平台相关）</td>
+<td>一般由 SPL 或 U-Boot&#x2F;FIT 一起被加载到 DDR&#x2F;安全内存后启动</td>
+</tr>
+<tr>
+<td><code>tee.bin</code> &#x2F; <code>optee.bin</code></td>
+<td><strong>常驻固件</strong>（TEE）</td>
+<td>Secure DRAM</td>
+<td>同上</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>可以把它理解成：<strong>SPL 拉起 DDR 后，会把“安全世界固件 + U-Boot”一起安排好</strong>，然后再进入 U-Boot（非安全世界）。</p>
+</blockquote>
+<hr>
+<h3 id="D-第二阶段引导器（“U-Boot”通常指它）"><a href="#D-第二阶段引导器（“U-Boot”通常指它）" class="headerlink" title="D. 第二阶段引导器（“U-Boot”通常指它）"></a>D. 第二阶段引导器（“U-Boot”通常指它）</h3><table>
+<thead>
+<tr>
+<th>常见名字</th>
+<th>属于哪一阶段</th>
+<th>典型运行内存</th>
+<th>谁加载它</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>u-boot.bin</code> &#x2F; <code>u-boot.img</code> &#x2F; <code>u-boot-nodtb.bin</code> &#x2F; <code>u-boot-dtb.bin</code></td>
+<td><strong>阶段2</strong>（U-Boot proper）</td>
+<td><strong>DDR</strong></td>
+<td>SPL&#x2F;FSBL：从启动介质读出 → 放到 DDR → 跳转</td>
+</tr>
+<tr>
+<td><code>u-boot.itb</code>（FIT 打包）</td>
+<td><strong>阶段2</strong>（把多个东西打成一包）</td>
+<td><strong>DDR</strong>（解包后各自放置）</td>
+<td>SPL&#x2F;FSBL：读到 DDR → U-Boot&#x2F;或 SPL 解包&#x2F;加载其中的组件</td>
+</tr>
+</tbody></table>
+<p>U-Boot proper 负责：</p>
+<ul>
+<li>初始化更多外设（存储、网络、USB…）</li>
+<li>选择启动配置（环境变量、脚本、extlinux）</li>
+<li>加载 kernel&#x2F;dtb&#x2F;initrd</li>
+<li>跳转内核</li>
+</ul>
+<hr>
+<h3 id="E-Linux-启动三件套"><a href="#E-Linux-启动三件套" class="headerlink" title="E. Linux 启动三件套"></a>E. Linux 启动三件套</h3><table>
+<thead>
+<tr>
+<th>常见名字</th>
+<th>属于哪一阶段</th>
+<th>放在哪</th>
+<th>谁加载它</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Image</code>（ARM64）、<code>zImage</code>（ARM32）、<code>uImage</code>（老式 U-Boot 格式）</td>
+<td><strong>阶段3：内核</strong></td>
+<td>DDR</td>
+<td>U-Boot 从存储读出 → 放 DDR</td>
+</tr>
+<tr>
+<td><code>*.dtb</code>（设备树）</td>
+<td><strong>阶段3：内核参数</strong></td>
+<td>DDR</td>
+<td>U-Boot 从存储读出 → 放 DDR</td>
+</tr>
+<tr>
+<td><code>initrd</code> &#x2F; <code>initramfs.img</code> &#x2F; <code>ramdisk.img</code>（可选）</td>
+<td><strong>阶段3：早期根文件系统</strong></td>
+<td>DDR</td>
+<td>U-Boot 从存储读出 → 放 DDR（或编进内核）</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>注意：DTB 不是“驱动”，它是<strong>内核描述硬件的配置数据</strong>；没有 DTB 的 ARM Linux 通常起不来</p>
+</blockquote>
+<hr>
+<h3 id="F-RootFS（真正的系统文件）"><a href="#F-RootFS（真正的系统文件）" class="headerlink" title="F. RootFS（真正的系统文件）"></a>F. RootFS（真正的系统文件）</h3><table>
+<thead>
+<tr>
+<th>常见名字</th>
+<th>用途</th>
+<th>在哪</th>
+<th>谁“加载&#x2F;使用”它</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>rootfs.ext4</code> &#x2F; <code>rootfs.squashfs</code> &#x2F; <code>rootfs.ubifs</code> &#x2F; <code>rootfs.ubi</code></td>
+<td>根文件系统</td>
+<td>eMMC&#x2F;SD 分区、NAND UBI 卷、NOR 分区等</td>
+<td><strong>Linux 内核</strong>挂载（不是 U-Boot 把它整体搬进 DDR）</td>
+</tr>
+<tr>
+<td><code>modules.tar.gz</code> &#x2F; <code>/lib/modules/*</code></td>
+<td>内核模块</td>
+<td>rootfs 里</td>
+<td>内核&#x2F;用户态按需加载</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>通用规律：<strong>U-Boot 负责把“内核三件套”放进 DDR；rootfs 通常不整体搬进 DDR，而是内核去挂载存储上的文件系统。</strong></p>
+</blockquote>
+<hr>
+<h2 id="2-“一个工程里通常有哪些文件”——按两种最常见打包方式分别对号"><a href="#2-“一个工程里通常有哪些文件”——按两种最常见打包方式分别对号" class="headerlink" title="2) “一个工程里通常有哪些文件”——按两种最常见打包方式分别对号"></a>2) “一个工程里通常有哪些文件”——按两种最常见打包方式分别对号</h2><h3 id="方式-I：裸文件-分区-偏移"><a href="#方式-I：裸文件-分区-偏移" class="headerlink" title="方式 I：裸文件 + 分区&#x2F;偏移"></a>方式 I：裸文件 + 分区&#x2F;偏移</h3><p>可能会看到类似这些文件：</p>
+<ul>
+<li><code>spl.bin</code> &#x2F; <code>u-boot-spl.bin</code></li>
+<li><code>u-boot.bin</code></li>
+<li><code>Image</code> 或 <code>zImage</code></li>
+<li><code>board.dtb</code></li>
+<li><code>rootfs.ext4</code> 或 <code>rootfs.ubi</code></li>
+</ul>
+<p>加载关系就是：</p>
+<ol>
+<li>BootROM：从启动介质读取 <code>spl.bin</code> → 放 SRAM → 跳 <code>spl</code></li>
+<li>SPL：初始化 DDR → 读 <code>u-boot.bin</code> → 放 DDR → 跳 U-Boot</li>
+<li>U-Boot：读 <code>Image</code> + <code>*.dtb</code> (+ <code>initrd</code>) → 放 DDR → <code>booti/bootz/bootm</code></li>
+<li>Kernel：挂载 <code>rootfs</code> 分区&#x2F;卷 → 起用户态</li>
+</ol>
+<hr>
+<h3 id="方式-II：FIT"><a href="#方式-II：FIT" class="headerlink" title="方式 II：FIT"></a>方式 II：FIT</h3><p>把很多东西打包成一个 <code>*.itb</code>，可能会看到：</p>
+<ul>
+<li><code>spl.bin</code></li>
+<li><code>u-boot.itb</code>（里面可能包含：U-Boot、ATF BL31、OP-TEE、甚至 kernel&#x2F;dtb）</li>
+</ul>
+<p>加载关系还是同一套，只是“文件数减少”：</p>
+<ol>
+<li>BootROM：加载 <code>spl.bin</code> 到 SRAM</li>
+<li>SPL：初始化 DDR → 加载 <code>u-boot.itb</code> 到 DDR → 解包&#x2F;放置各组件 → 跳转到 U-Boot&#x2F;或先到 BL31</li>
+<li>U-Boot：从 FIT 或外部再加载 kernel&#x2F;dtb&#x2F;initrd → 跳内核</li>
+</ol>
+<hr>
+<h2 id="3-两个定位问题的判断口诀"><a href="#3-两个定位问题的判断口诀" class="headerlink" title="3) 两个定位问题的判断口诀"></a>3) 两个定位问题的判断口诀</h2><h3 id="口诀-A：看“它必须在哪跑”"><a href="#口诀-A：看“它必须在哪跑”" class="headerlink" title="口诀 A：看“它必须在哪跑”"></a>口诀 A：看“它必须在哪跑”</h3><ul>
+<li><strong>DDR 没起来之前</strong>：只能在 <strong>ROM&#x2F;SRAM（或 Cache-as-RAM）</strong> 跑<br> ⇒ 所以“负责 DDR 初始化”的那段，几乎必然是 <strong>SPL&#x2F;FSBL&#x2F;BL2</strong> 这一层</li>
+<li><strong>U-Boot proper</strong> 大概率在 <strong>DDR</strong> 跑（体积大、功能多）</li>
+</ul>
+<h3 id="口诀-B：看“谁需要谁先活着”"><a href="#口诀-B：看“谁需要谁先活着”" class="headerlink" title="口诀 B：看“谁需要谁先活着”"></a>口诀 B：看“谁需要谁先活着”</h3><ul>
+<li>U-Boot proper 要正常工作通常依赖 DDR ⇒ 它不太可能负责“让 DDR 第一次可用”</li>
+<li>BootROM 体积小且固化 ⇒ 它倾向于只把“可更新的小程序”拉起来</li>
+</ul>
+<hr>
+<h2 id="4-总结"><a href="#4-总结" class="headerlink" title="4) 总结"></a>4) 总结</h2><ul>
+<li><strong>启动介质</strong>：SPI NOR &#x2F; eMMC &#x2F; SD &#x2F; NAND &#x2F; …</li>
+<li><strong>ROM 阶段</strong>：BootROM（固化）</li>
+<li><strong>第一阶段装载器（SRAM）</strong>：<code>______</code>（SPL&#x2F;FSBL&#x2F;BL2&#x2F;Preloader）<ul>
+<li>负责：DDR init&#x2F;训练；加载下一阶段到 DDR</li>
+</ul>
+</li>
+<li><strong>第二阶段引导器（DDR）</strong>：<code>______</code>（U-Boot proper&#x2F;UEFI）<ul>
+<li>负责：加载 <code>Kernel(______) + DTB(______) + initrd(______)</code> 到 DDR 并跳转</li>
+</ul>
+</li>
+<li><strong>内核与系统</strong>：<ul>
+<li>Kernel：<code>______</code>（Image&#x2F;zImage&#x2F;uImage）</li>
+<li>DTB：<code>______</code></li>
+<li>RootFS：<code>______</code>（ext4&#x2F;squashfs&#x2F;ubi&#x2F;ubifs），由内核挂载</li>
+</ul>
+</li>
+</ul>
+<h2 id="问题：为什么不一上电就直接在-SRAM-DDR-跑？为什么还要有“片内-ROM-执行-BootROM”"><a href="#问题：为什么不一上电就直接在-SRAM-DDR-跑？为什么还要有“片内-ROM-执行-BootROM”" class="headerlink" title="问题：为什么不一上电就直接在 SRAM&#x2F;DDR 跑？为什么还要有“片内 ROM 执行 BootROM”"></a>问题：为什么不一上电就直接在 SRAM&#x2F;DDR 跑？为什么还要有“片内 ROM 执行 BootROM”</h2><p>核心原因是：<strong>上电瞬间“可用的东西非常少”，必须先有一段“永远可用、不可被破坏、无需外部条件”的代码把系统带到“可运行”的状态。</strong></p>
+<h2 id="1-片内-ROM（BootROM）为什么存在：为了“永远能启动”"><a href="#1-片内-ROM（BootROM）为什么存在：为了“永远能启动”" class="headerlink" title="1) 片内 ROM（BootROM）为什么存在：为了“永远能启动”"></a>1) 片内 ROM（BootROM）为什么存在：为了“永远能启动”</h2><p>上电复位后，系统面临的问题是：</p>
+<ul>
+<li>外部 DDR <strong>完全不可用</strong>（没初始化&#x2F;没训练）</li>
+<li>外部存储（eMMC&#x2F;SD&#x2F;SPI&#x2F;NAND…）也<strong>未必可读</strong>（控制器时钟、引脚复用、时序、校验、坏块、ECC 等都可能没配）</li>
+<li>甚至时钟源&#x2F;电源域&#x2F;复位域都刚刚稳定</li>
+</ul>
+<p>这时你需要一段代码满足三个条件：</p>
+<ol>
+<li><strong>无需任何外部存储就存在</strong>（否则鸡生蛋：要读代码得先有代码）</li>
+<li><strong>可靠且不可被刷坏</strong>（否则刷错固件就“变砖”）</li>
+<li><strong>能在极简硬件条件下跑起来</strong>（不依赖 DDR、不依赖复杂驱动）</li>
+</ol>
+<p>所以厂商把这段“最小起步代码”<strong>固化在片内 ROM</strong>：</p>
+<ul>
+<li>ROM 天生“上电即在”、不可擦写、稳定</li>
+<li>负责把 SoC 从“刚醒”带到“能加载下一段程序”</li>
+</ul>
+<p>这就是 BootROM 的意义：<strong>保证最差情况下也能有路可走</strong>（包括救砖模式：UART&#x2F;USB 下载等）。</p>
+<hr>
+<h2 id="2-片内-SRAM为什么要用：因为“ROM不能写-需要栈-数据区”"><a href="#2-片内-SRAM为什么要用：因为“ROM不能写-需要栈-数据区”" class="headerlink" title="2) 片内 SRAM为什么要用：因为“ROM不能写 + 需要栈&#x2F;数据区”"></a>2) 片内 SRAM为什么要用：因为“ROM不能写 + 需要栈&#x2F;数据区”</h2><p>你可能会问：那 BootROM 既然在 ROM 里执行，为什么不能一直在 ROM 里把所有事做完？</p>
+<p>原因是 ROM 的天然限制：</p>
+<ul>
+<li><strong>ROM 不能写</strong>，而程序运行需要写入内存：<ul>
+<li>栈（函数调用、局部变量）</li>
+<li>BSS&#x2F;全局数据</li>
+<li>缓冲区（读外部存储时得有 buffer）</li>
+<li>解密&#x2F;解压&#x2F;校验也需要工作区</li>
+</ul>
+</li>
+</ul>
+<p>因此 BootROM 执行时，必须找一个可写的地方当“工作台”。<br> 最早能用、最可靠的可写内存就是：<strong>片内 SRAM（或 Cache-as-RAM）</strong>。</p>
+<p>所以 BootROM 的典型行为是：</p>
+<ul>
+<li>自己在 ROM 里取指执行</li>
+<li>把栈&#x2F;缓冲区放在 SRAM</li>
+<li>从外部存储读出“第一阶段装载器”到 SRAM</li>
+<li>然后跳转到第一阶段装载器继续执行</li>
+</ul>
+<hr>
+<h2 id="3-为什么“第一阶段装载器”也要在-SRAM跑：因为-DDR还没起来"><a href="#3-为什么“第一阶段装载器”也要在-SRAM跑：因为-DDR还没起来" class="headerlink" title="3) 为什么“第一阶段装载器”也要在 SRAM跑：因为 DDR还没起来"></a>3) 为什么“第一阶段装载器”也要在 SRAM跑：因为 DDR还没起来</h2><p>你已经掌握了最关键点：<strong>DDR 必须初始化&#x2F;训练之后才能可靠使用</strong>。<br> 那“初始化 DDR”的代码必须运行在哪？</p>
+<ul>
+<li>不能运行在 DDR（因为 DDR 还不能用）</li>
+<li>ROM 很小、不够放复杂 DDR 初始化&#x2F;训练逻辑，而且 ROM 不可更新（DDR 参数&#x2F;板级差异很大，ROM 做不通用）</li>
+<li>最自然的选择就是：<strong>让第一阶段装载器在 SRAM 里跑，专门把 DDR 拉起来</strong></li>
+</ul>
+<p>这就是 SPL&#x2F;FSBL&#x2F;BL2 的存在意义：</p>
+<blockquote>
+<p><strong>用一段小程序（适配板级参数、可更新）在 SRAM 里把 DDR bring-up，然后把大程序搬到 DDR。</strong></p>
+</blockquote>
+<hr>
+<h2 id="4-为什么不直接把“第一阶段装载器”也做进-ROM，省事？"><a href="#4-为什么不直接把“第一阶段装载器”也做进-ROM，省事？" class="headerlink" title="4) 为什么不直接把“第一阶段装载器”也做进 ROM，省事？"></a>4) 为什么不直接把“第一阶段装载器”也做进 ROM，省事？</h2><p>主要是四个工程原因：</p>
+<h3 id="1-ROM空间非常宝贵"><a href="#1-ROM空间非常宝贵" class="headerlink" title="(1) ROM空间非常宝贵"></a>(1) ROM空间非常宝贵</h3><p>ROM 做大了：</p>
+<ul>
+<li>芯片面积&#x2F;成本上升</li>
+<li>验证周期更长，Bug 代价巨大（ROM 修不了）</li>
+</ul>
+<p>所以 ROM 通常只放“最小功能集”。</p>
+<h3 id="2-板级差异太大，ROM无法通吃"><a href="#2-板级差异太大，ROM无法通吃" class="headerlink" title="(2) 板级差异太大，ROM无法通吃"></a>(2) 板级差异太大，ROM无法通吃</h3><p>DDR 参数（走线、颗粒型号、频率、时序、训练策略）强依赖具体板子。<br> ROM 如果把 DDR 初始化写死，换板&#x2F;换颗粒就麻烦了。</p>
+<p>把 DDR init 放在可更新的 SPL 里更合理。</p>
+<h3 id="3-安全与救砖"><a href="#3-安全与救砖" class="headerlink" title="(3) 安全与救砖"></a>(3) 安全与救砖</h3><p>ROM 固定+最小化，容易做：</p>
+<ul>
+<li>安全启动链根信任</li>
+<li>失败回退到 USB&#x2F;UART 下载（maskrom 模式等）</li>
+<li>不会因为刷坏外部存储就彻底没法启动</li>
+</ul>
+<h3 id="4-可维护性"><a href="#4-可维护性" class="headerlink" title="(4) 可维护性"></a>(4) 可维护性</h3><p>第一阶段装载器可以升级（修 DDR 兼容、提速、修 bug、加新存储支持），ROM 不行。</p>
+<hr>
+<h2 id="5-可以用一个非常形象的比喻记住它"><a href="#5-可以用一个非常形象的比喻记住它" class="headerlink" title="5) 可以用一个非常形象的比喻记住它"></a>5) 可以用一个非常形象的比喻记住它</h2><p>把 SoC 启动当成“搭舞台”：</p>
+<ul>
+<li><strong>BootROM（ROM）</strong>：剧院自带的“应急照明和消防通道”，永远在、永远可靠，保证你能进门</li>
+<li><strong>SRAM</strong>：舞台边上的“小工作台”，空间小但马上能用，用来搭起大舞台（DDR）</li>
+<li><strong>DDR</strong>：真正的大舞台，空间大，灯光音响全在这儿，但得先把它搭好、调好才能演出</li>
+<li><strong>U-Boot proper &#x2F; Linux</strong>：正式演出的大团队，必须在大舞台（DDR）上才能展开</li>
+</ul>
+<hr>
+<h2 id="6-总结为什么要分-ROM-和-SRAM-执行”"><a href="#6-总结为什么要分-ROM-和-SRAM-执行”" class="headerlink" title="6) 总结为什么要分 ROM 和 SRAM 执行”"></a>6) 总结为什么要分 ROM 和 SRAM 执行”</h2><ul>
+<li><strong>ROM</strong>：为了“上电必有代码可执行、不可被刷坏、无需外部条件”</li>
+<li><strong>SRAM</strong>：为了“提供可写工作区（栈&#x2F;缓冲&#x2F;数据），并在 DDR 未就绪前承载可更新的早期装载器去初始化 DDR”</li>
+</ul>
+<h2 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h2><p>很多描述不对：</p>
+<ol>
+<li><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/611059923?share_code=SsKaAPHNMpxo&utm_psn=1991613055549849848">https://zhuanlan.zhihu.com/p/611059923?share_code=SsKaAPHNMpxo&amp;utm_psn=1991613055549849848</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_43467135/article/details/137133759">https://blog.csdn.net/qq_43467135/article/details/137133759</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://schandupatla.medium.com/u-boot-spl-vs-u-boot-proper-002187445ee0">https://schandupatla.medium.com/u-boot-spl-vs-u-boot-proper-002187445ee0</a></p>
+</li>
+<li><p>参考GPT输出答案</p>
+</li>
+</ol>
+</article>
+<div class="article-footer">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    
+
+</div>
+
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E5%B5%8C%E5%85%A5%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84/">嵌入式系统架构</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/12/28/%E5%85%B3%E4%BA%8E%E4%BA%8C%E7%BA%A7%E6%8C%87%E9%92%88%E5%8F%AF%E4%BB%A5%E7%9C%8B%E4%BD%9C%E6%8C%87%E9%92%88%E6%95%B0%E7%BB%84%E7%9A%84%E7%90%86%E8%A7%A3/">2025-12-28</a></div></section></div>
+
+<div class="related-wrap" id="related-posts">
+    <section class='header'>
+      <div class='title cap theme'>您可能感兴趣的文章</div>
+    </section>
+    <section class='body'>
+    <div class="related-posts"><a class="item" href="\2025\11\01\编译Buildroot_2020.02时遇到IndexErrorlist index out of range问题解决\" title="编译Buildroot_2020.02时遇到IndexError:list index out of range问题解决"><span class="title">编译Buildroot_2020.02时遇到IndexError:list index out of range问题解决</span></a><a class="item" href="\2026\01\02\系统构建\buildroot扫盲\" title="buildroot扫盲"><span class="title">buildroot扫盲</span></a><a class="item" href="\2026\01\02\系统构建\嵌入式系统架构\" title="嵌入式系统架构"><span class="title">嵌入式系统架构</span></a></div></section></div>
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="sitemap" style="column-count:2;"><div class="sitemap-group"><span class="fs15">导航</span><a href="/">首页</a><a href="/archives/">归档</a><a href="/categories/">分类</a><a href="/tags/">标签</a><a href="/atom.xml">RSS</a></div><div class="sitemap-group"><span class="fs15">关于</span><a href="/about/">关于我</a><a href="/friends/">友链</a><a href="/message/">留言板</a></div></div><div class="text"><div align="center" style="color:#666; font-size:14px; line-height:1.85;">
+  <p>© 2023–2025 <a target="_blank" rel="noopener" href="https://github.com/dkyou" style="color:#333; text-decoration:none;">Dkyou</a></p>
+  <p>Powered by <a target="_blank" rel="noopener" href="https://hexo.io" style="color:#333;">Hexo</a> · Theme <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar" style="color:#333;">Stellar</a></p>
+  <p>本站文章（除特别说明外）遵循
+    <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" style="color:#333;">CC BY-NC-SA 4.0</a>。
+  </p>
+</div>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%8A%AF%E7%89%87%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E8%A7%A3%E6%9E%90%EF%BC%88%E6%8C%89%E9%98%B6%E6%AE%B5%E7%90%86%E8%A7%A3%EF%BC%89"><span class="toc-text">芯片启动流程解析（按阶段理解）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#0-%E7%BB%93%E8%AE%BA"><span class="toc-text">0. 结论</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%90%AF%E5%8A%A8%E6%B6%89%E5%8F%8A%E7%9A%84%E5%AD%98%E5%82%A8%E5%8C%BA%E5%9F%9F%E5%92%8C%E5%8A%A0%E8%BD%BD%E5%8A%A8%E4%BD%9C"><span class="toc-text">1. 启动涉及的存储区域和加载动作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E4%B8%AA%E5%85%B3%E9%94%AE%E5%AD%98%E5%82%A8%E5%8C%BA%E5%9F%9F"><span class="toc-text">四个关键存储区域</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E7%B1%BB%E5%85%B3%E9%94%AE%E5%8A%A0%E8%BD%BD%E5%8A%A8%E4%BD%9C"><span class="toc-text">三类关键加载动作</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%88%86%E9%98%B6%E6%AE%B5%E8%AF%A6%E8%A7%A3%EF%BC%9A%E8%B0%81%E5%8A%A0%E8%BD%BD%E8%B0%81%E3%80%81%E4%BB%8E%E5%93%AA%E5%88%B0%E5%93%AA%E3%80%81%E5%9C%A8%E5%93%AA%E6%89%A7%E8%A1%8C"><span class="toc-text">2. 分阶段详解：谁加载谁、从哪到哪、在哪执行</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Stage-0%EF%BC%9A%E4%B8%8A%E7%94%B5%E5%A4%8D%E4%BD%8D-%E2%86%92-BootROM-%E6%89%A7%E8%A1%8C%EF%BC%88%E7%89%87%E5%86%85-ROM%EF%BC%89"><span class="toc-text">Stage 0：上电复位 → BootROM 执行（片内 ROM）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Stage-1%EF%BC%9A%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5%E8%A3%85%E8%BD%BD%E5%99%A8%EF%BC%88SPL-FSBL-BL2-Preloader%EF%BC%89%E6%89%A7%E8%A1%8C%EF%BC%88%E7%89%87%E5%86%85-SRAM%EF%BC%89"><span class="toc-text">Stage 1：第一阶段装载器（SPL&#x2F;FSBL&#x2F;BL2&#x2F;Preloader）执行（片内 SRAM）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Stage-2%EF%BC%9A%E7%AC%AC%E4%BA%8C%E9%98%B6%E6%AE%B5%E5%BC%95%E5%AF%BC%E5%99%A8%EF%BC%88U-Boot-proper-UEFI-BL33%EF%BC%89%E6%89%A7%E8%A1%8C%EF%BC%88DDR%EF%BC%89"><span class="toc-text">Stage 2：第二阶段引导器（U-Boot proper &#x2F; UEFI &#x2F; BL33）执行（DDR）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Stage-3%EF%BC%9ALinux-%E5%86%85%E6%A0%B8%E6%89%A7%E8%A1%8C%EF%BC%88DDR%EF%BC%89%E2%86%92-%E6%8C%82%E8%BD%BD-rootfs%EF%BC%88%E5%AD%98%E5%82%A8-%E7%BD%91%E7%BB%9C%EF%BC%89"><span class="toc-text">Stage 3：Linux 内核执行（DDR）→ 挂载 rootfs（存储&#x2F;网络）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%AE%89%E5%85%A8%E5%90%AF%E5%8A%A8%EF%BC%88Secure-Boot%EF%BC%89"><span class="toc-text">3. 安全启动（Secure Boot）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E5%B8%B8%E8%A7%81%E2%80%9C%E9%95%9C%E5%83%8F%E6%96%87%E4%BB%B6%E2%80%9D%E9%80%90%E4%B8%AA%E5%AF%B9%E5%8F%B7%E5%85%A5%E5%BA%A7"><span class="toc-text">4. 常见“镜像文件”逐个对号入座</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5%E8%A3%85%E8%BD%BD%E5%99%A8%EF%BC%88SRAM-%E9%87%8C%E8%B7%91%EF%BC%89"><span class="toc-text">4.1 第一阶段装载器（SRAM 里跑）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E7%AC%AC%E4%BA%8C%E9%98%B6%E6%AE%B5%E5%BC%95%E5%AF%BC%E5%99%A8%EF%BC%88DDR-%E9%87%8C%E8%B7%91%EF%BC%89"><span class="toc-text">4.2 第二阶段引导器（DDR 里跑）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-Linux-%E4%B8%89%E4%BB%B6%E5%A5%97%EF%BC%88%E8%A2%AB-U-Boot-%E6%94%BE%E8%BF%9B-DDR%EF%BC%89"><span class="toc-text">4.3 Linux 三件套（被 U-Boot 放进 DDR）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-RootFS%EF%BC%88%E9%80%9A%E5%B8%B8%E7%94%B1%E5%86%85%E6%A0%B8%E6%8C%82%E8%BD%BD%EF%BC%8C%E8%80%8C%E9%9D%9E-U-Boot-%E6%90%AC%E8%BF%90%EF%BC%89"><span class="toc-text">4.4 RootFS（通常由内核挂载，而非 U-Boot 搬运）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E6%80%BB%E7%BB%93"><span class="toc-text">5. 总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%8A%AF%E7%89%87%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E8%A7%A3%E6%9E%90%EF%BC%88%E6%8C%89%E7%85%A7%E4%B8%8A%E7%94%B5%E5%90%AF%E5%8A%A8%E6%97%B6%E9%97%B4%E7%BA%BF%E7%90%86%E8%A7%A3%EF%BC%89"><span class="toc-text">芯片启动流程解析（按照上电启动时间线理解）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#T0%EF%BC%9A%E7%94%B5%E6%BA%90%E7%A8%B3%E5%AE%9A%E3%80%81%E5%A4%8D%E4%BD%8D%E9%87%8A%E6%94%BE"><span class="toc-text">T0：电源稳定、复位释放</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#T1%EF%BC%9ACPU-%E6%89%A7%E8%A1%8C%E7%AC%AC%E4%B8%80%E6%9D%A1%E6%8C%87%E4%BB%A4%EF%BC%88%E8%BF%9B%E5%85%A5-BootROM%EF%BC%89"><span class="toc-text">T1：CPU 执行第一条指令（进入 BootROM）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#T2%EF%BC%9ABootROM-%E8%AF%BB%E5%8F%96%E5%90%AF%E5%8A%A8%E6%A8%A1%E5%BC%8F%EF%BC%8C%E5%86%B3%E5%AE%9A%E5%90%AF%E5%8A%A8%E4%BB%8B%E8%B4%A8"><span class="toc-text">T2：BootROM 读取启动模式，决定启动介质</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#T3%EF%BC%9ABootROM-%E5%88%9D%E5%A7%8B%E5%8C%96%E2%80%9C%E5%90%AF%E5%8A%A8%E4%BB%8B%E8%B4%A8%E6%8E%A7%E5%88%B6%E5%99%A8%E2%80%9D%E7%9A%84%E6%9C%80%E5%B0%8F%E8%AF%BB%E8%83%BD%E5%8A%9B"><span class="toc-text">T3：BootROM 初始化“启动介质控制器”的最小读能力</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#T4%EF%BC%9ABootROM-%E4%BB%8E%E5%90%AF%E5%8A%A8%E4%BB%8B%E8%B4%A8%E8%AF%BB%E5%8F%96%E2%80%9C%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5%E8%A3%85%E8%BD%BD%E5%99%A8%E2%80%9D%E5%88%B0-SRAM"><span class="toc-text">T4：BootROM 从启动介质读取“第一阶段装载器”到 SRAM</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#T5%EF%BC%9ABootROM%EF%BC%88%E5%8F%AF%E9%80%89%EF%BC%89%E6%A0%A1%E9%AA%8C-%E8%A7%A3%E5%AF%86%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5%E8%A3%85%E8%BD%BD%E5%99%A8%EF%BC%8C%E7%84%B6%E5%90%8E%E8%B7%B3%E8%BD%AC"><span class="toc-text">T5：BootROM（可选）校验&#x2F;解密第一阶段装载器，然后跳转</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#T6%EF%BC%9A%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5%E8%A3%85%E8%BD%BD%E5%99%A8%E5%BC%80%E5%A7%8B%E6%89%A7%E8%A1%8C%EF%BC%88SPL-FSBL-BL2-%E5%9C%A8-SRAM%EF%BC%89"><span class="toc-text">T6：第一阶段装载器开始执行（SPL&#x2F;FSBL&#x2F;BL2 在 SRAM）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#T7%EF%BC%9A%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5%E8%A3%85%E8%BD%BD%E5%99%A8%E5%88%9D%E5%A7%8B%E5%8C%96-%E8%AE%AD%E7%BB%83-DDR%EF%BC%88%E5%85%B3%E9%94%AE%E8%BD%AC%E6%8A%98%E7%82%B9%EF%BC%89"><span class="toc-text">T7：第一阶段装载器初始化&#x2F;训练 DDR（关键转折点）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#T8%EF%BC%9ADDR-%E5%8F%AF%E7%94%A8%E5%90%8E%EF%BC%8C%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5%E8%A3%85%E8%BD%BD%E5%99%A8%E6%8A%8A%E2%80%9C%E5%B7%A5%E4%BD%9C%E5%8C%BA-%E5%A0%86-%E7%BC%93%E5%86%B2%E2%80%9D%E8%BF%81%E5%88%B0-DDR%EF%BC%88%E5%B8%B8%E8%A7%81%E5%81%9A%E6%B3%95%EF%BC%89"><span class="toc-text">T8：DDR 可用后，第一阶段装载器把“工作区&#x2F;堆&#x2F;缓冲”迁到 DDR（常见做法）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#T9%EF%BC%9A%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5%E8%A3%85%E8%BD%BD%E5%99%A8%E4%BB%8E%E5%90%AF%E5%8A%A8%E4%BB%8B%E8%B4%A8%E5%8A%A0%E8%BD%BD%E7%AC%AC%E4%BA%8C%E9%98%B6%E6%AE%B5%E5%BC%95%E5%AF%BC%E5%99%A8%E5%88%B0-DDR"><span class="toc-text">T9：第一阶段装载器从启动介质加载第二阶段引导器到 DDR</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#T10%EF%BC%9A%E8%B7%B3%E8%BD%AC%E5%88%B0%E7%AC%AC%E4%BA%8C%E9%98%B6%E6%AE%B5%E5%BC%95%E5%AF%BC%E5%99%A8%EF%BC%88U-Boot-proper-%E5%9C%A8-DDR%EF%BC%89"><span class="toc-text">T10：跳转到第二阶段引导器（U-Boot proper 在 DDR）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#T11%EF%BC%9AU-Boot-%E5%8A%A0%E8%BD%BD-Linux-%E5%90%AF%E5%8A%A8%E4%B8%89%E4%BB%B6%E5%A5%97%E5%88%B0-DDR"><span class="toc-text">T11：U-Boot 加载 Linux 启动三件套到 DDR</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#T12%EF%BC%9AU-Boot-%E8%AE%BE%E7%BD%AE%E5%90%AF%E5%8A%A8%E5%8F%82%E6%95%B0%E5%B9%B6%E8%B7%B3%E8%BD%AC%E5%86%85%E6%A0%B8"><span class="toc-text">T12：U-Boot 设置启动参数并跳转内核</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#T13%EF%BC%9ALinux-%E5%86%85%E6%A0%B8%E6%89%A7%E8%A1%8C%E5%B9%B6%E5%AE%8C%E6%88%90%E8%87%AA%E8%BA%AB%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-text">T13：Linux 内核执行并完成自身初始化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#T14%EF%BC%9A%E5%86%85%E6%A0%B8%E6%8C%82%E8%BD%BD-rootfs-%E5%B9%B6%E5%90%AF%E5%8A%A8%E7%94%A8%E6%88%B7%E6%80%81"><span class="toc-text">T14：内核挂载 rootfs 并启动用户态</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#T15%EF%BC%9A%E6%80%BB%E7%BB%93"><span class="toc-text">T15：总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%8A%AF%E7%89%87%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E8%A7%A3%E6%9E%90%EF%BC%88%E6%8C%89%E4%B8%8D%E5%90%8C%E9%98%B6%E6%AE%B5%E4%BD%BF%E7%94%A8%E7%9A%84%E5%9B%BA%E4%BB%B6%E5%90%8D%E7%A7%B0%E7%90%86%E8%A7%A3%EF%BC%89"><span class="toc-text">芯片启动流程解析（按不同阶段使用的固件名称理解）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%B8%B8%E8%A7%81%E6%96%87%E4%BB%B6%E5%90%8D-%E2%86%92-%E5%B1%9E%E4%BA%8E%E5%93%AA%E4%B8%80%E9%98%B6%E6%AE%B5-%E2%86%92-%E8%B7%91%E5%9C%A8%E5%93%AA-%E2%86%92-%E8%B0%81%E5%8A%A0%E8%BD%BD%E8%B0%81"><span class="toc-text">1) 常见文件名 → 属于哪一阶段 → 跑在哪 → 谁加载谁</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#A-BootROM-%E7%9B%B8%E5%85%B3%EF%BC%88%E4%B8%80%E8%88%AC%E6%8B%BF%E4%B8%8D%E5%88%B0%E6%96%87%E4%BB%B6%EF%BC%89"><span class="toc-text">A. BootROM 相关（一般拿不到文件）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#B-%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5%E8%A3%85%E8%BD%BD%E5%99%A8"><span class="toc-text">B. 第一阶段装载器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#C-%E5%AE%89%E5%85%A8%E5%9B%BA%E4%BB%B6%EF%BC%88%E5%8F%AF%E9%80%89%EF%BC%8C%E4%BD%86%E8%B6%8A%E6%9D%A5%E8%B6%8A%E5%B8%B8%E8%A7%81%EF%BC%8C%E5%B0%A4%E5%85%B6-ARMv8%EF%BC%89"><span class="toc-text">C. 安全固件（可选，但越来越常见，尤其 ARMv8）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#D-%E7%AC%AC%E4%BA%8C%E9%98%B6%E6%AE%B5%E5%BC%95%E5%AF%BC%E5%99%A8%EF%BC%88%E2%80%9CU-Boot%E2%80%9D%E9%80%9A%E5%B8%B8%E6%8C%87%E5%AE%83%EF%BC%89"><span class="toc-text">D. 第二阶段引导器（“U-Boot”通常指它）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#E-Linux-%E5%90%AF%E5%8A%A8%E4%B8%89%E4%BB%B6%E5%A5%97"><span class="toc-text">E. Linux 启动三件套</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#F-RootFS%EF%BC%88%E7%9C%9F%E6%AD%A3%E7%9A%84%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%EF%BC%89"><span class="toc-text">F. RootFS（真正的系统文件）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E2%80%9C%E4%B8%80%E4%B8%AA%E5%B7%A5%E7%A8%8B%E9%87%8C%E9%80%9A%E5%B8%B8%E6%9C%89%E5%93%AA%E4%BA%9B%E6%96%87%E4%BB%B6%E2%80%9D%E2%80%94%E2%80%94%E6%8C%89%E4%B8%A4%E7%A7%8D%E6%9C%80%E5%B8%B8%E8%A7%81%E6%89%93%E5%8C%85%E6%96%B9%E5%BC%8F%E5%88%86%E5%88%AB%E5%AF%B9%E5%8F%B7"><span class="toc-text">2) “一个工程里通常有哪些文件”——按两种最常见打包方式分别对号</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%B9%E5%BC%8F-I%EF%BC%9A%E8%A3%B8%E6%96%87%E4%BB%B6-%E5%88%86%E5%8C%BA-%E5%81%8F%E7%A7%BB"><span class="toc-text">方式 I：裸文件 + 分区&#x2F;偏移</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%B9%E5%BC%8F-II%EF%BC%9AFIT"><span class="toc-text">方式 II：FIT</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E4%B8%A4%E4%B8%AA%E5%AE%9A%E4%BD%8D%E9%97%AE%E9%A2%98%E7%9A%84%E5%88%A4%E6%96%AD%E5%8F%A3%E8%AF%80"><span class="toc-text">3) 两个定位问题的判断口诀</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%A3%E8%AF%80-A%EF%BC%9A%E7%9C%8B%E2%80%9C%E5%AE%83%E5%BF%85%E9%A1%BB%E5%9C%A8%E5%93%AA%E8%B7%91%E2%80%9D"><span class="toc-text">口诀 A：看“它必须在哪跑”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%A3%E8%AF%80-B%EF%BC%9A%E7%9C%8B%E2%80%9C%E8%B0%81%E9%9C%80%E8%A6%81%E8%B0%81%E5%85%88%E6%B4%BB%E7%9D%80%E2%80%9D"><span class="toc-text">口诀 B：看“谁需要谁先活着”</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E6%80%BB%E7%BB%93"><span class="toc-text">4) 总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E4%B8%80%E4%B8%8A%E7%94%B5%E5%B0%B1%E7%9B%B4%E6%8E%A5%E5%9C%A8-SRAM-DDR-%E8%B7%91%EF%BC%9F%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E8%A6%81%E6%9C%89%E2%80%9C%E7%89%87%E5%86%85-ROM-%E6%89%A7%E8%A1%8C-BootROM%E2%80%9D"><span class="toc-text">问题：为什么不一上电就直接在 SRAM&#x2F;DDR 跑？为什么还要有“片内 ROM 执行 BootROM”</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E7%89%87%E5%86%85-ROM%EF%BC%88BootROM%EF%BC%89%E4%B8%BA%E4%BB%80%E4%B9%88%E5%AD%98%E5%9C%A8%EF%BC%9A%E4%B8%BA%E4%BA%86%E2%80%9C%E6%B0%B8%E8%BF%9C%E8%83%BD%E5%90%AF%E5%8A%A8%E2%80%9D"><span class="toc-text">1) 片内 ROM（BootROM）为什么存在：为了“永远能启动”</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E7%89%87%E5%86%85-SRAM%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E7%94%A8%EF%BC%9A%E5%9B%A0%E4%B8%BA%E2%80%9CROM%E4%B8%8D%E8%83%BD%E5%86%99-%E9%9C%80%E8%A6%81%E6%A0%88-%E6%95%B0%E6%8D%AE%E5%8C%BA%E2%80%9D"><span class="toc-text">2) 片内 SRAM为什么要用：因为“ROM不能写 + 需要栈&#x2F;数据区”</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E4%B8%BA%E4%BB%80%E4%B9%88%E2%80%9C%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5%E8%A3%85%E8%BD%BD%E5%99%A8%E2%80%9D%E4%B9%9F%E8%A6%81%E5%9C%A8-SRAM%E8%B7%91%EF%BC%9A%E5%9B%A0%E4%B8%BA-DDR%E8%BF%98%E6%B2%A1%E8%B5%B7%E6%9D%A5"><span class="toc-text">3) 为什么“第一阶段装载器”也要在 SRAM跑：因为 DDR还没起来</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E7%9B%B4%E6%8E%A5%E6%8A%8A%E2%80%9C%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5%E8%A3%85%E8%BD%BD%E5%99%A8%E2%80%9D%E4%B9%9F%E5%81%9A%E8%BF%9B-ROM%EF%BC%8C%E7%9C%81%E4%BA%8B%EF%BC%9F"><span class="toc-text">4) 为什么不直接把“第一阶段装载器”也做进 ROM，省事？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-ROM%E7%A9%BA%E9%97%B4%E9%9D%9E%E5%B8%B8%E5%AE%9D%E8%B4%B5"><span class="toc-text">(1) ROM空间非常宝贵</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E6%9D%BF%E7%BA%A7%E5%B7%AE%E5%BC%82%E5%A4%AA%E5%A4%A7%EF%BC%8CROM%E6%97%A0%E6%B3%95%E9%80%9A%E5%90%83"><span class="toc-text">(2) 板级差异太大，ROM无法通吃</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%AE%89%E5%85%A8%E4%B8%8E%E6%95%91%E7%A0%96"><span class="toc-text">(3) 安全与救砖</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%8F%AF%E7%BB%B4%E6%8A%A4%E6%80%A7"><span class="toc-text">(4) 可维护性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%8F%AF%E4%BB%A5%E7%94%A8%E4%B8%80%E4%B8%AA%E9%9D%9E%E5%B8%B8%E5%BD%A2%E8%B1%A1%E7%9A%84%E6%AF%94%E5%96%BB%E8%AE%B0%E4%BD%8F%E5%AE%83"><span class="toc-text">5) 可以用一个非常形象的比喻记住它</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E6%80%BB%E7%BB%93%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%88%86-ROM-%E5%92%8C-SRAM-%E6%89%A7%E8%A1%8C%E2%80%9D"><span class="toc-text">6) 总结为什么要分 ROM 和 SRAM 执行”</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%EF%BC%9A"><span class="toc-text">参考：</span></a></li></ol></li></ol></div><div class="widget-footer"><a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/><path d="M7 3.338A9.95 9.95 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5"/></g></svg><span>回到顶部</span></a></div></widget>
+
+
+</div></aside><div class='float-panel'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+
+
+<script type="text/javascript">
+  window.canonical = {"originalHost":null,"officialHosts":["localhost"],"encoded":""};
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+    tag_plugins: {
+      chat: Object.assign({"api":"https://siteinfo.listentothewind.cn/api/v1"}),
+    }
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":null,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+    loading: `https://api.iconify.design/eos-icons:three-dots-loading.svg?color=%231cd0fd`,
+  };
+  const deps = {
+    jquery: `https://gcore.jsdelivr.net/npm/jquery@3.7/dist/jquery.min.js`,
+    marked: `https://gcore.jsdelivr.net/npm/marked@13.0/lib/marked.umd.min.js`,
+    lazyload: `/%5Bobject%20Object%5D`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  
+  function RunItem() {
+    this.list = []; // 存放回调函数
+    this.start = () => {
+      for (var i = 0; i < this.list.length; i++) {
+        this.list[i].run();
+      }
+    };
+    this.push = (fn, name, setRequestAnimationFrame = true) => {
+      let myfn = fn
+      if (setRequestAnimationFrame) {
+        myfn = () => {
+          utils.requestAnimationFrame(fn)
+        }
+      }
+      var f = new Item(myfn, name);
+      this.list.push(f);
+    };
+    this.remove = (name) => {
+      for (let index = 0; index < this.list.length; index++) {
+        const e = this.list[index];
+        if (e.name == name) {
+          this.list.splice(index, 1);
+        }
+      }
+    }
+    // 构造一个可以run的对象
+    function Item(fn, name) {
+      // 函数名称
+      this.name = name || fn.name;
+      // run方法
+      this.run = () => {
+        try {
+          fn()
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    }
+  }
+
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')) {
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function () {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      const maxRetry = 3;
+      let retryCount = 0;
+
+      return new Promise((resolve, reject) => {
+        const load = () => {
+          utils.onLoading?.(el);
+
+          let timedOut = false;
+          const timeout = setTimeout(() => {
+            timedOut = true;
+            console.warn('[request] 超时:', url);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject('请求超时');
+            } else {
+              setTimeout(load, 1000);
+            }
+          }, 5000);
+
+          fetch(url).then(resp => {
+            if (timedOut) return;
+            clearTimeout(timeout);
+
+            if (!resp.ok) throw new Error('响应失败');
+            return resp;
+          }).then(data => {
+            if (timedOut) return;
+            utils.onLoadSuccess?.(el);
+            callback(data);
+            resolve(data);
+          }).catch(err => {
+            clearTimeout(timeout);
+            console.warn('[request] 错误:', err);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject(err);
+            } else {
+              setTimeout(load, 1000);
+            }
+          });
+        };
+
+        load();
+      });
+    },
+    requestWithoutLoading: (url, options = {}, maxRetry = 2, timeout = 5000) => {
+      return new Promise((resolve, reject) => {
+        let retryCount = 0;
+
+        const tryRequest = () => {
+          let timedOut = false;
+          const timer = setTimeout(() => {
+            timedOut = true;
+            if (++retryCount > maxRetry) reject('timeout');
+            else tryRequest();
+          }, timeout);
+
+          fetch(url, options)
+            .then(resp => {
+              clearTimeout(timer);
+              if (!resp.ok) throw new Error('bad response');
+              resolve(resp);
+            })
+            .catch(err => {
+              clearTimeout(timer);
+              if (++retryCount > maxRetry) reject(err);
+              else setTimeout(tryRequest, 500);
+            });
+        };
+
+        tryRequest();
+      });
+    },
+    /********************** requestAnimationFrame ********************************/
+    // 1、requestAnimationFrame 会把每一帧中的所有 DOM 操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
+    // 2、在隐藏或不可见的元素中，requestAnimationFrame 将不会进行重绘或回流，这当然就意味着更少的的 cpu，gpu 和内存使用量。
+    requestAnimationFrame: (fn) => {
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+      }
+      window.requestAnimationFrame(fn)
+    },
+    dark: {},
+  };
+
+  // utils.dark.mode 当前模式 dark or light
+  // utils.dark.toggle() 暗黑模式触发器
+  // utils.dark.push(callBack[,"callBackName"]) 传入触发器回调函数
+  utils.dark.method = {
+    toggle: new RunItem(),
+  };
+  utils.dark = Object.assign(utils.dark, {
+    push: utils.dark.method.toggle.push,
+  });
+</script>
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+<script async src="https://gcore.jsdelivr.net/npm/vanilla-lazyload@19.1/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+    callback_loaded: (el) => {
+      el.classList.add('loaded');
+      const wrapper = el.closest('.lazy-box');
+      const icon = wrapper?.querySelector('.lazy-icon');
+      if (icon) icon.remove();
+    }
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+
+  window.wrapLazyloadImages = (container) => {
+    if (typeof container === 'string') {
+      container = document.querySelector(container);
+    }
+    if (!container) return;
+    
+    const images = container.querySelectorAll('img');
+    images.forEach((img) => {
+      if (img.classList.contains('lazy')) return;
+
+      const src = img.getAttribute('src');
+      if (!src) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'lazy-box';
+
+      const newImg = img.cloneNode();
+      newImg.removeAttribute('src');
+      newImg.setAttribute('data-src', src);
+      newImg.classList.add('lazy');
+
+      const icon = document.createElement('div');
+      icon.className = 'lazy-icon';
+      if (def.loading) {
+        icon.style.backgroundImage = `url("${def.loading}")`;
+      }
+
+      wrapper.appendChild(newImg);
+      wrapper.appendChild(icon);
+
+      img.replaceWith(wrapper);
+    });
+
+    // 通知 LazyLoad 更新
+    if (window.lazyLoadInstance?.update) {
+      window.lazyLoadInstance.update();
+    }
+  }
+  
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.33.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    // applyThemeToGiscus(theme)
+  }
+
+  // FIXME: 这会导致无法使用 preferred_color_scheme 以外的主题
+  const applyThemeToGiscus = (theme) => {
+    // theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+    utils.dark.mode = newTheme === 'auto' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : newTheme;
+    utils.dark.method.toggle.start();
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    } else {
+      utils.dark.mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    utils.dark.method.toggle.start();
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"rating":{"js":"/js/services/rating.js","api":"https://star-vote.xaox.cc/api/rating"},"vote":{"js":"/js/services/vote.js","api":"https://star-vote.xaox.cc/api/vote"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"friends_and_posts":{"js":"/js/services/friends_and_posts.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"voice":{"js":"/js/plugins/voice.js"},"video":{"js":"/js/plugins/video.js"},"download-file":{"js":"/js/plugins/download-file.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"},"contributors":{"edit_this_page":{"_posts/":null,"wiki/stellar/":"https://github.com/xaoxuu/hexo-theme-stellar-docs/blob/main/"},"js":"/js/services/contributors.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else if (id == 'voice') {
+        ctx.voiceAudios = document.querySelectorAll('.voice>audio');
+        if (ctx.voiceAudios?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            createVoiceDom(ctx.voiceAudios);
+          });
+        }
+      } else if (id == 'video') {
+        ctx.videos = document.querySelectorAll('.video>video');
+        if (ctx.videos?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            videoEvents(ctx.videos);
+          });
+        }
+      } else if (id == 'download-file') {
+        ctx.files = document.querySelectorAll('.file');
+        if (ctx.files?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            downloadFileEvent(ctx.files);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+
+    // chat iphone time
+    let phoneTimes = document.querySelectorAll('.chat .status-bar .time');
+
+    if (phoneTimes.length > 0) {
+      NowTime();
+      var date = new Date();
+      var sec = date.getSeconds();
+      var firstAdjustInterval = setInterval(firstAdjustTime, 1000 * (60 - sec));
+    }
+
+    function firstAdjustTime() {
+      NowTime();
+      clearInterval(firstAdjustInterval);
+      setInterval(NowTime, 1000 * 60);
+    }
+
+    function NowTime() {
+      for (let i = 0; i < phoneTimes.length; ++i) {
+        var timeSpan = phoneTimes[i];
+        var date = new Date();
+        var hour = date.getHours();
+        var min = date.getMinutes();
+        timeSpan.innerHTML = check(hour) + ":" + check(min);
+      }
+    };
+
+    function check(val) {
+      if (val < 10) {
+        return ("0" + val);
+      }
+      return (val);
+    }
+
+    // chat quote
+    const chat_quote_obverser = new IntersectionObserver((entries, observer) => {
+      entries.filter((entry) => { return entry.isIntersecting }).sort((a, b) => a.intersectionRect.y !== b.intersectionRect.y ? a.intersectionRect.y - b.intersectionRect.y : a.intersectionRect.x - b.intersectionRect.x).forEach((entry, index) => {
+          observer.unobserve(entry.target);
+          setTimeout(() => {
+            entry.target.classList.add('quote-blink');
+            setTimeout(() => {
+              entry.target.classList.remove('quote-blink');
+            }, 1000);
+          }, Math.max(100, 16) * (index + 1));
+        });
+    });
+
+    var chatQuotes = document.querySelectorAll(".chat .talk .quote");
+    chatQuotes.forEach((quote) => {
+      quote.addEventListener('click', function () {
+        var chatCellDom = document.getElementById("quote-" + quote.getAttribute("quotedCellTag"));
+        if (chatCellDom) {
+          var chatDiv = chatCellDom.parentElement;
+          var mid = chatDiv.clientHeight / 2;
+          var offsetTop = chatCellDom.offsetTop;
+          if (offsetTop > mid - chatCellDom.clientHeight / 2) {
+            chatDiv.scrollTo({
+              top: chatCellDom.offsetTop - mid + chatCellDom.clientHeight / 2,
+              behavior: "smooth"
+            });
+          } else {
+            chatDiv.scrollTo({
+              top: 0,
+              behavior: "smooth"
+            });
+          }
+          chat_quote_obverser.observe(chatCellDom);
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://gcore.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error), .with-fancybox .atk-content img:not([atk-emoticon])';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const memos = document.getElementsByClassName('ds-memos');
+    if (memos != undefined && memos.length > 0) {
+      needFancybox = true;
+    }
+    const fancybox = document.getElementsByClassName('with-fancybox');
+    if (fancybox != undefined && fancybox.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `不能复制哦~`,
+        success_text: `竟没骗到你！复制成功`,
+        toast: `又被你小子复制了！🌈`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
