@@ -17,24 +17,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
   <meta name="theme-color" content="#f9fafb">
-  <title>又是摸鱼的一天</title>
+  <title>win11 + wsl + vscode + cpptools调试 - 又是摸鱼的一天</title>
 
   
     <meta name="description" content="win11 + wsl + vscode + cpptools调试安装c&#x2F;c++插件为了使用调试功能，重新安装了c&#x2F;c++拓展插件，cpptools 只当“调试器前端”用，代码提示&#x2F;跳转&#x2F;诊断仍然全部交给 clangd，同时又为了不影响clang等拓展的功能，因此需要禁用一些功能 windows 在 窗口里按 Ctrl+Shift+P 输入并选择：Prefe">
 <meta property="og:type" content="article">
-<meta property="og:title" content="又是摸鱼的一天">
-<meta property="og:url" content="https://dkyou.github.io/2025/12/20/win11%20+%20wsl%20+%20vscode%20+%20cpptools%E8%B0%83%E8%AF%95/">
+<meta property="og:title" content="win11 + wsl + vscode + cpptools调试">
+<meta property="og:url" content="https://dkyou.github.io/2025/12/12/win11%20+%20wsl%20+%20vscode%20+%20cpptools%E8%B0%83%E8%AF%95/">
 <meta property="og:site_name" content="又是摸鱼的一天">
 <meta property="og:description" content="win11 + wsl + vscode + cpptools调试安装c&#x2F;c++插件为了使用调试功能，重新安装了c&#x2F;c++拓展插件，cpptools 只当“调试器前端”用，代码提示&#x2F;跳转&#x2F;诊断仍然全部交给 clangd，同时又为了不影响clang等拓展的功能，因此需要禁用一些功能 windows 在 窗口里按 Ctrl+Shift+P 输入并选择：Prefe">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2025-12-20T13:33:09.299Z">
-<meta property="article:modified_time" content="2025-12-20T14:03:32.469Z">
+<meta property="article:published_time" content="2025-12-11T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-01-16T08:10:39.635Z">
 <meta property="article:author" content="Dku">
+<meta property="article:tag" content="vscode">
+<meta property="article:tag" content="wsl">
 <meta name="twitter:card" content="summary">
   
   
   
-  
+  <meta name="keywords" content="wsl,vscode">
 
   <!-- feed -->
   
@@ -46,7 +48,7 @@
 
   
 
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dku","sameAs":[]},"dateCreated":"2025-12-20T21:33:09+08:00","dateModified":"2025-12-20T22:03:32+08:00","datePublished":"2025-12-20T21:33:09+08:00","description":"","headline":"","mainEntityOfPage":{"@type":"WebPage","@id":"https://dkyou.github.io/2025/12/20/win11%20+%20wsl%20+%20vscode%20+%20cpptools%E8%B0%83%E8%AF%95/"},"publisher":{"@type":"Organization","name":"Dku","sameAs":[]},"url":"https://dkyou.github.io/2025/12/20/win11%20+%20wsl%20+%20vscode%20+%20cpptools%E8%B0%83%E8%AF%95/","image":[]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dku","sameAs":[]},"dateCreated":"2025-12-12T00:00:00+08:00","dateModified":"2026-01-16T16:10:39+08:00","datePublished":"2025-12-12T00:00:00+08:00","description":"","headline":"win11 + wsl + vscode + cpptools调试","mainEntityOfPage":{"@type":"WebPage","@id":"https://dkyou.github.io/2025/12/12/win11%20+%20wsl%20+%20vscode%20+%20cpptools%E8%B0%83%E8%AF%95/"},"publisher":{"@type":"Organization","name":"Dku","sameAs":[]},"url":"https://dkyou.github.io/2025/12/12/win11%20+%20wsl%20+%20vscode%20+%20cpptools%E8%B0%83%E8%AF%95/","keywords":"wsl, vscode","image":[]}</script>
   
 </head>
 <body><div class="sitebg"><div class="siteblur"></div></div>
@@ -65,7 +67,7 @@
 
 
 
-<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E5%B5%8C%E5%85%A5%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84/"><span class="title">嵌入式系统架构</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E8%8A%AF%E7%89%87%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/"><span class="title">芯片启动流程</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/buildroot%E6%89%AB%E7%9B%B2/"><span class="title">buildroot扫盲</span></a><a class="item title" href="/2026/01/02/%E9%85%8D%E7%BD%AEWSL%E5%86%85%E5%AD%98/"><span class="title">配置WSL内存和swap</span></a><a class="item title" href="/2025/08/18/%E7%AE%80%E5%8D%95%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90/"><span class="title">杂项笔记-不完整</span></a><a class="item title" href="/2026/01/02/%E9%93%BE%E8%A1%A8%E7%9A%84%E4%B8%80%E4%BA%9B%E6%8A%80%E5%B7%A7/"><span class="title">链表的一些技巧</span></a><a class="item title" href="/2026/01/02/%E7%A6%81%E6%AD%A2%E6%8A%8A%20Windows%20PATH%20%E6%B3%A8%E5%85%A5%E5%88%B0%20WSL/"><span class="title">禁止把 Windows PATH 注入到 WSL</span></a><a class="item title" href="/2025/12/12/win11+WSL+%E9%BC%A0%E6%A0%87%E5%85%89%E6%A0%87%E6%B6%88%E5%A4%B1%E8%A7%A3%E5%86%B3/"><span class="title">解决win11+WSL+鼠标光标消失</span></a><a class="item title" href="/2025/08/18/fastfetch/"><span class="title">fastfetch编译安装</span></a><a class="item title" href="/2025/08/18/pkg-config/"><span class="title">pkg-config 了解</span></a></div></widget>
+<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E5%88%B6%E4%BD%9Cubuntu%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/"><span class="title">制作ubuntu根文件系统</span></a><a class="item title" href="/2025/08/18/git%E4%BF%9D%E7%95%99%E6%9C%AC%E5%9C%B0%E6%96%B0%E6%96%87%E4%BB%B6%E7%9A%84%E5%90%8C%E6%97%B6%E5%90%8C%E6%AD%A5%E8%BF%9C%E7%A8%8B%E6%9B%B4%E6%96%B0%E5%B9%B6%E4%B8%8A%E4%BC%A0%E4%BF%AE%E6%94%B9/"><span class="title">git保留本地新文件的同时同步远程更新并上传修改</span></a><a class="item title" href="/2025/08/18/git%E5%9B%9E%E9%80%80/"><span class="title">git 回退commit和push</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E5%AD%98%E5%82%A8%E6%89%AB%E7%9B%B2/"><span class="title">存储扫盲</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E4%B8%8D%E5%90%8C%E6%9E%B6%E6%9E%84%E7%BC%96%E5%9D%80%E6%96%B9%E6%B3%95/"><span class="title">不同架构编址方法</span></a><a class="item title" href="/2024/09/15/ubuntu20.04%E5%AE%89%E8%A3%85clash/"><span class="title">ubuntu20.04安装clash</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E8%AE%BE%E5%A4%87%E6%A0%91chosen%E8%8A%82%E7%82%B9%E7%9A%84bootargs%E5%8F%82%E6%95%B0%E4%BB%8B%E7%BB%8D/"><span class="title">设备树chosen节点的bootargs参数介绍</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/uboot%E5%90%91kernel%E7%9A%84%E4%BC%A0%E5%8F%82%E6%9C%BA%E5%88%B6/"><span class="title">uboot向kernel的传参机制--bootm与tags</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/buildroot%E7%AD%89%E5%AE%98%E6%96%B9%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3%E6%B1%87%E6%80%BB/"><span class="title">buildroot等官方参考文档汇总</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/bootm%E5%8E%9F%E7%90%86/"><span class="title">bootm原理</span></a></div></widget>
 </div>
 <footer class="footer dis-select"><div class="social-wrap"><a class="social" href="https://github.com/dkyou" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="mailto:2328727915@qq.com" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/gmail.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="https://space.bilibili.com/" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/bilibili.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="/atom.xml" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/rss.svg" height="20" style="opacity:0.9;"/></a></div></footer>
 </div></aside><div class="l_main" id="main">
@@ -77,8 +79,16 @@
 <div class="article banner top">
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
-<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-12-20T13:33:09.299Z">2025-12-20</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-12-20T14:03:32.469Z">2025-12-20</time></span></div></div></div>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/UBUNTU/">UBUNTU</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-12-11T16:00:00.000Z">2025-12-12</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2026-01-16T08:10:39.635Z">2026-01-16</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>win11 + wsl + vscode + cpptools调试</span></h1>
+        
+      </div>
+    </div>
     
   </div>
   </div><article class="md-text content"><h1 id="win11-wsl-vscode-cpptools调试"><a href="#win11-wsl-vscode-cpptools调试" class="headerlink" title="win11 + wsl + vscode + cpptools调试"></a>win11 + wsl + vscode + cpptools调试</h1><h2 id="安装c-c-插件"><a href="#安装c-c-插件" class="headerlink" title="安装c&#x2F;c++插件"></a>安装c&#x2F;c++插件</h2><p>为了使用调试功能，重新安装了c&#x2F;c++拓展插件，cpptools 只当“调试器前端”用，代码提示&#x2F;跳转&#x2F;诊断仍然全部交给 clangd，同时又为了不影响clang等拓展的功能，因此需要禁用一些功能</p>
@@ -144,14 +154,14 @@
 
 </div>
 
-<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2025/12/28/%E5%85%B3%E4%BA%8E%E4%BA%8C%E7%BA%A7%E6%8C%87%E9%92%88%E5%8F%AF%E4%BB%A5%E7%9C%8B%E4%BD%9C%E6%8C%87%E9%92%88%E6%95%B0%E7%BB%84%E7%9A%84%E7%90%86%E8%A7%A3/">2025-12-28</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/12/12/win11+WSL+vscode+clangd%E7%AE%80%E5%8D%95%E9%85%8D%E7%BD%AE/">win11+WSL+vscode+clangd简单配置</a></div></section></div>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E5%88%B6%E4%BD%9Cubuntu%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/">制作ubuntu根文件系统</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/12/12/win11+WSL+vscode+clangd%E7%AE%80%E5%8D%95%E9%85%8D%E7%BD%AE/">win11+WSL+vscode+clangd简单配置</a></div></section></div>
 
 <div class="related-wrap" id="related-posts">
     <section class='header'>
       <div class='title cap theme'>您可能感兴趣的文章</div>
     </section>
     <section class='body'>
-    <div class="related-posts"><a class="item" href="\2024\05\20\ChessLearning\" title="车类残局定式"><span class="title">车类残局定式</span></a></div></section></div>
+    <div class="related-posts"><a class="item" href="\2025\12\12\win11+WSL+vscode+clangd简单配置\" title="win11+WSL+vscode+clangd简单配置"><span class="title">win11+WSL+vscode+clangd简单配置</span></a><a class="item" href="\2025\12\12\win11+WSL+鼠标光标消失解决\" title="解决win11+WSL+鼠标光标消失"><span class="title">解决win11+WSL+鼠标光标消失</span></a><a class="item" href="\2024\09\15\fileZilla连接虚拟机\" title="fileZilla连接虚拟机，同样适用MobaXterm"><span class="title">fileZilla连接虚拟机，同样适用MobaXterm</span></a></div></section></div>
 
 
 

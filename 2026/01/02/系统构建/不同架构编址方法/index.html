@@ -1,0 +1,896 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.33.1" theme-name="Stellar" theme-version="1.33.1">
+  
+  
+  <meta name="generator" content="Hexo 8.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  <title>不同架构编址方法 - 又是摸鱼的一天</title>
+
+  
+    <meta name="description" content="不同架构编址方法发现一个写得比较好的博客，链接如下： 【x86】不同架构的编址方法 - Tyler77 - 博客园 他的博客地址为：Tyler77 - 博客园 I&#x2F;O的概念本人是从单片机嵌入式入行BIOS，以前接触的I&#x2F;O概念是在GPIO中是一个简单的引脚的概念。 GPIO &#x3D; General Purpose Input &#x2F; Output  是一种简单、灵活">
+<meta property="og:type" content="article">
+<meta property="og:title" content="不同架构编址方法">
+<meta property="og:url" content="https://dkyou.github.io/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E4%B8%8D%E5%90%8C%E6%9E%B6%E6%9E%84%E7%BC%96%E5%9D%80%E6%96%B9%E6%B3%95/">
+<meta property="og:site_name" content="又是摸鱼的一天">
+<meta property="og:description" content="不同架构编址方法发现一个写得比较好的博客，链接如下： 【x86】不同架构的编址方法 - Tyler77 - 博客园 他的博客地址为：Tyler77 - 博客园 I&#x2F;O的概念本人是从单片机嵌入式入行BIOS，以前接触的I&#x2F;O概念是在GPIO中是一个简单的引脚的概念。 GPIO &#x3D; General Purpose Input &#x2F; Output  是一种简单、灵活">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img2024.cnblogs.com/blog/3273121/202507/3273121-20250708152613369-2010852554.png">
+<meta property="article:published_time" content="2026-01-01T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-01-16T08:10:39.696Z">
+<meta property="article:author" content="Dku">
+<meta property="article:tag" content="Buildroot">
+<meta property="article:tag" content="uboot">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://img2024.cnblogs.com/blog/3273121/202507/3273121-20250708152613369-2010852554.png">
+  
+  
+  
+  <meta name="keywords" content="uboot,Buildroot">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.33.1">
+
+
+  
+
+  
+
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dku","sameAs":[]},"dateCreated":"2026-01-02T00:00:00+08:00","dateModified":"2026-01-16T16:10:39+08:00","datePublished":"2026-01-02T00:00:00+08:00","description":"","headline":"不同架构编址方法","mainEntityOfPage":{"@type":"WebPage","@id":"https://dkyou.github.io/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E4%B8%8D%E5%90%8C%E6%9E%B6%E6%9E%84%E7%BC%96%E5%9D%80%E6%96%B9%E6%B3%95/"},"publisher":{"@type":"Organization","name":"Dku","sameAs":[]},"url":"https://dkyou.github.io/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E4%B8%8D%E5%90%8C%E6%9E%B6%E6%9E%84%E7%BC%96%E5%9D%80%E6%96%B9%E6%B3%95/","keywords":"uboot, Buildroot","thumbnailUrl":"https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/linedog.png","image":1}</script>
+  
+</head>
+<body><div class="sitebg"><div class="siteblur"></div></div>
+
+<div class="l_body content" id="start" layout="post" type="tech" ><aside class="l_left"><div class="sidebg"></div><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大白鹅喝酒.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main">👀瞅啥呢！👀</div><div class="sub normal cap">今天又是摸鱼的一天！</div><div class="sub hover cap" style="opacity:0">可不摸鱼又干什么呢？</div></a></div></header>
+
+<div class="nav-area">
+
+<nav class="menu dis-select"><a class="nav-item active" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="文档" href="/wiki/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="探索" href="/explore/" style="color:#FA6400"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M20 12a8 8 0 1 1-16 0a8 8 0 0 1 16 0" opacity=".5"/><path fill="currentColor" d="M17.712 5.453c1.047-.193 2.006-.259 2.797-.152c.77.103 1.536.393 1.956 1.064c.446.714.312 1.542-.012 2.258c-.33.728-.918 1.499-1.672 2.268c-1.516 1.547-3.836 3.226-6.597 4.697c-2.763 1.472-5.495 2.484-7.694 2.92c-1.095.217-2.098.299-2.923.201c-.8-.095-1.6-.383-2.032-1.075c-.47-.752-.296-1.63.07-2.379c.375-.768 1.032-1.586 1.872-2.403L4 12.416c0 .219.083.71.168 1.146c.045.23.09.444.123.596c-.652.666-1.098 1.263-1.339 1.756c-.277.567-.208.825-.145.925c.072.116.305.305.937.38c.609.073 1.44.018 2.455-.183c2.02-.4 4.613-1.351 7.28-2.772c2.667-1.42 4.85-3.015 6.23-4.423c.694-.707 1.15-1.334 1.377-1.836c.233-.515.167-.75.107-.844c-.07-.112-.289-.294-.883-.374c-.542-.072-1.272-.041-2.163.112L16.87 5.656c.338-.101.658-.17.842-.203"/></svg></a><a class="nav-item" title="社交" href="/friends/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+
+<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E5%88%B6%E4%BD%9Cubuntu%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/"><span class="title">制作ubuntu根文件系统</span></a><a class="item title" href="/2025/08/18/git%E4%BF%9D%E7%95%99%E6%9C%AC%E5%9C%B0%E6%96%B0%E6%96%87%E4%BB%B6%E7%9A%84%E5%90%8C%E6%97%B6%E5%90%8C%E6%AD%A5%E8%BF%9C%E7%A8%8B%E6%9B%B4%E6%96%B0%E5%B9%B6%E4%B8%8A%E4%BC%A0%E4%BF%AE%E6%94%B9/"><span class="title">git保留本地新文件的同时同步远程更新并上传修改</span></a><a class="item title" href="/2025/08/18/git%E5%9B%9E%E9%80%80/"><span class="title">git 回退commit和push</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E5%AD%98%E5%82%A8%E6%89%AB%E7%9B%B2/"><span class="title">存储扫盲</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E4%B8%8D%E5%90%8C%E6%9E%B6%E6%9E%84%E7%BC%96%E5%9D%80%E6%96%B9%E6%B3%95/"><span class="title">不同架构编址方法</span></a><a class="item title" href="/2024/09/15/ubuntu20.04%E5%AE%89%E8%A3%85clash/"><span class="title">ubuntu20.04安装clash</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E8%AE%BE%E5%A4%87%E6%A0%91chosen%E8%8A%82%E7%82%B9%E7%9A%84bootargs%E5%8F%82%E6%95%B0%E4%BB%8B%E7%BB%8D/"><span class="title">设备树chosen节点的bootargs参数介绍</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/uboot%E5%90%91kernel%E7%9A%84%E4%BC%A0%E5%8F%82%E6%9C%BA%E5%88%B6/"><span class="title">uboot向kernel的传参机制--bootm与tags</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/buildroot%E7%AD%89%E5%AE%98%E6%96%B9%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3%E6%B1%87%E6%80%BB/"><span class="title">buildroot等官方参考文档汇总</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/bootm%E5%8E%9F%E7%90%86/"><span class="title">bootm原理</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="https://github.com/dkyou" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="mailto:2328727915@qq.com" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/gmail.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="https://space.bilibili.com/" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/bilibili.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="/atom.xml" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/rss.svg" height="20" style="opacity:0.9;"/></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top"><img class="lazy bg" data-src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/linedog.png">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/UBOOT/">UBOOT</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2026-01-01T16:00:00.000Z">2026-01-02</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2026-01-16T08:10:39.696Z">2026-01-16</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>不同架构编址方法</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h1 id="不同架构编址方法"><a href="#不同架构编址方法" class="headerlink" title="不同架构编址方法"></a>不同架构编址方法</h1><p>发现一个写得比较好的博客，链接如下：</p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/tylerw/p/18973077">【x86】不同架构的编址方法 - Tyler77 - 博客园</a></p>
+<p>他的博客地址为：<a target="_blank" rel="noopener" href="https://www.cnblogs.com/tylerw">Tyler77 - 博客园</a></p>
+<h2 id="I-O的概念"><a href="#I-O的概念" class="headerlink" title="I&#x2F;O的概念"></a>I&#x2F;O的概念</h2><p>本人是从单片机嵌入式入行BIOS，以前接触的I&#x2F;O概念是在GPIO中是一个简单的引脚的概念。</p>
+<p>GPIO &#x3D; <strong>General Purpose Input &#x2F; Output</strong></p>
+<ul>
+<li>是一种简单、灵活的引脚接口，用于和外部电路通信。</li>
+<li>每个 GPIO 引脚可以单独配置为输入或输出。<br>📌 特点：</li>
+<li>主要面向低速控制、信号采集、灯、按钮等。</li>
+<li>控制的是芯片封装上的某一个具体引脚的电平高低。</li>
+<li>通常直接连到硬件引脚、没有复杂的协议。</li>
+</ul>
+<p>在CPU中，I&#x2F;O当然也是表示输入&#x2F;输出。但是这里的 I&#x2F;O &#x3D; <strong>Input &#x2F; Output 设备接口</strong>。是指 CPU 和外设（比如显卡、键盘、网卡、串口卡等）之间的读写接口。</p>
+<p>通常对应总线上的地址空间的一部分，比如：</p>
+<ul>
+<li><strong>I&#x2F;O 地址空间</strong>（比如 x86 的 0x0000~0xFFFF I&#x2F;O 端口）</li>
+<li>或者是<strong>内存映射 I&#x2F;O</strong>（MMIO，把外设寄存器映射到主存空间）<br>📌 特点：</li>
+<li>主要面向 <strong>外设控制器</strong>。</li>
+<li>编程时访问的是总线上的 I&#x2F;O 端口或者 MMIO 地址。</li>
+<li>比如在 x86 里用 <code>in</code>, <code>out</code> 指令操作 I&#x2F;O 端口。</li>
+</ul>
+<p>针对这<strong>IO端口和IO内存</strong>两个概念，下面进行详细介绍。</p>
+<h2 id="IO-端口和IO-内存"><a href="#IO-端口和IO-内存" class="headerlink" title="IO 端口和IO 内存"></a>IO 端口和IO 内存</h2><p>CPU是通过IO接口&#x2F;端口和外设交换数据的。8086CPU和外部设备之间是通过I&#x2F;O接口进行联系的，从而达到相互间传输信息的目的。</p>
+<p>每个I&#x2F;O芯片上都有一个端口或几个端口，一个端口往往对应于芯片上的一个寄存器或一组寄存器。微机系统要为每个端口分配一个地址，这个地址成为端口号。各个端口号和存储器单元地址一样，具有唯一性。</p>
+<p>外设都是通过读写设备上的寄存器来进行的，外设寄存器也称为“I&#x2F;O端口”，而I&#x2F;O端口有两种编址方式：独立编址和统一编址。</p>
+<p>也就是说，CPU要控制所链接的设备，需要通过IO操作设备上的寄存器来实现对设备的控制。</p>
+<p>一般厂商按照IO空间性质将IO划分为IO端口和IO内存。两者划分按照空间是否与CPU空间独立划分：<br><img src="https://img2024.cnblogs.com/blog/3273121/202507/3273121-20250708152613369-2010852554.png" alt="img"><br><strong>IO内存</strong>，也被称为MMIO（Memory Mapped I&#x2F;O），将IO空间映射到了内存空间，访问这篇IO空间就和访问内存一样没什么不同。两者都是通过CPU的地址总线和控制总线发送电平信号进行访问，再通过数据总线读写数据。要想操纵该IO就得首先将该IO映射到CPU的地址中，然后就可以访问该IO，如同访问内存。大多数嵌入式设备都属于此。</p>
+<p><strong>IO端口</strong>，也被称为PMIO（Port Mapped I&#x2F;O，有的地方也叫PIO），该IO的空间和CPU空间相互独立。两者互相独立，相互不干扰，这种类型IO在X86中比较常见，该IO端口有独立的空间，所以CPU要想访问该端口就得通过一些专有函数或者指令。</p>
+<h2 id="独立编址"><a href="#独立编址" class="headerlink" title="独立编址"></a>独立编址</h2><h4 id="x86-架构"><a href="#x86-架构" class="headerlink" title="x86 架构"></a>x86 架构</h4><p>独立编址指的是CPU访问内存和IO端口是分开独立编址。IO端口地址不占用存储空间的地址范围。</p>
+<p>这样，系统中就有了两类地址–IO地址和存储地址。CPU如果访问IO端口，则需要使用专用的输入输出操作的指令[IN] [OUT] 指令和控制逻辑。</p>
+<p>当地址总线上有一个地址过来，外设备是不知道给IO端口还是给寄存器的，于是处理器通过MEMR&#x2F;MEMW和IOR&#x2F;IOW两组控制信号来实现对I&#x2F;O端口和存储器的不同寻址。</p>
+<p>独立编址也称为“I&#x2F;O端口”方式，外设寄存器位于“I&#x2F;O（地址）空间”。</p>
+<p>对于x86架构来说，通过IN&#x2F;OUT指令。PC架构一共有65536个8bit的I&#x2F;O端口，组成64K个I&#x2F;O端口，编号从0<del>0xFFF，有16位，80x86用低16位地址线A0</del>A15来寻址。连续两个8bit的端口可以组成一个16bit的端口，连续4个组成一个32bit的端口。I&#x2F;O地址空间和CPU的物理地址空间是两个不同的概念，例如I&#x2F;O地址空间为64K，一个32bit的CPU物理地址空间是4G。</p>
+<p>优点：</p>
+<p>不占用内存空间；使用I&#x2F;O指令，程序清晰，很容易看出是I&#x2F;O操作还是存储器操作；译码电路比较简单（因为I&#x2F;O端口的地址空间一般比较小，所用地址线也比较少）。</p>
+<p>缺点：</p>
+<p>只能用专门的I&#x2F;O指令，访问端口的方法不如访问存储器的方法多。</p>
+<p>现代的x86 平台普通使用了名为内存映射（MMIO）的技术，该技术是PCI规范的一部分，IO设备端口被映射到内存空间，映射后，CPU访问I&#x2F;O端口就如同访问内存一样。看Intel TA 719文档给出的x86&#x2F;x64系统典型内存地址分配表：</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">BIOS </span><span class="number">1</span>M</span><br><span class="line">本地APIC <span class="number">4</span>K</span><br><span class="line">芯片组保留 <span class="number">2</span>M</span><br><span class="line">IO APIC <span class="number">4</span>K</span><br><span class="line">PCI设备 <span class="number">256</span>M</span><br><span class="line">PCI Express设备 <span class="number">256</span>M</span><br><span class="line">PCI设备（可选） <span class="number">256</span>M</span><br><span class="line">显示帧缓存 <span class="number">16</span>M</span><br><span class="line">TSEG <span class="number">1</span>M</span><br></pre></td></tr></table></figure>
+
+<h2 id="统一编址"><a href="#统一编址" class="headerlink" title="统一编址"></a>统一编址</h2><h3 id="Arm架构"><a href="#Arm架构" class="headerlink" title="Arm架构"></a>Arm架构</h3><p>外设结构中的I&#x2F;O寄存器（即I&#x2F;O端口）与主存单元一样看待，每个端口占用一个存储单元的地址，将主存的一部分划出来用作I&#x2F;O地址空间，如，在PDP-11中，把最高的4K主存作为I&#x2F;O设备寄存器地址。端口占用了存储器的地址空间，使存储容量减小。</p>
+<p>此统一编址也称为“I&#x2F;O内存”方式，外设寄存器位于“内存空间”（很多外设有自己的内存、缓冲区、外设的寄存器和内存统称“I&#x2F;O空间”）。</p>
+<p>优点：</p>
+<p>可以利用存储器的寻址方式来寻址I&#x2F;O端口。</p>
+<p>缺点：</p>
+<p>I&#x2F;O端口占用了存储空间，而且进行I&#x2F;O操作时，因地址编码较长，将导致速度较慢。</p>
+<p>举例：</p>
+<p>STM32芯片，是32位ARM处理器，它的4GB地址空间被外设、RAM等瓜分。</p>
+<h2 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h2><p>x86是有MMIO的，虽然我们在本文中将x86架构划定为独立编址，实际上因为MMIO在Modern x86的应用，已经模糊了这个界限，可以说x86是统一编址+少量的独立IO端口。</p>
+<h1 id="一句话：-x86-现在本质上是“统一编址为主，兼容独立-I-O-编址”。"><a href="#一句话：-x86-现在本质上是“统一编址为主，兼容独立-I-O-编址”。" class="headerlink" title="一句话： x86 现在本质上是“统一编址为主，兼容独立 I&#x2F;O 编址”。"></a>一句话： x86 现在本质上是“统一编址为主，兼容独立 I&#x2F;O 编址”。</h1><p>实际上，这些都是历史遗留的，为了兼容性而牺牲的历史包袱，IN&#x2F;OUT这种输入输出的方式完全可以用MMIO来替代。IN&#x2F;OUT占着指令编码，使用起来需要注意的东西也很多，并且硬件上实现也很奇怪。</p>
+<h2 id="参考链接："><a href="#参考链接：" class="headerlink" title="参考链接："></a>参考链接：</h2><p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/tylerw/p/18973077">【x86】不同架构的编址方法 - Tyler77 - 博客园</a></p>
+</article>
+<div class="article-footer">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    
+
+</div>
+
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2026/01/02/gtk%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/">gtk交叉编译</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E5%AD%98%E5%82%A8%E6%89%AB%E7%9B%B2/">存储扫盲</a></div></section></div>
+
+<div class="related-wrap" id="related-posts">
+    <section class='header'>
+      <div class='title cap theme'>您可能感兴趣的文章</div>
+    </section>
+    <section class='body'>
+    <div class="related-posts"><a class="item" href="\2026\01\02\系统构建\buildroot扫盲\" title="buildroot扫盲"><span class="title">buildroot扫盲</span></a><a class="item" href="\2026\01\02\系统构建\嵌入式系统架构\" title="嵌入式系统架构"><span class="title">嵌入式系统架构</span></a><a class="item" href="\2026\01\02\系统构建\bootm原理\" title="bootm原理"><span class="title">bootm原理</span></a><a class="item" href="\2026\01\02\系统构建\buildroot等官方参考文档汇总\" title="buildroot等官方参考文档汇总"><span class="title">buildroot等官方参考文档汇总</span></a><a class="item" href="\2025\11\01\编译Buildroot_2020.02时遇到IndexErrorlist index out of range问题解决\" title="编译Buildroot_2020.02时遇到IndexError:list index out of range问题解决"><span class="title">编译Buildroot_2020.02时遇到IndexError:list index out of range问题解决</span></a></div></section></div>
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="sitemap" style="column-count:2;"><div class="sitemap-group"><span class="fs15">导航</span><a href="/">首页</a><a href="/archives/">归档</a><a href="/categories/">分类</a><a href="/tags/">标签</a><a href="/atom.xml">RSS</a></div><div class="sitemap-group"><span class="fs15">关于</span><a href="/about/">关于我</a><a href="/friends/">友链</a><a href="/message/">留言板</a></div></div><div class="text"><div align="center" style="color:#666; font-size:14px; line-height:1.85;">
+  <p>© 2023–2025 <a target="_blank" rel="noopener" href="https://github.com/dkyou" style="color:#333; text-decoration:none;">Dkyou</a></p>
+  <p>Powered by <a target="_blank" rel="noopener" href="https://hexo.io" style="color:#333;">Hexo</a> · Theme <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar" style="color:#333;">Stellar</a></p>
+  <p>本站文章（除特别说明外）遵循
+    <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" style="color:#333;">CC BY-NC-SA 4.0</a>。
+  </p>
+</div>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%8D%E5%90%8C%E6%9E%B6%E6%9E%84%E7%BC%96%E5%9D%80%E6%96%B9%E6%B3%95"><span class="toc-text">不同架构编址方法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#I-O%E7%9A%84%E6%A6%82%E5%BF%B5"><span class="toc-text">I&#x2F;O的概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#IO-%E7%AB%AF%E5%8F%A3%E5%92%8CIO-%E5%86%85%E5%AD%98"><span class="toc-text">IO 端口和IO 内存</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8B%AC%E7%AB%8B%E7%BC%96%E5%9D%80"><span class="toc-text">独立编址</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#x86-%E6%9E%B6%E6%9E%84"><span class="toc-text">x86 架构</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%9F%E4%B8%80%E7%BC%96%E5%9D%80"><span class="toc-text">统一编址</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Arm%E6%9E%B6%E6%9E%84"><span class="toc-text">Arm架构</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9A"><span class="toc-text">总结：</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%EF%BC%9A-x86-%E7%8E%B0%E5%9C%A8%E6%9C%AC%E8%B4%A8%E4%B8%8A%E6%98%AF%E2%80%9C%E7%BB%9F%E4%B8%80%E7%BC%96%E5%9D%80%E4%B8%BA%E4%B8%BB%EF%BC%8C%E5%85%BC%E5%AE%B9%E7%8B%AC%E7%AB%8B-I-O-%E7%BC%96%E5%9D%80%E2%80%9D%E3%80%82"><span class="toc-text">一句话： x86 现在本质上是“统一编址为主，兼容独立 I&#x2F;O 编址”。</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5%EF%BC%9A"><span class="toc-text">参考链接：</span></a></li></ol></li></ol></div><div class="widget-footer"><a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/><path d="M7 3.338A9.95 9.95 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5"/></g></svg><span>回到顶部</span></a></div></widget>
+
+
+</div></aside><div class='float-panel'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+
+
+<script type="text/javascript">
+  window.canonical = {"originalHost":null,"officialHosts":["localhost"],"encoded":""};
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+    tag_plugins: {
+      chat: Object.assign({"api":"https://siteinfo.listentothewind.cn/api/v1"}),
+    }
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":null,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+    loading: `https://api.iconify.design/eos-icons:three-dots-loading.svg?color=%231cd0fd`,
+  };
+  const deps = {
+    jquery: `https://gcore.jsdelivr.net/npm/jquery@3.7/dist/jquery.min.js`,
+    marked: `https://gcore.jsdelivr.net/npm/marked@13.0/lib/marked.umd.min.js`,
+    lazyload: `/%5Bobject%20Object%5D`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  
+  function RunItem() {
+    this.list = []; // 存放回调函数
+    this.start = () => {
+      for (var i = 0; i < this.list.length; i++) {
+        this.list[i].run();
+      }
+    };
+    this.push = (fn, name, setRequestAnimationFrame = true) => {
+      let myfn = fn
+      if (setRequestAnimationFrame) {
+        myfn = () => {
+          utils.requestAnimationFrame(fn)
+        }
+      }
+      var f = new Item(myfn, name);
+      this.list.push(f);
+    };
+    this.remove = (name) => {
+      for (let index = 0; index < this.list.length; index++) {
+        const e = this.list[index];
+        if (e.name == name) {
+          this.list.splice(index, 1);
+        }
+      }
+    }
+    // 构造一个可以run的对象
+    function Item(fn, name) {
+      // 函数名称
+      this.name = name || fn.name;
+      // run方法
+      this.run = () => {
+        try {
+          fn()
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    }
+  }
+
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')) {
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function () {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      const maxRetry = 3;
+      let retryCount = 0;
+
+      return new Promise((resolve, reject) => {
+        const load = () => {
+          utils.onLoading?.(el);
+
+          let timedOut = false;
+          const timeout = setTimeout(() => {
+            timedOut = true;
+            console.warn('[request] 超时:', url);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject('请求超时');
+            } else {
+              setTimeout(load, 1000);
+            }
+          }, 5000);
+
+          fetch(url).then(resp => {
+            if (timedOut) return;
+            clearTimeout(timeout);
+
+            if (!resp.ok) throw new Error('响应失败');
+            return resp;
+          }).then(data => {
+            if (timedOut) return;
+            utils.onLoadSuccess?.(el);
+            callback(data);
+            resolve(data);
+          }).catch(err => {
+            clearTimeout(timeout);
+            console.warn('[request] 错误:', err);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject(err);
+            } else {
+              setTimeout(load, 1000);
+            }
+          });
+        };
+
+        load();
+      });
+    },
+    requestWithoutLoading: (url, options = {}, maxRetry = 2, timeout = 5000) => {
+      return new Promise((resolve, reject) => {
+        let retryCount = 0;
+
+        const tryRequest = () => {
+          let timedOut = false;
+          const timer = setTimeout(() => {
+            timedOut = true;
+            if (++retryCount > maxRetry) reject('timeout');
+            else tryRequest();
+          }, timeout);
+
+          fetch(url, options)
+            .then(resp => {
+              clearTimeout(timer);
+              if (!resp.ok) throw new Error('bad response');
+              resolve(resp);
+            })
+            .catch(err => {
+              clearTimeout(timer);
+              if (++retryCount > maxRetry) reject(err);
+              else setTimeout(tryRequest, 500);
+            });
+        };
+
+        tryRequest();
+      });
+    },
+    /********************** requestAnimationFrame ********************************/
+    // 1、requestAnimationFrame 会把每一帧中的所有 DOM 操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
+    // 2、在隐藏或不可见的元素中，requestAnimationFrame 将不会进行重绘或回流，这当然就意味着更少的的 cpu，gpu 和内存使用量。
+    requestAnimationFrame: (fn) => {
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+      }
+      window.requestAnimationFrame(fn)
+    },
+    dark: {},
+  };
+
+  // utils.dark.mode 当前模式 dark or light
+  // utils.dark.toggle() 暗黑模式触发器
+  // utils.dark.push(callBack[,"callBackName"]) 传入触发器回调函数
+  utils.dark.method = {
+    toggle: new RunItem(),
+  };
+  utils.dark = Object.assign(utils.dark, {
+    push: utils.dark.method.toggle.push,
+  });
+</script>
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+<script async src="https://gcore.jsdelivr.net/npm/vanilla-lazyload@19.1/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+    callback_loaded: (el) => {
+      el.classList.add('loaded');
+      const wrapper = el.closest('.lazy-box');
+      const icon = wrapper?.querySelector('.lazy-icon');
+      if (icon) icon.remove();
+    }
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+
+  window.wrapLazyloadImages = (container) => {
+    if (typeof container === 'string') {
+      container = document.querySelector(container);
+    }
+    if (!container) return;
+    
+    const images = container.querySelectorAll('img');
+    images.forEach((img) => {
+      if (img.classList.contains('lazy')) return;
+
+      const src = img.getAttribute('src');
+      if (!src) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'lazy-box';
+
+      const newImg = img.cloneNode();
+      newImg.removeAttribute('src');
+      newImg.setAttribute('data-src', src);
+      newImg.classList.add('lazy');
+
+      const icon = document.createElement('div');
+      icon.className = 'lazy-icon';
+      if (def.loading) {
+        icon.style.backgroundImage = `url("${def.loading}")`;
+      }
+
+      wrapper.appendChild(newImg);
+      wrapper.appendChild(icon);
+
+      img.replaceWith(wrapper);
+    });
+
+    // 通知 LazyLoad 更新
+    if (window.lazyLoadInstance?.update) {
+      window.lazyLoadInstance.update();
+    }
+  }
+  
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.33.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    // applyThemeToGiscus(theme)
+  }
+
+  // FIXME: 这会导致无法使用 preferred_color_scheme 以外的主题
+  const applyThemeToGiscus = (theme) => {
+    // theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+    utils.dark.mode = newTheme === 'auto' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : newTheme;
+    utils.dark.method.toggle.start();
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    } else {
+      utils.dark.mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    utils.dark.method.toggle.start();
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"rating":{"js":"/js/services/rating.js","api":"https://star-vote.xaox.cc/api/rating"},"vote":{"js":"/js/services/vote.js","api":"https://star-vote.xaox.cc/api/vote"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"friends_and_posts":{"js":"/js/services/friends_and_posts.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"voice":{"js":"/js/plugins/voice.js"},"video":{"js":"/js/plugins/video.js"},"download-file":{"js":"/js/plugins/download-file.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"},"contributors":{"edit_this_page":{"_posts/":null,"wiki/stellar/":"https://github.com/xaoxuu/hexo-theme-stellar-docs/blob/main/"},"js":"/js/services/contributors.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else if (id == 'voice') {
+        ctx.voiceAudios = document.querySelectorAll('.voice>audio');
+        if (ctx.voiceAudios?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            createVoiceDom(ctx.voiceAudios);
+          });
+        }
+      } else if (id == 'video') {
+        ctx.videos = document.querySelectorAll('.video>video');
+        if (ctx.videos?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            videoEvents(ctx.videos);
+          });
+        }
+      } else if (id == 'download-file') {
+        ctx.files = document.querySelectorAll('.file');
+        if (ctx.files?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            downloadFileEvent(ctx.files);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+
+    // chat iphone time
+    let phoneTimes = document.querySelectorAll('.chat .status-bar .time');
+
+    if (phoneTimes.length > 0) {
+      NowTime();
+      var date = new Date();
+      var sec = date.getSeconds();
+      var firstAdjustInterval = setInterval(firstAdjustTime, 1000 * (60 - sec));
+    }
+
+    function firstAdjustTime() {
+      NowTime();
+      clearInterval(firstAdjustInterval);
+      setInterval(NowTime, 1000 * 60);
+    }
+
+    function NowTime() {
+      for (let i = 0; i < phoneTimes.length; ++i) {
+        var timeSpan = phoneTimes[i];
+        var date = new Date();
+        var hour = date.getHours();
+        var min = date.getMinutes();
+        timeSpan.innerHTML = check(hour) + ":" + check(min);
+      }
+    };
+
+    function check(val) {
+      if (val < 10) {
+        return ("0" + val);
+      }
+      return (val);
+    }
+
+    // chat quote
+    const chat_quote_obverser = new IntersectionObserver((entries, observer) => {
+      entries.filter((entry) => { return entry.isIntersecting }).sort((a, b) => a.intersectionRect.y !== b.intersectionRect.y ? a.intersectionRect.y - b.intersectionRect.y : a.intersectionRect.x - b.intersectionRect.x).forEach((entry, index) => {
+          observer.unobserve(entry.target);
+          setTimeout(() => {
+            entry.target.classList.add('quote-blink');
+            setTimeout(() => {
+              entry.target.classList.remove('quote-blink');
+            }, 1000);
+          }, Math.max(100, 16) * (index + 1));
+        });
+    });
+
+    var chatQuotes = document.querySelectorAll(".chat .talk .quote");
+    chatQuotes.forEach((quote) => {
+      quote.addEventListener('click', function () {
+        var chatCellDom = document.getElementById("quote-" + quote.getAttribute("quotedCellTag"));
+        if (chatCellDom) {
+          var chatDiv = chatCellDom.parentElement;
+          var mid = chatDiv.clientHeight / 2;
+          var offsetTop = chatCellDom.offsetTop;
+          if (offsetTop > mid - chatCellDom.clientHeight / 2) {
+            chatDiv.scrollTo({
+              top: chatCellDom.offsetTop - mid + chatCellDom.clientHeight / 2,
+              behavior: "smooth"
+            });
+          } else {
+            chatDiv.scrollTo({
+              top: 0,
+              behavior: "smooth"
+            });
+          }
+          chat_quote_obverser.observe(chatCellDom);
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://gcore.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error), .with-fancybox .atk-content img:not([atk-emoticon])';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const memos = document.getElementsByClassName('ds-memos');
+    if (memos != undefined && memos.length > 0) {
+      needFancybox = true;
+    }
+    const fancybox = document.getElementsByClassName('with-fancybox');
+    if (fancybox != undefined && fancybox.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `不能复制哦~`,
+        success_text: `竟没骗到你！复制成功`,
+        toast: `又被你小子复制了！🌈`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
