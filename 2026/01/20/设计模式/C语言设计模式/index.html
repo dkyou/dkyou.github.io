@@ -1,0 +1,1062 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.33.1" theme-name="Stellar" theme-version="1.33.1">
+  
+  
+  <meta name="generator" content="Hexo 8.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  <title>「嵌入式结构体 + 反向父指针」设计模式 - 又是摸鱼的一天</title>
+
+  
+    <meta name="description" content="「嵌入式结构体 + 反向父指针」设计模式今天来总结一下C语言中常用的「嵌入式结构体 + 反向父指针」设计模式 以我自己写的代码为例子： 123456789101112struct AbCanvasGTK &#123;  struct GtkGfx* parent;&#x2F;*父级绘图上下文*&#x2F;&#125;;struct GtkGfx &#123;  GtkWidget *area;  &#x2F;*绘图区域*&#x2F;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="「嵌入式结构体 + 反向父指针」设计模式">
+<meta property="og:url" content="https://dkyou.github.io/2026/01/20/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/C%E8%AF%AD%E8%A8%80%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+<meta property="og:site_name" content="又是摸鱼的一天">
+<meta property="og:description" content="「嵌入式结构体 + 反向父指针」设计模式今天来总结一下C语言中常用的「嵌入式结构体 + 反向父指针」设计模式 以我自己写的代码为例子： 123456789101112struct AbCanvasGTK &#123;  struct GtkGfx* parent;&#x2F;*父级绘图上下文*&#x2F;&#125;;struct GtkGfx &#123;  GtkWidget *area;  &#x2F;*绘图区域*&#x2F;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-01-19T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-01-29T06:56:54.441Z">
+<meta property="article:author" content="Dku">
+<meta property="article:tag" content="c">
+<meta property="article:tag" content="c++">
+<meta name="twitter:card" content="summary">
+  
+  
+  
+  <meta name="keywords" content="c++,c">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.33.1">
+
+
+  
+
+  
+
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dku","sameAs":[]},"dateCreated":"2026-01-20T00:00:00+08:00","dateModified":"2026-01-29T14:56:54+08:00","datePublished":"2026-01-20T00:00:00+08:00","description":"","headline":"「嵌入式结构体 + 反向父指针」设计模式","mainEntityOfPage":{"@type":"WebPage","@id":"https://dkyou.github.io/2026/01/20/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/C%E8%AF%AD%E8%A8%80%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"},"publisher":{"@type":"Organization","name":"Dku","sameAs":[]},"url":"https://dkyou.github.io/2026/01/20/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/C%E8%AF%AD%E8%A8%80%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/","keywords":"c++, c","image":[]}</script>
+  
+</head>
+<body><div class="sitebg"><div class="siteblur"></div></div>
+
+<div class="l_body content" id="start" layout="post" type="tech" ><aside class="l_left"><div class="sidebg"></div><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大白鹅喝酒.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main">👀瞅啥呢！👀</div><div class="sub normal cap">今天又是摸鱼的一天！</div><div class="sub hover cap" style="opacity:0">可不摸鱼又干什么呢？</div></a></div></header>
+
+<div class="nav-area">
+
+<nav class="menu dis-select"><a class="nav-item active" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="文档" href="/wiki/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="探索" href="/explore/" style="color:#FA6400"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M20 12a8 8 0 1 1-16 0a8 8 0 0 1 16 0" opacity=".5"/><path fill="currentColor" d="M17.712 5.453c1.047-.193 2.006-.259 2.797-.152c.77.103 1.536.393 1.956 1.064c.446.714.312 1.542-.012 2.258c-.33.728-.918 1.499-1.672 2.268c-1.516 1.547-3.836 3.226-6.597 4.697c-2.763 1.472-5.495 2.484-7.694 2.92c-1.095.217-2.098.299-2.923.201c-.8-.095-1.6-.383-2.032-1.075c-.47-.752-.296-1.63.07-2.379c.375-.768 1.032-1.586 1.872-2.403L4 12.416c0 .219.083.71.168 1.146c.045.23.09.444.123.596c-.652.666-1.098 1.263-1.339 1.756c-.277.567-.208.825-.145.925c.072.116.305.305.937.38c.609.073 1.44.018 2.455-.183c2.02-.4 4.613-1.351 7.28-2.772c2.667-1.42 4.85-3.015 6.23-4.423c.694-.707 1.15-1.334 1.377-1.836c.233-.515.167-.75.107-.844c-.07-.112-.289-.294-.883-.374c-.542-.072-1.272-.041-2.163.112L16.87 5.656c.338-.101.658-.17.842-.203"/></svg></a><a class="nav-item" title="社交" href="/friends/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+
+<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2026/01/20/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/C%E8%AF%AD%E8%A8%80%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"><span class="title">「嵌入式结构体 + 反向父指针」设计模式</span></a><a class="item title" href="/2026/01/24/%E5%88%B6%E4%BD%9C%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93/"><span class="title">制作动态链接库</span></a><a class="item title" href="/2026/01/26/gcc%E5%87%BD%E6%95%B0%E5%B5%8C%E5%A5%97/"><span class="title">gcc函数嵌套</span></a><a class="item title" href="/2025/08/18/git%E6%9C%AC%E5%9C%B0%E5%B7%B2%E7%BB%8F%E6%9C%89%E4%BF%AE%E6%94%B9%E4%BD%86%E6%98%AF%E6%83%B3%E5%90%8C%E6%AD%A5%E8%BF%9C%E7%A8%8B%E4%BB%93%E5%BA%93%E7%9A%84%E6%9B%B4%E6%96%B0/"><span class="title">git本地已经有修改但是想同步远程仓库的更新</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E5%88%B6%E4%BD%9Cubuntu%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/"><span class="title">制作ubuntu根文件系统</span></a><a class="item title" href="/2025/08/18/git%E4%BF%9D%E7%95%99%E6%9C%AC%E5%9C%B0%E6%96%B0%E6%96%87%E4%BB%B6%E7%9A%84%E5%90%8C%E6%97%B6%E5%90%8C%E6%AD%A5%E8%BF%9C%E7%A8%8B%E6%9B%B4%E6%96%B0%E5%B9%B6%E4%B8%8A%E4%BC%A0%E4%BF%AE%E6%94%B9/"><span class="title">git保留本地新文件的同时同步远程更新并上传修改</span></a><a class="item title" href="/2025/08/18/git%E5%9B%9E%E9%80%80/"><span class="title">git 回退commit和push</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E5%AD%98%E5%82%A8%E6%89%AB%E7%9B%B2/"><span class="title">存储扫盲</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/%E4%B8%8D%E5%90%8C%E6%9E%B6%E6%9E%84%E7%BC%96%E5%9D%80%E6%96%B9%E6%B3%95/"><span class="title">不同架构编址方法</span></a><a class="item title" href="/2024/09/15/ubuntu20.04%E5%AE%89%E8%A3%85clash/"><span class="title">ubuntu20.04安装clash</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="https://github.com/dkyou" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="mailto:2328727915@qq.com" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/gmail.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="https://space.bilibili.com/" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/bilibili.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="/atom.xml" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/rss.svg" height="20" style="opacity:0.9;"/></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2026-01-19T16:00:00.000Z">2026-01-20</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2026-01-29T06:56:54.441Z">2026-01-29</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>「嵌入式结构体 + 反向父指针」设计模式</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h1 id="「嵌入式结构体-反向父指针」设计模式"><a href="#「嵌入式结构体-反向父指针」设计模式" class="headerlink" title="「嵌入式结构体 + 反向父指针」设计模式"></a>「嵌入式结构体 + 反向父指针」设计模式</h1><p>今天来总结一下C语言中常用的「嵌入式结构体 + 反向父指针」设计模式</p>
+<p>以我自己写的代码为例子：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">AbCanvasGTK</span> &#123;</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">GtkGfx</span>* <span class="title">parent</span>;</span><span class="comment">/*父级绘图上下文*/</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">GtkGfx</span> &#123;</span></span><br><span class="line">  GtkWidget *area;  <span class="comment">/*绘图区域*/</span></span><br><span class="line">  <span class="type">cairo_t</span> *cairo;   <span class="comment">/*Cairo绘图上下文*/</span></span><br><span class="line">  <span class="type">int</span> vp_w, vp_h;   <span class="comment">/*视口宽度/高度*/</span></span><br><span class="line"></span><br><span class="line">  GHashTable* pix_cache; <span class="comment">/* 图片缓存哈希表 */</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">AbCanvasGTK</span> <span class="title">embedded_canvas</span>;</span> <span class="comment">/*通过canvas.parent反向找到父结构体GtkGfx*/</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>上述代码在内存中的实际分布和关系如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">GtkGfx 对象整体地址：0x55a1b2c30000 ~ 0x55a1b2c30027 （40 字节）</span><br><span class="line"></span><br><span class="line">[0x55a1b2c30000]  area  = 0x55a1b2c31000</span><br><span class="line">[0x55a1b2c30008]  cairo = 0x55a1b2c32000</span><br><span class="line">[0x55a1b2c30010]  vp_w  = 800</span><br><span class="line">[0x55a1b2c30014]  vp_h  = 600</span><br><span class="line">[0x55a1b2c30018]  pix_cache = 0x55a1b2c33000</span><br><span class="line"></span><br><span class="line">[0x55a1b2c30020]  s_canvas (AbCanvasGTK，共8字节)</span><br><span class="line">        ↙ 这 8 字节的内容</span><br><span class="line">        [0x55a1b2c30020]  parent  =  0x55a1b2c30000</span><br><span class="line">                            👆</span><br><span class="line">                            这个值，正好等于外面 GtkGfx 的起始地址 BASE</span><br></pre></td></tr></table></figure>
+
+
+
+<p>大块内存包含小块内存，小块内存里存着大块内存的入口地址</p>
+<p>这种操作：**「父结构体包含子结构体实体 + 子结构体存指针反向指向父」**的操作，不仅非常多，更是 C 语言大型项目（尤其是 Linux 内核、底层库、GUI、服务端程序）的经典标准设计范式，有专门的名字，叫 <strong>「嵌入式结构体 + 反向父指针」</strong>（Linux 内核还延伸出了更极致的 <code>container_of</code> 模式）</p>
+<h2 id="结构范式"><a href="#结构范式" class="headerlink" title="结构范式"></a>结构范式</h2><p>先来将这这操作抽象成为一个统一的范式：</p>
+<p>结构范式</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">// 子结构体：轻量级，只做功能入口，反向引用父</span><br><span class="line">struct 子 &#123;</span><br><span class="line">    struct 父* 父指针; // 核心：反向指向包含自己的父</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">// 父结构体：核心容器，管理所有资源，**实体包含**子</span><br><span class="line">struct 父 &#123;</span><br><span class="line">    // 各种核心资源：指针、数据、缓存...</span><br><span class="line">    struct 子 子实例; // 核心：实体嵌入，不是指针</span><br><span class="line">&#125;;</span><br><span class="line">// 内核范式（两种，和上述代码完全一样）</span><br><span class="line">// 1. 和上述代码完全一样：子直接存父指针</span><br><span class="line">// 2. 内核更常用：子不存指针，用 container_of 宏算父地址（省内存，作用相同）</span><br></pre></td></tr></table></figure>
+
+
+
+<p>目的：拿到<strong>轻量级的子对象</strong>，就能快速找到<strong>管理所有资源的父对象</strong>，同时通过「实体嵌入」实现<strong>内存一体化、生命周期统一</strong></p>
+<p>注意：以下示例为AI生成，没有做真正的源码追踪！</p>
+<h2 id="Linux-内核示例"><a href="#Linux-内核示例" class="headerlink" title="Linux 内核示例"></a>Linux 内核示例</h2><p>Linux 内核：把这种模式用到极致，Linux 内核<strong>几乎处处都是这种设计</strong>，甚至为了优化，延伸出了 **<code>container_of</code> 宏 **（不额外存父指针，靠地址偏移直接找父，思想和上述代码代码完全一致），是内核模块化、面向对象设计的基础。</p>
+<p>内核大概有两种范式：</p>
+<ol>
+<li>一种是子直接存父指针</li>
+<li>另一种内核更常用：子不存指针，用 container_of 宏算父地址（省内存，作用相同）</li>
+</ol>
+<p><strong>「反向找父」神器：container_of 宏</strong></p>
+<p>内核很少像上述代码一样直接存 <code>parent 指针</code>（为了省 8 字节），而是用 <code>container_of</code>，作用和上述代码 <code>parent</code> 完全一样，只是通过「子结构体的地址 + 子在父中的偏移」，直接算出父结构体的地址。</p>
+<p>内核<code>container_of</code>定义（简化）</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> container_of(ptr, type, member) (&#123;                \</span></span><br><span class="line"><span class="meta">    const typeof( ((type *)0)-&gt;member ) *__mptr = (ptr);  \</span></span><br><span class="line"><span class="meta">    (type *)( (char *)__mptr - offsetof(type, member) );  \</span></span><br><span class="line"><span class="meta">&#125;)</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>ptr</code>：子结构体的指针</li>
+<li><code>type</code>：父结构体类型</li>
+<li><code>member</code>：子结构体在父中的成员名</li>
+<li>作用：拿到子，就能找到父，和上述代码用 <code>c-&gt;parent</code>完全等价。</li>
+</ul>
+<h3 id="1-内核双向链表-struct-list-head"><a href="#1-内核双向链表-struct-list-head" class="headerlink" title="1. 内核双向链表 struct list_head"></a>1. 内核双向链表 <code>struct list_head</code></h3><p>这是内核最基础的数据结构，<strong>所有内核链表都用它</strong>，完美匹配上述代码模式：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">// 子结构体：链表节点，极简，嵌入到任意父结构体</span><br><span class="line">// 子结构体：极简链表节点，仅存前后指针</span><br><span class="line">struct list_head &#123;</span><br><span class="line">    struct list_head *next;</span><br><span class="line">    struct list_head *prev;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">// 父结构体：比如进程描述符，核心资源，实体嵌入list_head</span><br><span class="line">struct task_struct &#123;</span><br><span class="line">    // 进程核心资源：PID、内存、文件、寄存器、状态...</span><br><span class="line">    // 父【实体嵌入】子结构体：链表节点</span><br><span class="line">    struct list_head tasks; // 实体嵌入链表节点</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>和上述代码代码的共性：</p>
+<ul>
+<li><strong>父包含子实体</strong>：<code>task_struct</code> 实体嵌入 <code>list_head</code>，同一块内存，同生同死。</li>
+<li><strong>子反向找父</strong>：内核通过 <code>container_of</code> 宏，从 <code>list_head</code> 指针，直接计算出外层 <code>task_struct</code> 的地址（替代上述代码代码里直接存 <code>parent</code>，更省内存）。</li>
+<li><strong>用途</strong>：内核通过链表节点，管理成千上万个进程，拿到节点就能找到完整的进程描述符。</li>
+</ul>
+<p>实际用法</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">// 拿到一个链表节点（子），相当于上述代码拿到 AbCanvasGTK*</span><br><span class="line">struct list_head *pos = ...;</span><br><span class="line"></span><br><span class="line">// 用 container_of 找到父结构体（进程），相当于上述代码用 c-&gt;owner 找到 GtkGfx*</span><br><span class="line">struct task_struct *proc = container_of(pos, struct task_struct, tasks);</span><br><span class="line"></span><br><span class="line">// 然后就能访问父的所有资源，和上述代码用 parent-&gt;cr 拿画笔一样</span><br><span class="line">printk(&quot;进程PID: %d\n&quot;, proc-&gt;pid);</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>用途</li>
+</ol>
+<p>和上述代码用 <code>AbCanvasGTK</code> 作为绘图入口一样，内核用 <code>list_head</code> 作为链表操作的入口，<strong>只传递轻量的子节点，就能操作父的全部资源</strong>，全内核（进程、文件、设备、网络）都在用。</p>
+<h3 id="2-内核设备模型-struct-device"><a href="#2-内核设备模型-struct-device" class="headerlink" title="2. 内核设备模型 struct device"></a>2. 内核设备模型 <code>struct device</code></h3><p>Linux 设备驱动的核心，和上述代码 GTK 绘图场景（资源管理 + 子对象入口）几乎一模一样：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">// 子结构体：设备基础对象，抽象入口</span><br><span class="line">struct device &#123;</span><br><span class="line">    // 设备基础属性</span><br><span class="line">    struct device *parent; // 反向指针，指向父设备</span><br><span class="line">    // ...</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">// 父结构体：具体设备，比如PCI设备，管理硬件资源</span><br><span class="line">struct pci_dev &#123;</span><br><span class="line">    // PCI设备专属资源：BAR地址、中断、配置空间...</span><br><span class="line">    struct device dev; // 实体嵌入基础设备对象</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>和上述代码代码的共性：</p>
+<ul>
+<li>上层驱动只操作轻量的 <code>struct device</code>，和上述代码绘图时只操作 <code>AbCanvasGTK</code> 一致。</li>
+<li>通过 <code>dev.parent</code> 反向找到父设备，和上述代码通过 <code>AbCanvasGTK.parent 找到 </code>GtkGfx&#96; 一致。</li>
+<li>资源全在父结构体，子结构体只做入口，解耦上层和底层。</li>
+</ul>
+<h3 id="3-PCI-设备模型-struct-pci-dev-struct-device（直接存父指针）"><a href="#3-PCI-设备模型-struct-pci-dev-struct-device（直接存父指针）" class="headerlink" title="3. PCI 设备模型 struct pci_dev + struct device（直接存父指针）"></a>3. PCI 设备模型 <code>struct pci_dev</code> + <code>struct device</code>（直接存父指针）</h3><p>这个是<strong>和上述代码代码写法 100% 相同</strong>的例子：<strong>子结构体直接存父指针</strong>，用于「抽象接口 + 具体资源」，和上述代码「抽象画布 + 绘图资源上下文」是同一个设计目的。</p>
+<ol>
+<li>内核源码（简化）</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">// 子结构体：通用设备抽象层</span><br><span class="line">// 对应上述代码：AbCanvasGTK（抽象绘图层）</span><br><span class="line">struct device &#123;</span><br><span class="line">    // 通用设备属性</span><br><span class="line">    const char *name;</span><br><span class="line">    // 【和上述代码完全一样】子结构体直接存父指针</span><br><span class="line">    struct device *parent; // 指向父设备，就是上述代码 owner</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">// 父结构体：具体的PCI设备，管理所有硬件资源</span><br><span class="line">// 对应上述代码：GtkGfx（具体的GTK绘图资源）</span><br><span class="line">struct pci_dev &#123;</span><br><span class="line">    // PCI设备专属硬件资源</span><br><span class="line">    unsigned int vendor;</span><br><span class="line">    unsigned int device;</span><br><span class="line">    resource_t resource[6]; // IO/内存资源</span><br><span class="line"></span><br><span class="line">    // 父【实体嵌入】子结构体：通用抽象设备</span><br><span class="line">    struct device dev;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>和上述代码代码一一映射（完全一致）</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="center">上述代码代码</th>
+<th align="center">内核 PCI 设备代码</th>
+<th align="center">完全一致的角色</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><code>AbCanvasGTK</code></td>
+<td align="center"><code>struct device</code></td>
+<td align="center">抽象层子结构体，对外提供统一接口</td>
+</tr>
+<tr>
+<td align="center"><code>GtkGfx</code></td>
+<td align="center"><code>struct pci_dev</code></td>
+<td align="center">具体实现父结构体，管理所有底层资源</td>
+</tr>
+<tr>
+<td align="center"><code>struct AbCanvasGTK { struct GtkGfx *owner; }</code></td>
+<td align="center"><code>struct device { struct device *parent; }</code></td>
+<td align="center"><strong>子直接存父指针，反向引用</strong></td>
+</tr>
+<tr>
+<td align="center"><code>g-&gt;s_canvas</code></td>
+<td align="center"><code>pdev-&gt;dev</code></td>
+<td align="center">父实体嵌入子，内存一体</td>
+</tr>
+</tbody></table>
+<ol start="3">
+<li>实际用法（和上述代码点击按钮、绘图找上下文完全一样）</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">// 拿到抽象设备（子），相当于上述代码拿到 AbCanvasGTK*</span><br><span class="line">struct device *dev = ...;</span><br><span class="line"></span><br><span class="line">// 直接用父指针找到具体PCI设备（父），和上述代码用 c-&gt;owner 完全一样</span><br><span class="line">struct pci_dev *pdev = container_of(dev, struct pci_dev, dev);</span><br><span class="line"></span><br><span class="line">// 访问父的硬件资源，和上述代码用 owner-&gt;cr 画图画图一样</span><br><span class="line">printk(&quot;PCI厂商ID: %x\n&quot;, pdev-&gt;vendor);</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>用途</li>
+</ol>
+<p>和上述代码设计目的<strong>完全相同</strong>：</p>
+<ul>
+<li>上层只操作<strong>抽象的 <code>struct device</code></strong>（上述代码操作抽象画布），不用关心是 PCI、USB、串口设备。</li>
+<li>底层资源都在<strong>具体的 <code>struct pci_dev</code></strong> 里（上述代码在 GtkGfx 里）。</li>
+<li>子的父指针，让上层能随时找到底层资源。</li>
+</ul>
+<hr>
+<h3 id="4-网络子系统-struct-socket-struct-sock"><a href="#4-网络子系统-struct-socket-struct-sock" class="headerlink" title="4. 网络子系统 struct socket + struct sock"></a>4. 网络子系统 <code>struct socket</code> + <code>struct sock</code></h3><p>上述代码代码是「应用层绘图接口 → GTK 底层实现」，内核网络是「用户态 Socket 接口 → 内核网络实现」，<strong>结构完全一致</strong>。</p>
+<ol>
+<li>内核源码（简化）</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">// 子结构体：给用户态的抽象Socket接口</span><br><span class="line">// 对应上述代码：AbCanvas（抽象绘图接口）</span><br><span class="line">struct socket &#123;</span><br><span class="line">    short type;</span><br><span class="line">    // 子存父指针，反向找内核网络资源</span><br><span class="line">    struct sock *sk; // 上述代码 owner</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">// 父结构体：内核网络资源，管理协议、缓存、连接</span><br><span class="line">// 对应上述代码：GtkGfx</span><br><span class="line">struct sock &#123;</span><br><span class="line">    // 网络核心资源</span><br><span class="line">    struct sk_buff_head sk_receive_queue;</span><br><span class="line">    unsigned short sk_family;</span><br><span class="line">    // ... 大量网络资源</span><br><span class="line"></span><br><span class="line">    // 父实体嵌入子</span><br><span class="line">    struct socket socket;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>核心逻辑</li>
+</ol>
+<p>和上述代码一模一样：</p>
+<ol>
+<li>用户 &#x2F; 上层操作轻量的 <code>struct socket</code>（上述代码操作<code>AbCanvasGTK</code>）。</li>
+<li>父<code>struct sock</code>管理所有网络资源（上述代码<code>GtkGfx</code>管理绘图资源）。</li>
+<li>子通过<code>sk</code>指针找到父（上述代码通过&#96;parent）。</li>
+</ol>
+<hr>
+<h3 id="5-文件系统-struct-inode"><a href="#5-文件系统-struct-inode" class="headerlink" title="5. 文件系统 struct inode"></a>5. 文件系统 <code>struct inode</code></h3><p>文件系统是内核的核心模块，同样用这种模式。</p>
+<ol>
+<li>内核源码（简化）</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">// 子结构体：文件地址空间抽象</span><br><span class="line">// 对应上述代码：AbCanvasGTK</span><br><span class="line">struct address_space &#123;</span><br><span class="line">    // 反向指向父inode</span><br><span class="line">    struct inode *host; // 上述代码 owner</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">// 父结构体：索引节点，管理文件所有资源</span><br><span class="line">// 对应上述代码：GtkGfx</span><br><span class="line">struct inode &#123;</span><br><span class="line">    umode_t i_mode;</span><br><span class="line">    uid_t i_uid;</span><br><span class="line">    // 文件数据、缓存、权限等资源</span><br><span class="line"></span><br><span class="line">    // 实体嵌入子结构体</span><br><span class="line">    struct address_space i_data;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>逻辑</li>
+</ol>
+<ul>
+<li>子<code>address_space</code>是文件缓存的抽象入口。</li>
+<li>父<code>inode</code>管理文件所有资源。</li>
+<li>子通过<code>host</code>指针找到父，和上述代码<code>parent</code>完全一样。</li>
+</ul>
+<h3 id="文件系统-struct-file"><a href="#文件系统-struct-file" class="headerlink" title="文件系统 struct file"></a>文件系统 <code>struct file</code></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">// 子结构体：文件抽象，给进程用的轻量入口</span><br><span class="line">struct file &#123;</span><br><span class="line">    struct file_operations *f_op;</span><br><span class="line">    struct inode *f_inode; // 反向指向索引节点（父级资源）</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">// 父结构体：索引节点，管理磁盘、文件数据核心资源</span><br><span class="line">struct inode &#123;</span><br><span class="line">    // 文件存储、权限、缓存等核心资源</span><br><span class="line">    struct file *i_file; // 关联文件对象</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>同样是<strong>资源放在父，子做入口，反向引用</strong>的逻辑。</p>
+<h3 id="内核示例总结"><a href="#内核示例总结" class="headerlink" title="内核示例总结"></a>内核示例总结</h3><p>上述代码代码和内核代码的关系</p>
+<table>
+<thead>
+<tr>
+<th align="center">GTK 绘图模块</th>
+<th align="center">Linux 内核对应模块</th>
+<th align="center">设计思想完全一致</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">抽象画布 <code>AbCanvasGTK</code></td>
+<td align="center">链表节点<code>list_head</code>、抽象设备<code>device</code>、抽象 Socket<code>socket</code></td>
+<td align="center">轻量子结构体，对外提供统一接口</td>
+</tr>
+<tr>
+<td align="center">绘图资源上下文 <code>GtkGfx</code></td>
+<td align="center">进程<code>task_struct</code>、PCI 设备<code>pci_dev</code>、网络<code>sock</code></td>
+<td align="center">父结构体，管理所有底层资源</td>
+</tr>
+<tr>
+<td align="center">子结构体存<code>owner</code>指针</td>
+<td align="center">子存<code>parent</code>&#x2F;<code>sk</code>&#x2F;<code>host</code>指针，或<code>container_of</code></td>
+<td align="center">子反向定位父，获取全部资源</td>
+</tr>
+<tr>
+<td align="center">父实体嵌入子<code>s_canvas</code></td>
+<td align="center">父实体嵌入<code>tasks</code>&#x2F;<code>dev</code>&#x2F;<code>socket</code></td>
+<td align="center">内存一体化，生命周期统一，避</td>
+</tr>
+</tbody></table>
+<h2 id="其他C-项目示例"><a href="#其他C-项目示例" class="headerlink" title="其他C 项目示例"></a>其他C 项目示例</h2><p>除了 Linux 内核，<strong>所有工业级 C 项目</strong>，只要涉及复杂资源管理、模块化、抽象接口，都会用这种模式，和上述代码 GTK 代码同源。</p>
+<h3 id="GLib-库"><a href="#GLib-库" class="headerlink" title="GLib 库"></a>GLib 库</h3><p>GTK 本身就是基于 GLib 开发的，GLib 的<strong>GObject 系统</strong>（GTK 控件的基础），核心就是这种模式：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">// 子结构体：GObject，所有GTK控件的基础，轻量抽象</span><br><span class="line">struct _GObject &#123;</span><br><span class="line">    GTypeInstance  instance;</span><br><span class="line">    guint          ref_count;</span><br><span class="line">    GObject*       parent; // 反向指向父对象</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">// 父结构体：比如GtkButton，具体控件，管理UI资源</span><br><span class="line">struct _GtkButton &#123;</span><br><span class="line">    GObject     parent; // 实体嵌入基础GObject</span><br><span class="line">    // 按钮文字、样式、信号、布局等资源</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><strong>上述代码 GTK 代码，本质是 GObject 模式的简化版</strong>。</p>
+<h3 id="Nginx"><a href="#Nginx" class="headerlink" title="Nginx"></a>Nginx</h3><p>Nginx 的核心连接、事件模型，大量使用嵌入式结构体 + 反向指针：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">// 子结构体：事件对象，轻量级，事件入口</span><br><span class="line">struct ngx_event_s &#123;</span><br><span class="line">    ngx_uint_t         events;</span><br><span class="line">    ngx_connection_t*  conn; // 反向指向连接对象（父）</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">// 父结构体：连接对象，管理Socket、缓冲区、会话等核心资源</span><br><span class="line">struct ngx_connection_s &#123;</span><br><span class="line">    // Socket、读写缓存、状态、定时器等资源</span><br><span class="line">    ngx_event_t  read;  // 实体嵌入读事件</span><br><span class="line">    ngx_event_t  write; // 实体嵌入写事件</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>拿到事件 <code>ngx_event_t</code>，通过 <code>conn</code> 找到完整的连接资源，和上述代码拿到画布找到绘图上下文完全一致。</li>
+</ul>
+<h3 id="SQLite"><a href="#SQLite" class="headerlink" title="SQLite"></a>SQLite</h3><p>SQLite 的存储、分页模块，核心结构也是如此：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">// 子结构体：页面缓存入口，轻量</span><br><span class="line">struct PgHdr &#123;</span><br><span class="line">    Pager *pPager; // 反向指向Pager（父，管理磁盘分页）</span><br><span class="line">    // 页面基础信息</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">// 父结构体：Pager，管理数据库文件、缓存、磁盘IO核心资源</span><br><span class="line">struct Pager &#123;</span><br><span class="line">    // 文件句柄、缓存池、事务等资源</span><br><span class="line">    PgHdr pFirst; // 实体嵌入页面头节点</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="SDL"><a href="#SDL" class="headerlink" title="SDL"></a>SDL</h3><p>SDL 的绘图、窗口系统，和上述代码 GTK 绘图代码设计几乎一样：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">// 子结构体：渲染纹理，轻量绘图入口</span><br><span class="line">struct SDL_Texture &#123;</span><br><span class="line">    SDL_Renderer* renderer; // 反向指向渲染器（父）</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">// 父结构体：渲染器，管理显卡、画布、窗口资源</span><br><span class="line">struct SDL_Renderer &#123;</span><br><span class="line">    // 显卡上下文、窗口、缓存等资源</span><br><span class="line">    SDL_Texture* textures; // 关联纹理对象</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>「嵌入式结构体 + 反向父指针」设计模式解决了 C 语言<strong>没有面向对象、没有自动内存管理、没有继承</strong>的痛点</p>
+<ol>
+<li><strong>C 语言实现「组合 &#x2F; 复用」，模拟面向对象</strong></li>
+</ol>
+<p>C 没有类和继承，通过 <strong>「父结构体嵌入子结构体」</strong>，实现**「组合」**—— 把通用功能（画布、链表、事件、设备）封装成子结构体，复用到所有父结构体中，和面向对象的「继承 &#x2F; 组合」效果一致。</p>
+<ol start="2">
+<li><strong>解耦上层接口和底层资源，接口更简洁</strong></li>
+</ol>
+<ul>
+<li>上层只需要传递<strong>轻量的子对象</strong>（上述代码 <code>AbCanvasGTK</code>、内核的 <code>list_head</code>、<code>Nginx</code> 的 <code>ngx_event_t</code>），不用传递臃肿的父对象。</li>
+<li>底层通过反向指针，随时拿到父对象的所有资源，<strong>上层简洁，底层强大</strong>。</li>
+</ul>
+<ol start="3">
+<li><strong>内存极致高效，生命周期绝对安全</strong></li>
+</ol>
+<ul>
+<li>子结构体是<strong>实体嵌入</strong>，和父结构体共用<strong>同一块堆内存</strong>，不需要额外 <code>malloc</code>，减少内存碎片和分配开销。</li>
+<li>销毁父结构体时，子结构体<strong>自动同步销毁</strong>，不需要单独释放，彻底避免内存泄漏。</li>
+</ul>
+<ol start="4">
+<li><strong>反向引用解决「由子寻父」的刚需</strong></li>
+</ol>
+<p>程序中，往往只能拿到<strong>功能入口的子对象</strong>（画布、事件、链表节点），但所有资源都在父对象里。</p>
+<hr>
+<h2 id="完！"><a href="#完！" class="headerlink" title="完！"></a>完！</h2></article>
+<div class="article-footer">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    
+
+</div>
+
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2026/01/24/%E5%88%B6%E4%BD%9C%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93/">制作动态链接库</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2026/01/02/gtk%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/">gtk交叉编译</a></div></section></div>
+
+<div class="related-wrap" id="related-posts">
+    <section class='header'>
+      <div class='title cap theme'>您可能感兴趣的文章</div>
+    </section>
+    <section class='body'>
+    <div class="related-posts"><a class="item" href="\2026\01\26\gcc函数嵌套\" title="gcc函数嵌套"><span class="title">gcc函数嵌套</span></a><a class="item" href="\2024\07\20\关于二级指针可以看作指针数组的理解\" title="关于二级指针可以看作指针数组的理解"><span class="title">关于二级指针可以看作指针数组的理解</span></a><a class="item" href="\2023\05\20\C++函数形参为引用类型时，传入的参数类型为什么用引用对象的类型和引用类型都可以？\" title="C++函数形参为引用类型时，传入的参数类型为什么用引用对象的类型和引用类型都可以？"><span class="title">C++函数形参为引用类型时，传入的参数类型为什么用引用对象的类型和引用类型都可以？</span></a><a class="item" href="\2024\10\30\Cmake构建自动化编译环境\" title="Cmake构建自动化编译环境"><span class="title">Cmake构建自动化编译环境</span></a></div></section></div>
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="sitemap" style="column-count:2;"><div class="sitemap-group"><span class="fs15">导航</span><a href="/">首页</a><a href="/archives/">归档</a><a href="/categories/">分类</a><a href="/tags/">标签</a><a href="/atom.xml">RSS</a></div><div class="sitemap-group"><span class="fs15">关于</span><a href="/about/">关于我</a><a href="/friends/">友链</a><a href="/message/">留言板</a></div></div><div class="text"><div align="center" style="color:#666; font-size:14px; line-height:1.85;">
+  <p>© 2023–2025 <a target="_blank" rel="noopener" href="https://github.com/dkyou" style="color:#333; text-decoration:none;">Dkyou</a></p>
+  <p>Powered by <a target="_blank" rel="noopener" href="https://hexo.io" style="color:#333;">Hexo</a> · Theme <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar" style="color:#333;">Stellar</a></p>
+  <p>本站文章（除特别说明外）遵循
+    <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" style="color:#333;">CC BY-NC-SA 4.0</a>。
+  </p>
+</div>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E3%80%8C%E5%B5%8C%E5%85%A5%E5%BC%8F%E7%BB%93%E6%9E%84%E4%BD%93-%E5%8F%8D%E5%90%91%E7%88%B6%E6%8C%87%E9%92%88%E3%80%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F"><span class="toc-text">「嵌入式结构体 + 反向父指针」设计模式</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%93%E6%9E%84%E8%8C%83%E5%BC%8F"><span class="toc-text">结构范式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Linux-%E5%86%85%E6%A0%B8%E7%A4%BA%E4%BE%8B"><span class="toc-text">Linux 内核示例</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%86%85%E6%A0%B8%E5%8F%8C%E5%90%91%E9%93%BE%E8%A1%A8-struct-list-head"><span class="toc-text">1. 内核双向链表 struct list_head</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%86%85%E6%A0%B8%E8%AE%BE%E5%A4%87%E6%A8%A1%E5%9E%8B-struct-device"><span class="toc-text">2. 内核设备模型 struct device</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-PCI-%E8%AE%BE%E5%A4%87%E6%A8%A1%E5%9E%8B-struct-pci-dev-struct-device%EF%BC%88%E7%9B%B4%E6%8E%A5%E5%AD%98%E7%88%B6%E6%8C%87%E9%92%88%EF%BC%89"><span class="toc-text">3. PCI 设备模型 struct pci_dev + struct device（直接存父指针）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E7%BD%91%E7%BB%9C%E5%AD%90%E7%B3%BB%E7%BB%9F-struct-socket-struct-sock"><span class="toc-text">4. 网络子系统 struct socket + struct sock</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F-struct-inode"><span class="toc-text">5. 文件系统 struct inode</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F-struct-file"><span class="toc-text">文件系统 struct file</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E6%A0%B8%E7%A4%BA%E4%BE%8B%E6%80%BB%E7%BB%93"><span class="toc-text">内核示例总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B6%E4%BB%96C-%E9%A1%B9%E7%9B%AE%E7%A4%BA%E4%BE%8B"><span class="toc-text">其他C 项目示例</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#GLib-%E5%BA%93"><span class="toc-text">GLib 库</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Nginx"><span class="toc-text">Nginx</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SQLite"><span class="toc-text">SQLite</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SDL"><span class="toc-text">SDL</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%8C%EF%BC%81"><span class="toc-text">完！</span></a></li></ol></li></ol></div><div class="widget-footer"><a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/><path d="M7 3.338A9.95 9.95 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5"/></g></svg><span>回到顶部</span></a></div></widget>
+
+
+</div></aside><div class='float-panel'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+
+
+<script type="text/javascript">
+  window.canonical = {"originalHost":null,"officialHosts":["localhost"],"encoded":""};
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+    tag_plugins: {
+      chat: Object.assign({"api":"https://siteinfo.listentothewind.cn/api/v1"}),
+    }
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":null,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+    loading: `https://api.iconify.design/eos-icons:three-dots-loading.svg?color=%231cd0fd`,
+  };
+  const deps = {
+    jquery: `https://gcore.jsdelivr.net/npm/jquery@3.7/dist/jquery.min.js`,
+    marked: `https://gcore.jsdelivr.net/npm/marked@13.0/lib/marked.umd.min.js`,
+    lazyload: `/%5Bobject%20Object%5D`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  
+  function RunItem() {
+    this.list = []; // 存放回调函数
+    this.start = () => {
+      for (var i = 0; i < this.list.length; i++) {
+        this.list[i].run();
+      }
+    };
+    this.push = (fn, name, setRequestAnimationFrame = true) => {
+      let myfn = fn
+      if (setRequestAnimationFrame) {
+        myfn = () => {
+          utils.requestAnimationFrame(fn)
+        }
+      }
+      var f = new Item(myfn, name);
+      this.list.push(f);
+    };
+    this.remove = (name) => {
+      for (let index = 0; index < this.list.length; index++) {
+        const e = this.list[index];
+        if (e.name == name) {
+          this.list.splice(index, 1);
+        }
+      }
+    }
+    // 构造一个可以run的对象
+    function Item(fn, name) {
+      // 函数名称
+      this.name = name || fn.name;
+      // run方法
+      this.run = () => {
+        try {
+          fn()
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    }
+  }
+
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')) {
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function () {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      const maxRetry = 3;
+      let retryCount = 0;
+
+      return new Promise((resolve, reject) => {
+        const load = () => {
+          utils.onLoading?.(el);
+
+          let timedOut = false;
+          const timeout = setTimeout(() => {
+            timedOut = true;
+            console.warn('[request] 超时:', url);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject('请求超时');
+            } else {
+              setTimeout(load, 1000);
+            }
+          }, 5000);
+
+          fetch(url).then(resp => {
+            if (timedOut) return;
+            clearTimeout(timeout);
+
+            if (!resp.ok) throw new Error('响应失败');
+            return resp;
+          }).then(data => {
+            if (timedOut) return;
+            utils.onLoadSuccess?.(el);
+            callback(data);
+            resolve(data);
+          }).catch(err => {
+            clearTimeout(timeout);
+            console.warn('[request] 错误:', err);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject(err);
+            } else {
+              setTimeout(load, 1000);
+            }
+          });
+        };
+
+        load();
+      });
+    },
+    requestWithoutLoading: (url, options = {}, maxRetry = 2, timeout = 5000) => {
+      return new Promise((resolve, reject) => {
+        let retryCount = 0;
+
+        const tryRequest = () => {
+          let timedOut = false;
+          const timer = setTimeout(() => {
+            timedOut = true;
+            if (++retryCount > maxRetry) reject('timeout');
+            else tryRequest();
+          }, timeout);
+
+          fetch(url, options)
+            .then(resp => {
+              clearTimeout(timer);
+              if (!resp.ok) throw new Error('bad response');
+              resolve(resp);
+            })
+            .catch(err => {
+              clearTimeout(timer);
+              if (++retryCount > maxRetry) reject(err);
+              else setTimeout(tryRequest, 500);
+            });
+        };
+
+        tryRequest();
+      });
+    },
+    /********************** requestAnimationFrame ********************************/
+    // 1、requestAnimationFrame 会把每一帧中的所有 DOM 操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
+    // 2、在隐藏或不可见的元素中，requestAnimationFrame 将不会进行重绘或回流，这当然就意味着更少的的 cpu，gpu 和内存使用量。
+    requestAnimationFrame: (fn) => {
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+      }
+      window.requestAnimationFrame(fn)
+    },
+    dark: {},
+  };
+
+  // utils.dark.mode 当前模式 dark or light
+  // utils.dark.toggle() 暗黑模式触发器
+  // utils.dark.push(callBack[,"callBackName"]) 传入触发器回调函数
+  utils.dark.method = {
+    toggle: new RunItem(),
+  };
+  utils.dark = Object.assign(utils.dark, {
+    push: utils.dark.method.toggle.push,
+  });
+</script>
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+<script async src="https://gcore.jsdelivr.net/npm/vanilla-lazyload@19.1/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+    callback_loaded: (el) => {
+      el.classList.add('loaded');
+      const wrapper = el.closest('.lazy-box');
+      const icon = wrapper?.querySelector('.lazy-icon');
+      if (icon) icon.remove();
+    }
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+
+  window.wrapLazyloadImages = (container) => {
+    if (typeof container === 'string') {
+      container = document.querySelector(container);
+    }
+    if (!container) return;
+    
+    const images = container.querySelectorAll('img');
+    images.forEach((img) => {
+      if (img.classList.contains('lazy')) return;
+
+      const src = img.getAttribute('src');
+      if (!src) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'lazy-box';
+
+      const newImg = img.cloneNode();
+      newImg.removeAttribute('src');
+      newImg.setAttribute('data-src', src);
+      newImg.classList.add('lazy');
+
+      const icon = document.createElement('div');
+      icon.className = 'lazy-icon';
+      if (def.loading) {
+        icon.style.backgroundImage = `url("${def.loading}")`;
+      }
+
+      wrapper.appendChild(newImg);
+      wrapper.appendChild(icon);
+
+      img.replaceWith(wrapper);
+    });
+
+    // 通知 LazyLoad 更新
+    if (window.lazyLoadInstance?.update) {
+      window.lazyLoadInstance.update();
+    }
+  }
+  
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.33.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    // applyThemeToGiscus(theme)
+  }
+
+  // FIXME: 这会导致无法使用 preferred_color_scheme 以外的主题
+  const applyThemeToGiscus = (theme) => {
+    // theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+    utils.dark.mode = newTheme === 'auto' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : newTheme;
+    utils.dark.method.toggle.start();
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    } else {
+      utils.dark.mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    utils.dark.method.toggle.start();
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"rating":{"js":"/js/services/rating.js","api":"https://star-vote.xaox.cc/api/rating"},"vote":{"js":"/js/services/vote.js","api":"https://star-vote.xaox.cc/api/vote"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"friends_and_posts":{"js":"/js/services/friends_and_posts.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"voice":{"js":"/js/plugins/voice.js"},"video":{"js":"/js/plugins/video.js"},"download-file":{"js":"/js/plugins/download-file.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"},"contributors":{"edit_this_page":{"_posts/":null,"wiki/stellar/":"https://github.com/xaoxuu/hexo-theme-stellar-docs/blob/main/"},"js":"/js/services/contributors.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else if (id == 'voice') {
+        ctx.voiceAudios = document.querySelectorAll('.voice>audio');
+        if (ctx.voiceAudios?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            createVoiceDom(ctx.voiceAudios);
+          });
+        }
+      } else if (id == 'video') {
+        ctx.videos = document.querySelectorAll('.video>video');
+        if (ctx.videos?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            videoEvents(ctx.videos);
+          });
+        }
+      } else if (id == 'download-file') {
+        ctx.files = document.querySelectorAll('.file');
+        if (ctx.files?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            downloadFileEvent(ctx.files);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+
+    // chat iphone time
+    let phoneTimes = document.querySelectorAll('.chat .status-bar .time');
+
+    if (phoneTimes.length > 0) {
+      NowTime();
+      var date = new Date();
+      var sec = date.getSeconds();
+      var firstAdjustInterval = setInterval(firstAdjustTime, 1000 * (60 - sec));
+    }
+
+    function firstAdjustTime() {
+      NowTime();
+      clearInterval(firstAdjustInterval);
+      setInterval(NowTime, 1000 * 60);
+    }
+
+    function NowTime() {
+      for (let i = 0; i < phoneTimes.length; ++i) {
+        var timeSpan = phoneTimes[i];
+        var date = new Date();
+        var hour = date.getHours();
+        var min = date.getMinutes();
+        timeSpan.innerHTML = check(hour) + ":" + check(min);
+      }
+    };
+
+    function check(val) {
+      if (val < 10) {
+        return ("0" + val);
+      }
+      return (val);
+    }
+
+    // chat quote
+    const chat_quote_obverser = new IntersectionObserver((entries, observer) => {
+      entries.filter((entry) => { return entry.isIntersecting }).sort((a, b) => a.intersectionRect.y !== b.intersectionRect.y ? a.intersectionRect.y - b.intersectionRect.y : a.intersectionRect.x - b.intersectionRect.x).forEach((entry, index) => {
+          observer.unobserve(entry.target);
+          setTimeout(() => {
+            entry.target.classList.add('quote-blink');
+            setTimeout(() => {
+              entry.target.classList.remove('quote-blink');
+            }, 1000);
+          }, Math.max(100, 16) * (index + 1));
+        });
+    });
+
+    var chatQuotes = document.querySelectorAll(".chat .talk .quote");
+    chatQuotes.forEach((quote) => {
+      quote.addEventListener('click', function () {
+        var chatCellDom = document.getElementById("quote-" + quote.getAttribute("quotedCellTag"));
+        if (chatCellDom) {
+          var chatDiv = chatCellDom.parentElement;
+          var mid = chatDiv.clientHeight / 2;
+          var offsetTop = chatCellDom.offsetTop;
+          if (offsetTop > mid - chatCellDom.clientHeight / 2) {
+            chatDiv.scrollTo({
+              top: chatCellDom.offsetTop - mid + chatCellDom.clientHeight / 2,
+              behavior: "smooth"
+            });
+          } else {
+            chatDiv.scrollTo({
+              top: 0,
+              behavior: "smooth"
+            });
+          }
+          chat_quote_obverser.observe(chatCellDom);
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://gcore.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error), .with-fancybox .atk-content img:not([atk-emoticon])';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const memos = document.getElementsByClassName('ds-memos');
+    if (memos != undefined && memos.length > 0) {
+      needFancybox = true;
+    }
+    const fancybox = document.getElementsByClassName('with-fancybox');
+    if (fancybox != undefined && fancybox.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `不能复制哦~`,
+        success_text: `竟没骗到你！复制成功`,
+        toast: `又被你小子复制了！🌈`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
