@@ -1,0 +1,926 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.33.1" theme-name="Stellar" theme-version="1.33.1">
+  
+  
+  <meta name="generator" content="Hexo 8.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  <title>proc 文件系统 - 又是摸鱼的一天</title>
+
+  
+    <meta name="description" content="1.proc 文件系统简介  proc 文件系统一种伪文件系统，文件内容存储在内存（不占用磁盘空间，不能永久存储）。它用于向用户空间暴露内核数据结构、进程状态及系统配置信息，是系统监控、调试与性能调优的核心工具。   proc文件系统的内核定义如下： 1234567static struct file_system_type proc_fs_type &#x3D; &#123;    .name &#x3D; &amp;qu">
+<meta property="og:type" content="article">
+<meta property="og:title" content="proc 文件系统">
+<meta property="og:url" content="https://dkyou.github.io/2024/09/18/Linux%20proc%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/">
+<meta property="og:site_name" content="又是摸鱼的一天">
+<meta property="og:description" content="1.proc 文件系统简介  proc 文件系统一种伪文件系统，文件内容存储在内存（不占用磁盘空间，不能永久存储）。它用于向用户空间暴露内核数据结构、进程状态及系统配置信息，是系统监控、调试与性能调优的核心工具。   proc文件系统的内核定义如下： 1234567static struct file_system_type proc_fs_type &#x3D; &#123;    .name &#x3D; &amp;qu">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mmbiz.qpic.cn/sz_mmbiz_png/pBLyMoXAbVze4KygD1nDNQ9OVZmt10qY9zjibKib0eibdyXJkDmGFZY6Cs5OECsEHjyQGOWmpc7ZC17Adxyg8xibGzLRdMSOc9PZ9PMGz85e530/640?wx_fmt=png&from=appmsg&watermark=1&tp=wxpic&wxfrom=5&wx_lazy=1#imgIndex=0">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_png/pBLyMoXAbVzVicSQQnOLteAw2yyt4vwTNRgHVeWHwDQ22nC5AnolIypwW2M2VX6BqN6tolbIjKBKztIicgqdyuq6ibsbgTscBooNB1IgO8Ovib4/640?wx_fmt=png&from=appmsg&watermark=1&tp=wxpic&wxfrom=5&wx_lazy=1#imgIndex=1">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_png/pBLyMoXAbVzgWEJrRRzMHicW0W8JSAOWfOXN0GdXJXfLMqmvfzHCaicWqiaibiaULTMe0FhRV9QxAu8wQRiamOVKs9kcKtknP8YRFFQNy9IaYv4aQ/640?wx_fmt=png&from=appmsg&watermark=1&tp=wxpic&wxfrom=5&wx_lazy=1#imgIndex=2">
+<meta property="article:published_time" content="2024-09-18T05:39:11.000Z">
+<meta property="article:modified_time" content="2026-03-12T02:00:16.420Z">
+<meta property="article:author" content="Dku">
+<meta property="article:tag" content="fs">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="proc">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mmbiz.qpic.cn/sz_mmbiz_png/pBLyMoXAbVze4KygD1nDNQ9OVZmt10qY9zjibKib0eibdyXJkDmGFZY6Cs5OECsEHjyQGOWmpc7ZC17Adxyg8xibGzLRdMSOc9PZ9PMGz85e530/640?wx_fmt=png&from=appmsg&watermark=1&tp=wxpic&wxfrom=5&wx_lazy=1#imgIndex=0">
+  
+  
+  
+  <meta name="keywords" content="linux,proc,fs">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.33.1">
+
+
+  
+
+  
+
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dku","sameAs":[]},"dateCreated":"2024-09-18T13:39:11+08:00","dateModified":"2026-03-12T10:00:16+08:00","datePublished":"2024-09-18T13:39:11+08:00","description":"","headline":"proc 文件系统","mainEntityOfPage":{"@type":"WebPage","@id":"https://dkyou.github.io/2024/09/18/Linux%20proc%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/"},"publisher":{"@type":"Organization","name":"Dku","sameAs":[]},"url":"https://dkyou.github.io/2024/09/18/Linux%20proc%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/","keywords":"linux, proc, fs","image":[]}</script>
+  
+</head>
+<body><div class="sitebg"><div class="siteblur"></div></div>
+
+<div class="l_body content" id="start" layout="post" type="tech" ><aside class="l_left"><div class="sidebg"></div><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大白鹅喝酒.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main">👀瞅啥呢！👀</div><div class="sub normal cap">今天又是摸鱼的一天！</div><div class="sub hover cap" style="opacity:0">可不摸鱼又干什么呢？</div></a></div></header>
+
+<div class="nav-area">
+
+<nav class="menu dis-select"><a class="nav-item active" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="文档" href="/wiki/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="探索" href="/explore/" style="color:#FA6400"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M20 12a8 8 0 1 1-16 0a8 8 0 0 1 16 0" opacity=".5"/><path fill="currentColor" d="M17.712 5.453c1.047-.193 2.006-.259 2.797-.152c.77.103 1.536.393 1.956 1.064c.446.714.312 1.542-.012 2.258c-.33.728-.918 1.499-1.672 2.268c-1.516 1.547-3.836 3.226-6.597 4.697c-2.763 1.472-5.495 2.484-7.694 2.92c-1.095.217-2.098.299-2.923.201c-.8-.095-1.6-.383-2.032-1.075c-.47-.752-.296-1.63.07-2.379c.375-.768 1.032-1.586 1.872-2.403L4 12.416c0 .219.083.71.168 1.146c.045.23.09.444.123.596c-.652.666-1.098 1.263-1.339 1.756c-.277.567-.208.825-.145.925c.072.116.305.305.937.38c.609.073 1.44.018 2.455-.183c2.02-.4 4.613-1.351 7.28-2.772c2.667-1.42 4.85-3.015 6.23-4.423c.694-.707 1.15-1.334 1.377-1.836c.233-.515.167-.75.107-.844c-.07-.112-.289-.294-.883-.374c-.542-.072-1.272-.041-2.163.112L16.87 5.656c.338-.101.658-.17.842-.203"/></svg></a><a class="nav-item" title="社交" href="/friends/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+
+<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/linux%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B/"><span class="title">linux内核编译过程</span></a><a class="item title" href="/2025/08/18/jtank%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF/"><span class="title">jtank学习路线</span></a><a class="item title" href="/2026/01/24/Office%E5%90%AF%E5%8A%A8%E4%B8%8D%E4%BA%86%E5%BC%B9%E7%AA%97%E9%94%99%E8%AF%AF%E4%BB%A3%E7%A0%810x426-0x0/"><span class="title">Office启动不了，弹窗错误代码0x426-0x0</span></a><a class="item title" href="/2024/09/18/Linux%20proc%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/"><span class="title">proc 文件系统</span></a><a class="item title" href="/2025/11/03/%E6%81%8B%E7%88%B1%E5%B0%8F%E7%9B%AE%E6%A0%87/"><span class="title">恋爱小目标进度</span></a><a class="item title" href="/2026/02/02/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/observer%20mode/"><span class="title">「observer」设计模式</span></a><a class="item title" href="/2026/01/20/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/C%E8%AF%AD%E8%A8%80%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"><span class="title">「嵌入式结构体 + 反向父指针」设计模式</span></a><a class="item title" href="/2026/01/24/%E5%88%B6%E4%BD%9C%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93/"><span class="title">制作动态链接库</span></a><a class="item title" href="/2026/01/26/gcc%E5%87%BD%E6%95%B0%E5%B5%8C%E5%A5%97/"><span class="title">gcc函数嵌套</span></a><a class="item title" href="/2025/08/18/git%E6%9C%AC%E5%9C%B0%E5%B7%B2%E7%BB%8F%E6%9C%89%E4%BF%AE%E6%94%B9%E4%BD%86%E6%98%AF%E6%83%B3%E5%90%8C%E6%AD%A5%E8%BF%9C%E7%A8%8B%E4%BB%93%E5%BA%93%E7%9A%84%E6%9B%B4%E6%96%B0/"><span class="title">git本地已经有修改但是想同步远程仓库的更新</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="https://github.com/dkyou" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="mailto:2328727915@qq.com" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/gmail.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="https://space.bilibili.com/" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/bilibili.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="/atom.xml" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/rss.svg" height="20" style="opacity:0.9;"/></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/LINUX/">LINUX</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-09-18T05:39:11.000Z">2024-09-18</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2026-03-12T02:00:16.420Z">2026-03-12</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>proc 文件系统</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h2 id="1-proc-文件系统简介"><a href="#1-proc-文件系统简介" class="headerlink" title="1.proc 文件系统简介"></a>1.proc <strong>文件系统简介</strong></h2><p>  proc 文件系统一种伪文件系统，文件内容存储在内存（不占用磁盘空间，不能永久存储）。它用于向用户空间暴露内核数据结构、进程状态及系统配置信息，是系统监控、调试与性能调优的核心工具。</p>
+<p>  proc文件系统的内核定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_system_type</span> <span class="title">proc_fs_type</span> =</span> &#123;</span><br><span class="line">    .name = <span class="string">&quot;proc&quot;</span>,</span><br><span class="line">    .init_fs_context = proc_init_fs_context,</span><br><span class="line">    .parameters = proc_fs_parameters,</span><br><span class="line">    .kill_sb = proc_kill_sb,</span><br><span class="line">    .fs_flags = FS_USERNS_MOUNT | FS_DISALLOW_NOTIFY_PERM,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>  内核初始化过程中，initramfs init 脚本会挂载 proc 文件系统。proc 文件系统中常见的文件有： </p>
+<h3 id="（1）系统信息"><a href="#（1）系统信息" class="headerlink" title="（1）系统信息"></a><strong>（1）系统信息</strong></h3><ul>
+<li>&#x2F;proc&#x2F;cpuinfo：CPU 硬件信息。</li>
+<li>&#x2F;proc&#x2F;meminfo：内存总大小、空闲、缓存、Swap 等状态。</li>
+<li>&#x2F;proc&#x2F;loadavg：系统平均负载。</li>
+<li>&#x2F;proc&#x2F;uptime：系统启动总时间、空闲时间。</li>
+<li>&#x2F;proc&#x2F;cmdline：内核启动参数。</li>
+<li>&#x2F;proc&#x2F;filesystems：内核支持的文件系统列表。</li>
+<li>&#x2F;proc&#x2F;stat：系统整体 CPU 使用率、中断、进程切换统计。</li>
+<li>&#x2F;proc&#x2F;partitions：块设备与分区信息。</li>
+<li>&#x2F;proc&#x2F;mounts：当前已挂载文件系统列表。</li>
+</ul>
+<h3 id="（2）进程信息"><a href="#（2）进程信息" class="headerlink" title="（2）进程信息"></a><strong>（2）进程信息</strong></h3><ul>
+<li>&#x2F;proc&#x2F;[PID]&#x2F;cmdline：进程启动命令与参数。</li>
+<li>&#x2F;proc&#x2F;[PID]&#x2F;status：进程状态。</li>
+<li>&#x2F;proc&#x2F;[PID]&#x2F;maps：进程虚拟内存映射。</li>
+<li>&#x2F;proc&#x2F;[PID]&#x2F;fd&#x2F;：进程打开的文件描述符列表。</li>
+<li>&#x2F;proc&#x2F;[PID]&#x2F;environ：进程环境变量。</li>
+<li>&#x2F;proc&#x2F;[PID]&#x2F;limits：进程资源限制。</li>
+<li>&#x2F;proc&#x2F;[PID]&#x2F;io：进程 I&#x2F;O 统计。</li>
+<li>&#x2F;proc&#x2F;[PID]&#x2F;sched：进程调度信息与优先级。</li>
+</ul>
+<h3 id="（3）网络信息"><a href="#（3）网络信息" class="headerlink" title="（3）网络信息"></a><strong>（3）网络信息</strong></h3><ul>
+<li>&#x2F;proc&#x2F;net&#x2F;dev：网卡流量、错误、丢包统计。</li>
+<li>&#x2F;proc&#x2F;net&#x2F;tcp：TCP 连接表。</li>
+<li>&#x2F;proc&#x2F;net&#x2F;udp：UDP 连接表。</li>
+<li>&#x2F;proc&#x2F;net&#x2F;route：内核路由表。</li>
+<li>&#x2F;proc&#x2F;net&#x2F;arp：ARP 表。</li>
+<li>&#x2F;proc&#x2F;net&#x2F;netstat：网络栈统计。</li>
+<li>&#x2F;proc&#x2F;net&#x2F;sockstat：套接字使用统计。</li>
+</ul>
+<h2 id="2-从内核看-proc-文件系统"><a href="#2-从内核看-proc-文件系统" class="headerlink" title="2.从内核看 proc 文件系统"></a><strong>2.从内核看 proc 文件系统</strong></h2><p>  理解 proc 文件系统的关键在于理解 proc 文件系统内部树，所谓内部树是指独立于 VFS（虚拟文件系统）的文件树，具体情况如图1所示。</p>
+<p><img src="https://mmbiz.qpic.cn/sz_mmbiz_png/pBLyMoXAbVze4KygD1nDNQ9OVZmt10qY9zjibKib0eibdyXJkDmGFZY6Cs5OECsEHjyQGOWmpc7ZC17Adxyg8xibGzLRdMSOc9PZ9PMGz85e530/640?wx_fmt=png&from=appmsg&watermark=1&tp=wxpic&wxfrom=5&wx_lazy=1#imgIndex=0" alt="图片"></p>
+<p>图1   proc 文件系统内核实现原理</p>
+<p>  内核初始化时会调用 start_kernel 函数，该函数会调用 proc_root_init 函数来初始化 proc 内部文件树。proc 内部文件树的节点类型（文件或目录）为 struct proc_dir_entry 结构，其定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">proc_dir_entry</span> &#123;</span></span><br><span class="line">    conststruct inode_operations *proc_iops;    <span class="comment">/* inode操作函数表 */</span></span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">        conststruct proc_ops *proc_ops;        <span class="comment">/* 内核5.6+新增proc专用文件操作函数表 */</span></span><br><span class="line">        conststruct file_operations *proc_dir_ops;    <span class="comment">/* 文件操作函数表 */</span></span><br><span class="line">    &#125;;</span><br><span class="line">    conststruct dentry_operations *proc_dops;    <span class="comment">/* 目录项（dentry）操作函数表 */</span></span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">        conststruct seq_operations *seq_ops;      <span class="comment">/* seq_file操作函数表，用于复杂文件（多个记录）*/</span></span><br><span class="line">        <span class="type">int</span> (*single_show)(<span class="keyword">struct</span> seq_file *, <span class="type">void</span> *); <span class="comment">/* 简单显示函数，用于简单文件（单个记录） */</span></span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="type">void</span> *data; <span class="comment">/* 私有数据指针 */</span></span><br><span class="line">    <span class="type">nlink_t</span> nlink; <span class="comment">/* 硬链接数 */</span></span><br><span class="line">    <span class="type">kuid_t</span> uid; <span class="comment">/* 用户 ID */</span></span><br><span class="line">    <span class="type">kgid_t</span> gid; <span class="comment">/* 组 ID */</span></span><br><span class="line">    <span class="type">loff_t</span> size; <span class="comment">/* 文件大小 */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">proc_dir_entry</span> *<span class="title">parent</span>;</span>          <span class="comment">/* 父目录指针，指向包含此节点的父目录 */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">rb_root</span> <span class="title">subdir</span>;</span>                <span class="comment">/* 子目录红黑树根 */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">rb_node</span> <span class="title">subdir_node</span>;</span>            <span class="comment">/* 红黑树节点，子节点插入父目录红黑树的节点 */</span></span><br><span class="line">    <span class="type">char</span> *name; <span class="comment">/* 指向文件/目录名字符串 */</span></span><br><span class="line">    <span class="type">umode_t</span> mode; <span class="comment">/* 表示文件类型和权限 */</span></span><br><span class="line">    u8 flags; <span class="comment">/* 标志位 */</span></span><br><span class="line">    u8 namelen; <span class="comment">/* 文件名长度 */</span></span><br><span class="line">    ......</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>  struct proc_dir_entry（简称 PDE）是 Linux 内核管理 &#x2F;proc 文件系统所有节点（文件、目录、链接）的数据结构体，每个节点在内核中都对应一个PDE，PDE用于存储节点的名称、权限、所属目录、操作回调、私有数据等关键信息。</p>
+<p>  如果 PDE 是一个目录，那么 PDE 的 subdir 成员将会生效，subdir 是子节点（文件和目录）的红黑树根，子节点通过 PDE 的 subdir_node 成员插入父节点红黑树，这样就构成了树形结构。</p>
+<p>  proc 内部文件树的文件节点和 VFS（虚拟文件系统）中的文件是对应关系，proc 的文件由内核创建，内核通过 proc_mkdir 和 proc_create 函数来创建 proc 文件节点。当用户程序需要访问 proc 文件时，内核会基于 proc 文件节点动态生成 struct inode 结构，并将访问 proc 文件的方法（函数表）也赋值给inode。这样用户程序就能够通过 VFS 来访问 proc 文件了。</p>
+<p>  proc 内部文件树的根节点是 &#x2F;proc 目录，它是一个特殊的PDE，其定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">proc_dir_entry</span> <span class="title">proc_root</span> =</span> &#123;</span><br><span class="line">    .low_ino = PROC_ROOT_INO,</span><br><span class="line">    .namelen = <span class="number">5</span>,</span><br><span class="line">    .mode = S_IFDIR | S_IRUGO | S_IXUGO,</span><br><span class="line">    .nlink = <span class="number">2</span>,</span><br><span class="line">    .refcnt = REFCOUNT_INIT(<span class="number">1</span>),</span><br><span class="line">    .proc_iops = &amp;proc_root_inode_operations,</span><br><span class="line">    .proc_dir_ops = &amp;proc_root_operations,</span><br><span class="line">    .parent = &amp;proc_root,</span><br><span class="line">    .subdir = RB_ROOT,</span><br><span class="line">    .name = <span class="string">&quot;/proc&quot;</span>,</span><br><span class="line">&#125;; </span><br></pre></td></tr></table></figure>
+
+<p>  proc_root 是 Linux 内核中 &#x2F;proc 文件系统根节点，所有 &#x2F;proc 下的文件&#x2F;目录都是挂载到这个根节点下的子节点，它是整个 proc 内部文件树的 “根”。</p>
+<h2 id="3-seq-file-机制"><a href="#3-seq-file-机制" class="headerlink" title="3.seq_file 机制"></a><strong>3.seq_file 机制</strong></h2><p>  <strong>seq_file</strong> 是用于简化 <code>/proc</code> 文件的创建和读取操作的机制。它解决了传统 proc 文件处理中的缓冲区管理难题，提供了一种<strong>迭代式、分块输出</strong>的方式来生成动态内容。</p>
+<p>  seq_file 的核心数据结构为：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">seq_file</span> &#123;</span></span><br><span class="line">    <span class="type">char</span> *buf; <span class="comment">// 输出缓冲区</span></span><br><span class="line">    <span class="type">size_t</span> size; <span class="comment">// 缓冲区大小</span></span><br><span class="line">    <span class="type">size_t</span> from; <span class="comment">// 用户空间已读取的位置</span></span><br><span class="line">    <span class="type">size_t</span> count; <span class="comment">// buf 中有效数据量</span></span><br><span class="line">    <span class="type">size_t</span> pad_until; <span class="comment">// 填充位置</span></span><br><span class="line">    <span class="type">loff_t</span> index; <span class="comment">// 当前迭代位置</span></span><br><span class="line">    <span class="type">loff_t</span> read_pos; <span class="comment">// 当前读取位置</span></span><br><span class="line">    u64 version; <span class="comment">// 版本号</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">mutex</span> <span class="title">lock</span>;</span><span class="comment">// 互斥锁</span></span><br><span class="line">    conststruct seq_operations *op;<span class="comment">// 操作函数集</span></span><br><span class="line">    <span class="type">int</span> poll_event; <span class="comment">// poll 事件</span></span><br><span class="line">    conststruct file *file;<span class="comment">// 关联的文件</span></span><br><span class="line">    <span class="type">void</span> *private; <span class="comment">// 私有数据</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>  简单来说，seq_file 就是一个内核缓冲区，proc 文件中的数据需要先格式化输出到 seq_file 内核缓冲区，再拷贝至用户缓冲区。格式化输出的过程需要使用特定的方法，这种方法由 struct seq_operations 结构定义，如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">seq_operations</span> &#123;</span></span><br><span class="line">    <span class="comment">/* 遍历起始回调：找到第pos个数据节点（遍历的起点）*/</span></span><br><span class="line">    <span class="type">void</span> * (*start) (<span class="keyword">struct</span> seq_file *m, <span class="type">loff_t</span> *pos);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 遍历结束回调：清理资源（解锁、释放内存等）*/</span></span><br><span class="line">    <span class="type">void</span> (*stop) (<span class="keyword">struct</span> seq_file *m, <span class="type">void</span> *v);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 遍历下一个回调：获取当前节点的下一个节点 */</span></span><br><span class="line">    <span class="type">void</span> * (*next) (<span class="keyword">struct</span> seq_file *m, <span class="type">void</span> *v, <span class="type">loff_t</span> *pos);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 内容输出回调：将单个节点的数据格式化输出到seq_file缓冲区 */</span></span><br><span class="line">    <span class="type">int</span> (*show) (<span class="keyword">struct</span> seq_file *m, <span class="type">void</span> *v);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>  seq_operations 的使用方式如图2所示。</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/pBLyMoXAbVzVicSQQnOLteAw2yyt4vwTNRgHVeWHwDQ22nC5AnolIypwW2M2VX6BqN6tolbIjKBKztIicgqdyuq6ibsbgTscBooNB1IgO8Ovib4/640?wx_fmt=png&from=appmsg&watermark=1&tp=wxpic&wxfrom=5&wx_lazy=1#imgIndex=1" alt="图片"></p>
+<p>图 2   seq_file机制   </p>
+<p>  用户程序（shell）执行 cat &#x2F;proc&#x2F;xxx 命令查看 proc 文件时，首先会打开文件，打开文件的过程会创建 file 对象，然后将 file 对象的私有指针指向 proc 文件对应的 seq_file。接着，cat 命令会读取 proc 文件数据，读取的过程需要用到 seq_file 对象中的 op 函数表 (struct struct seq_operations)，具体过程如下：</p>
+<ul>
+<li>步骤1：调用 start 函数开始迭代，获取第一个数据项（整型数、字符串、结构体等），并调用 show 函数格式化输出该数据项至 seq_file 内核缓冲区。</li>
+<li>*步骤2：调用 next 函数获取下一个数据项，并调用 show 函数格式化输出该数据项至 seq_file 内核缓冲区。</li>
+<li>步骤3：持续执行步骤2，直至所有数据项都格式化输出到 seq_file 内核缓冲区。</li>
+<li>步骤4：调用 stop 函数停止迭代，清理资源。</li>
+<li>步骤5：:将 seq_file 收集到数据拷贝至用户缓冲区。</li>
+</ul>
+<h2 id="4-proc-partitions-示例"><a href="#4-proc-partitions-示例" class="headerlink" title="4. &#x2F;proc&#x2F;partitions 示例&#x2F;"></a><strong>4. &#x2F;proc&#x2F;partitions 示例</strong>&#x2F;</h2><p>  我们以读取 &#x2F;proc&#x2F;partitions 文件为例，来进一步了解 proc 文件的读取过程。&#x2F;proc&#x2F;partitions 是 proc 文件系统中专门用于暴露系统块设备（磁盘 &#x2F; 分区）信息的核心虚拟文件，如图3所示。</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/pBLyMoXAbVzgWEJrRRzMHicW0W8JSAOWfOXN0GdXJXfLMqmvfzHCaicWqiaibiaULTMe0FhRV9QxAu8wQRiamOVKs9kcKtknP8YRFFQNy9IaYv4aQ/640?wx_fmt=png&from=appmsg&watermark=1&tp=wxpic&wxfrom=5&wx_lazy=1#imgIndex=2" alt="图片"></p>
+<p>图3   读取 &#x2F;proc&#x2F;partitions 文件</p>
+<p>  &#x2F;proc&#x2F;partitions 文件的数据项是 struct gendisk 结构，<code>struct gendisk</code>（通用磁盘结构体）是 Linux 内核块设备子系统的<strong>核心数据结构</strong>，用于抽象和管理系统中所有块设备，定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">gendisk</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="type">int</span> major; <span class="comment">// 主设备号</span></span><br><span class="line">    <span class="type">int</span> first_minor; <span class="comment">// 起始次设备号</span></span><br><span class="line">    <span class="type">int</span> minors; <span class="comment">// 次设备号</span></span><br><span class="line">    <span class="type">char</span> disk_name[DISK_NAME_LEN]; <span class="comment">// 磁盘名称</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">xarray</span> <span class="title">part_tbl</span>;</span> <span class="comment">// 分区表</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">block_device</span> *<span class="title">part0</span>;</span> <span class="comment">//主设备块设备对象</span></span><br><span class="line">    ......</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>  一台主机通常会有多个块设备，调用 start 函数后，内核会查询块设备列表，获取到第一个块设备。 接着，内核调用 show 函数格式化输出块设备信息，该场景下的 show 函数具体实现如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">show_partition</span><span class="params">(<span class="keyword">struct</span> seq_file *seqf, </span></span><br><span class="line"><span class="params"><span class="type">void</span> *v)</span> &#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">gendisk</span> *<span class="title">sgp</span> =</span> v;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">block_device</span> *<span class="title">part</span>;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> idx;</span><br><span class="line">    xa_for_each(&amp;sgp-&gt;part_tbl, idx, part) &#123;</span><br><span class="line">        seq_printf(seqf, <span class="string">&quot;%4d %7d %10llu %pg\n&quot;</span>,</span><br><span class="line">      MAJOR(part-&gt;bd_dev), MINOR(part-&gt;bd_dev),</span><br><span class="line">               bdev_nr_sectors(part) &gt;&gt; <span class="number">1</span>, part);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>  show 函数中循环（xa_for_each语言）格式化输出（调用 seq_printf 函数）每个分区的信息至 seq_file 内核缓冲区。一个块设备处理完毕后，调用 next 函数定位到下一个块设备，然后按照相同的方式处理下一个块设备，直至所有块设备的信息都格式化输出到 seq_file 内核缓冲区，最后将 seq_file 内核缓冲区的数据拷贝至用户缓冲区，用户程序就能够查看到内核的块设备分区信息了。</p>
+<h2 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h2><p>微信公众号：物联网心球</p>
+<p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/jfkFjkiZcHa7ghQTNGTfiw">一文吃透 Linux proc 文件系统</a></p>
+</article>
+<div class="article-footer">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    
+
+</div>
+
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2024/09/18/Linux%E5%B5%8C%E5%85%A5%E5%BC%8F/">Linux嵌入式学习粗略笔记</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2024/09/18/ros%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">ros常用命令</a></div></section></div>
+
+<div class="related-wrap" id="related-posts">
+    <section class='header'>
+      <div class='title cap theme'>您可能感兴趣的文章</div>
+    </section>
+    <section class='body'>
+    <div class="related-posts"><a class="item" href="\2024\10\30\Cmake构建自动化编译环境\" title="Cmake构建自动化编译环境"><span class="title">Cmake构建自动化编译环境</span></a><a class="item" href="\2024\09\18\Linux嵌入式\" title="Linux嵌入式学习粗略笔记"><span class="title">Linux嵌入式学习粗略笔记</span></a><a class="item" href="\2024\10\18\Makefile总结及通用模板使用\" title="Makefile总结及通用模板使用"><span class="title">Makefile总结及通用模板使用</span></a><a class="item" href="\2025\11\19\SDL编译安装\" title="SDL源码编译安装"><span class="title">SDL源码编译安装</span></a><a class="item" href="\2024\09\20\Linux汇编基础\" title="Linux汇编基础"><span class="title">Linux汇编基础</span></a></div></section></div>
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="sitemap" style="column-count:2;"><div class="sitemap-group"><span class="fs15">导航</span><a href="/">首页</a><a href="/archives/">归档</a><a href="/categories/">分类</a><a href="/tags/">标签</a><a href="/atom.xml">RSS</a></div><div class="sitemap-group"><span class="fs15">关于</span><a href="/about/">关于我</a><a href="/friends/">友链</a><a href="/message/">留言板</a></div></div><div class="text"><div align="center" style="color:#666; font-size:14px; line-height:1.85;">
+  <p>© 2023–2025 <a target="_blank" rel="noopener" href="https://github.com/dkyou" style="color:#333; text-decoration:none;">Dkyou</a></p>
+  <p>Powered by <a target="_blank" rel="noopener" href="https://hexo.io" style="color:#333;">Hexo</a> · Theme <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar" style="color:#333;">Stellar</a></p>
+  <p>本站文章（除特别说明外）遵循
+    <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" style="color:#333;">CC BY-NC-SA 4.0</a>。
+  </p>
+</div>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-proc-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%AE%80%E4%BB%8B"><span class="toc-text">1.proc 文件系统简介</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E7%B3%BB%E7%BB%9F%E4%BF%A1%E6%81%AF"><span class="toc-text">（1）系统信息</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EF%BC%882%EF%BC%89%E8%BF%9B%E7%A8%8B%E4%BF%A1%E6%81%AF"><span class="toc-text">（2）进程信息</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EF%BC%883%EF%BC%89%E7%BD%91%E7%BB%9C%E4%BF%A1%E6%81%AF"><span class="toc-text">（3）网络信息</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BB%8E%E5%86%85%E6%A0%B8%E7%9C%8B-proc-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="toc-text">2.从内核看 proc 文件系统</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-seq-file-%E6%9C%BA%E5%88%B6"><span class="toc-text">3.seq_file 机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-proc-partitions-%E7%A4%BA%E4%BE%8B"><span class="toc-text">4. &#x2F;proc&#x2F;partitions 示例&#x2F;</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%EF%BC%9A"><span class="toc-text">参考：</span></a></li></ol></div><div class="widget-footer"><a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/><path d="M7 3.338A9.95 9.95 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5"/></g></svg><span>回到顶部</span></a></div></widget>
+
+
+</div></aside><div class='float-panel'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+
+
+<script type="text/javascript">
+  window.canonical = {"originalHost":null,"officialHosts":["localhost"],"encoded":""};
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+    tag_plugins: {
+      chat: Object.assign({"api":"https://siteinfo.listentothewind.cn/api/v1"}),
+    }
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":null,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+    loading: `https://api.iconify.design/eos-icons:three-dots-loading.svg?color=%231cd0fd`,
+  };
+  const deps = {
+    jquery: `https://gcore.jsdelivr.net/npm/jquery@3.7/dist/jquery.min.js`,
+    marked: `https://gcore.jsdelivr.net/npm/marked@13.0/lib/marked.umd.min.js`,
+    lazyload: `/%5Bobject%20Object%5D`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  
+  function RunItem() {
+    this.list = []; // 存放回调函数
+    this.start = () => {
+      for (var i = 0; i < this.list.length; i++) {
+        this.list[i].run();
+      }
+    };
+    this.push = (fn, name, setRequestAnimationFrame = true) => {
+      let myfn = fn
+      if (setRequestAnimationFrame) {
+        myfn = () => {
+          utils.requestAnimationFrame(fn)
+        }
+      }
+      var f = new Item(myfn, name);
+      this.list.push(f);
+    };
+    this.remove = (name) => {
+      for (let index = 0; index < this.list.length; index++) {
+        const e = this.list[index];
+        if (e.name == name) {
+          this.list.splice(index, 1);
+        }
+      }
+    }
+    // 构造一个可以run的对象
+    function Item(fn, name) {
+      // 函数名称
+      this.name = name || fn.name;
+      // run方法
+      this.run = () => {
+        try {
+          fn()
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    }
+  }
+
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')) {
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function () {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      const maxRetry = 3;
+      let retryCount = 0;
+
+      return new Promise((resolve, reject) => {
+        const load = () => {
+          utils.onLoading?.(el);
+
+          let timedOut = false;
+          const timeout = setTimeout(() => {
+            timedOut = true;
+            console.warn('[request] 超时:', url);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject('请求超时');
+            } else {
+              setTimeout(load, 1000);
+            }
+          }, 5000);
+
+          fetch(url).then(resp => {
+            if (timedOut) return;
+            clearTimeout(timeout);
+
+            if (!resp.ok) throw new Error('响应失败');
+            return resp;
+          }).then(data => {
+            if (timedOut) return;
+            utils.onLoadSuccess?.(el);
+            callback(data);
+            resolve(data);
+          }).catch(err => {
+            clearTimeout(timeout);
+            console.warn('[request] 错误:', err);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject(err);
+            } else {
+              setTimeout(load, 1000);
+            }
+          });
+        };
+
+        load();
+      });
+    },
+    requestWithoutLoading: (url, options = {}, maxRetry = 2, timeout = 5000) => {
+      return new Promise((resolve, reject) => {
+        let retryCount = 0;
+
+        const tryRequest = () => {
+          let timedOut = false;
+          const timer = setTimeout(() => {
+            timedOut = true;
+            if (++retryCount > maxRetry) reject('timeout');
+            else tryRequest();
+          }, timeout);
+
+          fetch(url, options)
+            .then(resp => {
+              clearTimeout(timer);
+              if (!resp.ok) throw new Error('bad response');
+              resolve(resp);
+            })
+            .catch(err => {
+              clearTimeout(timer);
+              if (++retryCount > maxRetry) reject(err);
+              else setTimeout(tryRequest, 500);
+            });
+        };
+
+        tryRequest();
+      });
+    },
+    /********************** requestAnimationFrame ********************************/
+    // 1、requestAnimationFrame 会把每一帧中的所有 DOM 操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
+    // 2、在隐藏或不可见的元素中，requestAnimationFrame 将不会进行重绘或回流，这当然就意味着更少的的 cpu，gpu 和内存使用量。
+    requestAnimationFrame: (fn) => {
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+      }
+      window.requestAnimationFrame(fn)
+    },
+    dark: {},
+  };
+
+  // utils.dark.mode 当前模式 dark or light
+  // utils.dark.toggle() 暗黑模式触发器
+  // utils.dark.push(callBack[,"callBackName"]) 传入触发器回调函数
+  utils.dark.method = {
+    toggle: new RunItem(),
+  };
+  utils.dark = Object.assign(utils.dark, {
+    push: utils.dark.method.toggle.push,
+  });
+</script>
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+<script async src="https://gcore.jsdelivr.net/npm/vanilla-lazyload@19.1/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+    callback_loaded: (el) => {
+      el.classList.add('loaded');
+      const wrapper = el.closest('.lazy-box');
+      const icon = wrapper?.querySelector('.lazy-icon');
+      if (icon) icon.remove();
+    }
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+
+  window.wrapLazyloadImages = (container) => {
+    if (typeof container === 'string') {
+      container = document.querySelector(container);
+    }
+    if (!container) return;
+    
+    const images = container.querySelectorAll('img');
+    images.forEach((img) => {
+      if (img.classList.contains('lazy')) return;
+
+      const src = img.getAttribute('src');
+      if (!src) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'lazy-box';
+
+      const newImg = img.cloneNode();
+      newImg.removeAttribute('src');
+      newImg.setAttribute('data-src', src);
+      newImg.classList.add('lazy');
+
+      const icon = document.createElement('div');
+      icon.className = 'lazy-icon';
+      if (def.loading) {
+        icon.style.backgroundImage = `url("${def.loading}")`;
+      }
+
+      wrapper.appendChild(newImg);
+      wrapper.appendChild(icon);
+
+      img.replaceWith(wrapper);
+    });
+
+    // 通知 LazyLoad 更新
+    if (window.lazyLoadInstance?.update) {
+      window.lazyLoadInstance.update();
+    }
+  }
+  
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.33.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    // applyThemeToGiscus(theme)
+  }
+
+  // FIXME: 这会导致无法使用 preferred_color_scheme 以外的主题
+  const applyThemeToGiscus = (theme) => {
+    // theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+    utils.dark.mode = newTheme === 'auto' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : newTheme;
+    utils.dark.method.toggle.start();
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    } else {
+      utils.dark.mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    utils.dark.method.toggle.start();
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"rating":{"js":"/js/services/rating.js","api":"https://star-vote.xaox.cc/api/rating"},"vote":{"js":"/js/services/vote.js","api":"https://star-vote.xaox.cc/api/vote"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"friends_and_posts":{"js":"/js/services/friends_and_posts.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"voice":{"js":"/js/plugins/voice.js"},"video":{"js":"/js/plugins/video.js"},"download-file":{"js":"/js/plugins/download-file.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"},"contributors":{"edit_this_page":{"_posts/":null,"wiki/stellar/":"https://github.com/xaoxuu/hexo-theme-stellar-docs/blob/main/"},"js":"/js/services/contributors.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else if (id == 'voice') {
+        ctx.voiceAudios = document.querySelectorAll('.voice>audio');
+        if (ctx.voiceAudios?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            createVoiceDom(ctx.voiceAudios);
+          });
+        }
+      } else if (id == 'video') {
+        ctx.videos = document.querySelectorAll('.video>video');
+        if (ctx.videos?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            videoEvents(ctx.videos);
+          });
+        }
+      } else if (id == 'download-file') {
+        ctx.files = document.querySelectorAll('.file');
+        if (ctx.files?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            downloadFileEvent(ctx.files);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+
+    // chat iphone time
+    let phoneTimes = document.querySelectorAll('.chat .status-bar .time');
+
+    if (phoneTimes.length > 0) {
+      NowTime();
+      var date = new Date();
+      var sec = date.getSeconds();
+      var firstAdjustInterval = setInterval(firstAdjustTime, 1000 * (60 - sec));
+    }
+
+    function firstAdjustTime() {
+      NowTime();
+      clearInterval(firstAdjustInterval);
+      setInterval(NowTime, 1000 * 60);
+    }
+
+    function NowTime() {
+      for (let i = 0; i < phoneTimes.length; ++i) {
+        var timeSpan = phoneTimes[i];
+        var date = new Date();
+        var hour = date.getHours();
+        var min = date.getMinutes();
+        timeSpan.innerHTML = check(hour) + ":" + check(min);
+      }
+    };
+
+    function check(val) {
+      if (val < 10) {
+        return ("0" + val);
+      }
+      return (val);
+    }
+
+    // chat quote
+    const chat_quote_obverser = new IntersectionObserver((entries, observer) => {
+      entries.filter((entry) => { return entry.isIntersecting }).sort((a, b) => a.intersectionRect.y !== b.intersectionRect.y ? a.intersectionRect.y - b.intersectionRect.y : a.intersectionRect.x - b.intersectionRect.x).forEach((entry, index) => {
+          observer.unobserve(entry.target);
+          setTimeout(() => {
+            entry.target.classList.add('quote-blink');
+            setTimeout(() => {
+              entry.target.classList.remove('quote-blink');
+            }, 1000);
+          }, Math.max(100, 16) * (index + 1));
+        });
+    });
+
+    var chatQuotes = document.querySelectorAll(".chat .talk .quote");
+    chatQuotes.forEach((quote) => {
+      quote.addEventListener('click', function () {
+        var chatCellDom = document.getElementById("quote-" + quote.getAttribute("quotedCellTag"));
+        if (chatCellDom) {
+          var chatDiv = chatCellDom.parentElement;
+          var mid = chatDiv.clientHeight / 2;
+          var offsetTop = chatCellDom.offsetTop;
+          if (offsetTop > mid - chatCellDom.clientHeight / 2) {
+            chatDiv.scrollTo({
+              top: chatCellDom.offsetTop - mid + chatCellDom.clientHeight / 2,
+              behavior: "smooth"
+            });
+          } else {
+            chatDiv.scrollTo({
+              top: 0,
+              behavior: "smooth"
+            });
+          }
+          chat_quote_obverser.observe(chatCellDom);
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://gcore.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error), .with-fancybox .atk-content img:not([atk-emoticon])';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const memos = document.getElementsByClassName('ds-memos');
+    if (memos != undefined && memos.length > 0) {
+      needFancybox = true;
+    }
+    const fancybox = document.getElementsByClassName('with-fancybox');
+    if (fancybox != undefined && fancybox.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `不能复制哦~`,
+        success_text: `竟没骗到你！复制成功`,
+        toast: `又被你小子复制了！🌈`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
