@@ -1,0 +1,1038 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.33.1" theme-name="Stellar" theme-version="1.33.1">
+  
+  
+  <meta name="generator" content="Hexo 8.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  <title>Linux内核双向链表的神级设计，为什么它能吊打传统实现 - 又是摸鱼的一天</title>
+
+  
+    <meta name="description" content="转载自：Linux内核双向链表的神级设计：为什么它能吊打传统实现？ Linux内核双向链表的神级设计：为什么它能吊打传统实现？在 Linux 内核中，链表堪称无处不在的 “万能连接器”，是构建内核复杂数据结构大厦的基石。从内存管理模块中对内存块的精细组织，到进程调度模块里对各个进程状态的有序维护，再到文件系统中对文件节点和目录结构的巧妙串联，链表都发挥着不可或缺的作用。 链表之所以能在Linux内">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux内核双向链表的神级设计，为什么它能吊打传统实现">
+<meta property="og:url" content="https://dkyou.github.io/2025/08/18/%E5%86%85%E6%A0%B8%E9%93%BE%E8%A1%A8/">
+<meta property="og:site_name" content="又是摸鱼的一天">
+<meta property="og:description" content="转载自：Linux内核双向链表的神级设计：为什么它能吊打传统实现？ Linux内核双向链表的神级设计：为什么它能吊打传统实现？在 Linux 内核中，链表堪称无处不在的 “万能连接器”，是构建内核复杂数据结构大厦的基石。从内存管理模块中对内存块的精细组织，到进程调度模块里对各个进程状态的有序维护，再到文件系统中对文件节点和目录结构的巧妙串联，链表都发挥着不可或缺的作用。 链表之所以能在Linux内">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_png/Lnwp73xHJzpdYW0KlHQO5xKqXXqh2cU4z6nQYcgr5bJnjetwDkWWaksBrreSRySxHw01g66GTAzLKBUT4v5ZzQ/640?wx_fmt=png&from=appmsg&watermark=1&tp=webp&wxfrom=5&wx_lazy=1#imgIndex=0">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_jpg/Lnwp73xHJzpdYW0KlHQO5xKqXXqh2cU4yYqfM8AlppRheiaBVAb2fliaOsFHiaXeadebNOrV0T1yUfnamibBvpCfibg/640?wx_fmt=jpeg&from=appmsg&watermark=1&tp=webp&wxfrom=5&wx_lazy=1#imgIndex=1">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_jpg/Lnwp73xHJzpdYW0KlHQO5xKqXXqh2cU4nMyQlscv07x0H2pBvGlgnuuDWa7ibRmYRjZ0VKN0ibKibVth1Io30iaAgw/640?wx_fmt=jpeg&from=appmsg&watermark=1&tp=webp&wxfrom=5&wx_lazy=1#imgIndex=2">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_png/Lnwp73xHJzpdYW0KlHQO5xKqXXqh2cU4bQ54yxPgvTZauO3t7PBNqDeKyCAlefe9Gfu1eOKsPbORbyAgMHnLibQ/640?wx_fmt=png&from=appmsg&watermark=1&tp=webp&wxfrom=5&wx_lazy=1#imgIndex=3">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_png/Lnwp73xHJzpdYW0KlHQO5xKqXXqh2cU46GUx9elmQRKvfwR0qHzIibDwjUJat4zFdU37nsYRrW9rAGecHqic9sVQ/640?wx_fmt=png&from=appmsg&watermark=1&tp=webp&wxfrom=5&wx_lazy=1#imgIndex=4">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_png/Lnwp73xHJzpdYW0KlHQO5xKqXXqh2cU4nGXO1UPVRglibibIribL1EqNgGEhf5DdIaQVvl9E5lC6LaQOW29fhkjcA/640?wx_fmt=png&from=appmsg&watermark=1&tp=webp&wxfrom=5&wx_lazy=1#imgIndex=5">
+<meta property="article:published_time" content="2025-08-17T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-03-16T03:17:33.743Z">
+<meta property="article:author" content="Dku">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="list">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://mmbiz.qpic.cn/mmbiz_png/Lnwp73xHJzpdYW0KlHQO5xKqXXqh2cU4z6nQYcgr5bJnjetwDkWWaksBrreSRySxHw01g66GTAzLKBUT4v5ZzQ/640?wx_fmt=png&from=appmsg&watermark=1&tp=webp&wxfrom=5&wx_lazy=1#imgIndex=0">
+  
+  
+  
+  <meta name="keywords" content="linux,list">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.33.1">
+
+
+  
+
+  
+
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dku","sameAs":[]},"dateCreated":"2025-08-18T00:00:00+08:00","dateModified":"2026-03-16T11:17:33+08:00","datePublished":"2025-08-18T00:00:00+08:00","description":"","headline":"Linux内核双向链表的神级设计，为什么它能吊打传统实现","mainEntityOfPage":{"@type":"WebPage","@id":"https://dkyou.github.io/2025/08/18/%E5%86%85%E6%A0%B8%E9%93%BE%E8%A1%A8/"},"publisher":{"@type":"Organization","name":"Dku","sameAs":[]},"url":"https://dkyou.github.io/2025/08/18/%E5%86%85%E6%A0%B8%E9%93%BE%E8%A1%A8/","keywords":"linux, list","thumbnailUrl":"https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/wallhaven-jx8r75.webp","image":1}</script>
+  
+</head>
+<body><div class="sitebg"><div class="siteblur"></div></div>
+
+<div class="l_body content" id="start" layout="post" type="tech" ><aside class="l_left"><div class="sidebg"></div><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大白鹅喝酒.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main">👀瞅啥呢！👀</div><div class="sub normal cap">今天又是摸鱼的一天！</div><div class="sub hover cap" style="opacity:0">可不摸鱼又干什么呢？</div></a></div></header>
+
+<div class="nav-area">
+
+<nav class="menu dis-select"><a class="nav-item active" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="文档" href="/wiki/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="探索" href="/explore/" style="color:#FA6400"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M20 12a8 8 0 1 1-16 0a8 8 0 0 1 16 0" opacity=".5"/><path fill="currentColor" d="M17.712 5.453c1.047-.193 2.006-.259 2.797-.152c.77.103 1.536.393 1.956 1.064c.446.714.312 1.542-.012 2.258c-.33.728-.918 1.499-1.672 2.268c-1.516 1.547-3.836 3.226-6.597 4.697c-2.763 1.472-5.495 2.484-7.694 2.92c-1.095.217-2.098.299-2.923.201c-.8-.095-1.6-.383-2.032-1.075c-.47-.752-.296-1.63.07-2.379c.375-.768 1.032-1.586 1.872-2.403L4 12.416c0 .219.083.71.168 1.146c.045.23.09.444.123.596c-.652.666-1.098 1.263-1.339 1.756c-.277.567-.208.825-.145.925c.072.116.305.305.937.38c.609.073 1.44.018 2.455-.183c2.02-.4 4.613-1.351 7.28-2.772c2.667-1.42 4.85-3.015 6.23-4.423c.694-.707 1.15-1.334 1.377-1.836c.233-.515.167-.75.107-.844c-.07-.112-.289-.294-.883-.374c-.542-.072-1.272-.041-2.163.112L16.87 5.656c.338-.101.658-.17.842-.203"/></svg></a><a class="nav-item" title="社交" href="/friends/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+
+<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/18/%E7%AE%80%E5%8D%95%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90glibc%E6%89%A9%E5%B1%95/"><span class="title">简单系统调用glibc扩展</span></a><a class="item title" href="/2025/08/18/%E7%AE%80%E5%8D%95%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90/"><span class="title">简单系统调用,glibc,buildroot,内核编译等杂项笔记-不完整</span></a><a class="item title" href="/2026/01/26/%E5%87%BD%E6%95%B0%E5%90%8D%E5%B0%B1%E6%98%AF%E5%87%BD%E6%95%B0%E7%9A%84%E6%8C%87%E9%92%88%E7%9A%84%E9%94%99%E8%AF%AF%E8%AF%B4%E6%B3%95/"><span class="title">函数名就是函数的指针的错误说法</span></a><a class="item title" href="/2025/08/18/%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93(DL)demo/"><span class="title">动态链接库（DL）demo</span></a><a class="item title" href="/2025/08/18/%E5%86%85%E6%A0%B8%E9%93%BE%E8%A1%A8/"><span class="title">Linux内核双向链表的神级设计，为什么它能吊打传统实现</span></a><a class="item title" href="/2025/08/18/Linux%E5%B8%A7%E7%BC%93%E5%86%B2Framebuffer/"><span class="title">Linux帧缓冲Framebuffer</span></a><a class="item title" href="/2026/01/02/%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA/linux%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B/"><span class="title">linux内核编译过程</span></a><a class="item title" href="/2025/08/18/jtank%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF/"><span class="title">jtank学习路线</span></a><a class="item title" href="/2026/01/24/Office%E5%90%AF%E5%8A%A8%E4%B8%8D%E4%BA%86%E5%BC%B9%E7%AA%97%E9%94%99%E8%AF%AF%E4%BB%A3%E7%A0%810x426-0x0/"><span class="title">Office启动不了，弹窗错误代码0x426-0x0</span></a><a class="item title" href="/2024/09/18/Linux%20proc%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/"><span class="title">proc 文件系统</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="https://github.com/dkyou" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="mailto:2328727915@qq.com" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/gmail.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="https://space.bilibili.com/" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/bilibili.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="/atom.xml" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/rss.svg" height="20" style="opacity:0.9;"/></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top"><img class="lazy bg" data-src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/wallhaven-jx8r75.webp">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/">嵌入式</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-08-17T16:00:00.000Z">2025-08-18</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2026-03-16T03:17:33.743Z">2026-03-16</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>Linux内核双向链表的神级设计，为什么它能吊打传统实现</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><p>转载自：<a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/XG9L1Iyqo-tRiDEzJ9QYWQ">Linux内核双向链表的神级设计：为什么它能吊打传统实现？</a></p>
+<h1 id="Linux内核双向链表的神级设计：为什么它能吊打传统实现？"><a href="#Linux内核双向链表的神级设计：为什么它能吊打传统实现？" class="headerlink" title="Linux内核双向链表的神级设计：为什么它能吊打传统实现？"></a>Linux内核双向链表的神级设计：为什么它能吊打传统实现？</h1><p>在 Linux 内核中，链表堪称无处不在的 “万能连接器”，是构建内核复杂数据结构大厦的基石。从内存管理模块中对内存块的精细组织，到进程调度模块里对各个进程状态的有序维护，再到文件系统中对文件节点和目录结构的巧妙串联，链表都发挥着不可或缺的作用。</p>
+<p>链表之所以能在Linux内核中如此 “神通广大”，源于其独特的数据结构特性。它采用动态内存分配方式，能根据实际需求灵活地增加或删除节点，这种高效的增删操作使得内核在处理各种动态变化的数据时游刃有余。同时，链表对内存的使用极为灵活，无需像数组那样预先分配连续的大块内存空间，这大大提高了内存的利用率，尤其适合内核这种对资源高效利用要求极高的环境 。</p>
+<p>那么，Linux 内核是如何突破这一困境，实现双向链表的 “华丽转身” 呢？</p>
+<p>让我们带着这个疑问，继续深入~</p>
+<h1 id="一、-传统链表的坑"><a href="#一、-传统链表的坑" class="headerlink" title="一、 传统链表的坑"></a>一、 传统链表的坑</h1><p>传统双向链表在 C 语言中的实现，其基本思路是将数据字段与 prev&#x2F;next 指针封装在同一个结构体中，形成一个紧密结合的数据节点。例如，我们要创建一个存储整数的双向链表，可能会这样定义节点结构体：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">struct traditional_list_node &#123;    int data;    struct traditional_list_node *prev;    struct traditional_list_node *next;&#125;;</span><br><span class="line">struct traditional_list &#123;    struct traditional_list_node *head;    struct traditional_list_node *tail;&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>在这个定义中，<code>data</code>字段用于存储整数数据，<code>prev</code>和<code>next</code>指针分别指向前一个和后一个节点，而<code>traditional_list</code>结构体则用于管理整个链表，包含头指针<code>head</code>和尾指针<code>tail</code> 。</p>
+<p>当我们要对链表进行操作，如插入、删除或遍历节点时，都需要针对这个特定的结构体编写相应的函数。比如插入节点的函数：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">void traditional_list_insert(struct traditional_list *list, int new_data) &#123;    struct traditional_list_node *new_node = (struct traditional_list_node *)malloc(sizeof(struct traditional_list_node));    new_node-&gt;data = new_data;    new_node-&gt;prev = NULL;    new_node-&gt;next = list-&gt;head;    if (list-&gt;head != NULL) &#123;        list-&gt;head-&gt;prev = new_node;    &#125;    list-&gt;head = new_node;    if (list-&gt;tail == NULL) &#123;        list-&gt;tail = new_node;    &#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这种实现方式虽然直观易懂，但局限性也非常明显。一旦我们需要存储其他类型的数据，比如字符串、结构体等，就必须重新定义链表节点和操作函数。以存储字符串为例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">struct traditional_list_node_str &#123;    char *data;    struct traditional_list_node_str *prev;    struct traditional_list_node_str *next;&#125;;</span><br><span class="line">struct traditional_list_str &#123;    struct traditional_list_node_str *head;    struct traditional_list_node_str *tail;&#125;;</span><br><span class="line">void traditional_list_insert_str(struct traditional_list_str *list, char *new_data) &#123;    struct traditional_list_node_str *new_node = (struct traditional_list_node_str *)malloc(sizeof(struct traditional_list_node_str));    new_node-&gt;data = strdup(new_data);    new_node-&gt;prev = NULL;    new_node-&gt;next = list-&gt;head;    if (list-&gt;head != NULL) &#123;        list-&gt;head-&gt;prev = new_node;    &#125;    list-&gt;head = new_node;    if (list-&gt;tail == NULL) &#123;        list-&gt;tail = new_node;    &#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，仅仅因为数据类型的改变，我们就需要重复编写大量几乎相同的代码，这不仅繁琐易错，而且严重违反了代码复用的原则。在追求高效、简洁和可维护性的 Linux 内核开发中，这种方式显然是行不通的。那么，Linux 内核是如何另辟蹊径，巧妙地解决这一难题的呢？这就引出了 Linux 内核双向链表那令人拍案叫绝的 “数据与逻辑分离” 设计理念，接下来，就让我们一同揭开它神秘的面纱。</p>
+<h2 id="二：-颠覆传统的设计哲学：把节点-“嵌”-进数据里"><a href="#二：-颠覆传统的设计哲学：把节点-“嵌”-进数据里" class="headerlink" title="二： 颠覆传统的设计哲学：把节点 “嵌” 进数据里"></a>二： 颠覆传统的设计哲学：把节点 “嵌” 进数据里</h2><h3 id="2-1-核心结构体-list-head"><a href="#2-1-核心结构体-list-head" class="headerlink" title="2.1  核心结构体 list_head"></a>2.1  核心结构体 list_head</h3><p><img src="https://mmbiz.qpic.cn/mmbiz_png/Lnwp73xHJzpdYW0KlHQO5xKqXXqh2cU4z6nQYcgr5bJnjetwDkWWaksBrreSRySxHw01g66GTAzLKBUT4v5ZzQ/640?wx_fmt=png&from=appmsg&watermark=1&tp=webp&wxfrom=5&wx_lazy=1#imgIndex=0" alt="图片"></p>
+<p>在 Linux 内核的双向链表实现中，<code>list_head</code>结构体堪称极简主义设计的典范，仅由两个指针字段构成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">struct list_head &#123;    struct list_head *next;    struct list_head *prev;&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>这里，<code>next</code>指针指向链表中的下一个节点，<code>prev</code>指针则指向前一个节点 。值得注意的是，<code>list_head</code>结构体中没有任何数据域，这与我们常见的链表节点定义大相径庭。它的存在，纯粹是为了构建链表的连接关系，就像一座桥梁，只负责连接两岸，而不承载具体的货物 。</p>
+<p>在 Linux 内核中，<code>list_head</code>结构体不仅是链表节点的基本构成，更是链表表头的代表。当我们初始化一个链表时，会使用<code>LIST_HEAD</code>宏：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#define LIST_HEAD(name) \    struct list_head name = &#123; &amp;(name), &amp;(name) &#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过这个宏定义的链表头，其<code>next</code>和<code>prev</code>指针都指向自身，形成了一个自引用的循环双向链表。这意味着，即使链表中暂时没有任何数据节点，它依然是一个完整的链表结构，只是其中的节点数量为零而已 。</p>
+<p>这种设计带来了诸多好处。一方面，极简的<code>list_head</code>结构体极大地节省了内存空间，尤其在内存资源紧张的内核环境中，每一个字节的节省都意义重大。另一方面，将链表的维护逻辑与数据类型彻底分离，使得链表操作更加通用和灵活。无论内核中需要管理何种类型的数据，都可以借助<code>list_head</code>结构体构建链表，而无需为不同数据类型重复编写链表操作代码 。</p>
+<h3 id="2-2-关键创新：数据结构嵌入链表节点，而非相反"><a href="#2-2-关键创新：数据结构嵌入链表节点，而非相反" class="headerlink" title="2.2  关键创新：数据结构嵌入链表节点，而非相反"></a>2.2  关键创新：数据结构嵌入链表节点，而非相反</h3><p>传统链表的设计思路是将数据直接封装在链表节点内部，形成 “节点包含数据” 的结构模式。这种模式虽然直观，但却限制了链表的通用性。而 Linux 内核双向链表则反其道而行之，采用了 “数据包含节点” 的创新设计。</p>
+<p>具体来说，Linux 内核通过将<code>list_head</code>结构体作为成员变量，嵌入到任意用户自定义的数据结构体中。例如，假设我们有一个表示进程描述符的结构体<code>task_struct</code>，可以这样定义：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">struct task_struct &#123;    // 进程ID    pid_t pid;    // 进程名称    char name[16];    // 其他进程相关的业务字段    // ...    // 用于链表连接的节点    struct list_head list;&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>在这个结构体中，<code>list</code>字段就是一个<code>list_head</code>类型的成员，它为<code>task_struct</code>结构体提供了接入链表的能力。通过这种方式，任何数据结构，只要包含<code>list_head</code>成员，都可以被视为链表的一个节点，从而方便地进行链表操作，如插入、删除和遍历等 。</p>
+<p>这种设计思路的转变，彻底打破了数据类型与链表操作之间的束缚。无论数据结构多么复杂，无论其包含何种类型的数据，都可以通过统一的链表接口进行管理。这就好比为所有的数据结构提供了一个通用的 “挂钩”，使得它们能够轻松地挂接到链表这根 “绳子” 上，实现了链表操作的高度抽象和复用 。</p>
+<p>Linux 内核双向链表能够实现数据与链表节点的灵活关联，离不开两个关键宏的支持：<code>offsetof</code>和<code>container_of</code>。这两个宏堪称链表实现的 “幕后英雄”，它们协同工作，完成了从链表节点到完整数据结构体的 “神奇转换” 。</p>
+<p><code>offsetof</code>宏的定义如下：</p>
+<p>- </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#define offsetof(TYPE, MEMBER) ((size_t)&amp;((TYPE *)0)-&gt;MEMBER)</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://mmbiz.qpic.cn/mmbiz_jpg/Lnwp73xHJzpdYW0KlHQO5xKqXXqh2cU4yYqfM8AlppRheiaBVAb2fliaOsFHiaXeadebNOrV0T1yUfnamibBvpCfibg/640?wx_fmt=jpeg&from=appmsg&watermark=1&tp=webp&wxfrom=5&wx_lazy=1#imgIndex=1" alt="图片"></p>
+<p>它的作用是计算<code>MEMBER</code>成员在<code>TYPE</code>类型结构体中的偏移量。其原理是通过将<code>TYPE</code>类型的指针强制转换为 0 地址，然后访问<code>MEMBER</code>成员，从而得到该成员在结构体中的相对地址，即偏移量 。</p>
+<p><code>container_of</code>宏则基于<code>offsetof</code>宏的结果，实现了从链表节点指针到完整数据结构体指针的反向推导，定义如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#define container_of(ptr, type, member) (&#123;\    const typeof( ((type *)0)-&gt;member ) *__mptr = (ptr);\    (type *)( (char *)__mptr - offsetof(type,member) );&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>这里，<code>ptr</code>是指向<code>list_head</code>节点的指针，<code>type</code>是包含<code>list_head</code>成员的数据结构体类型，<code>member</code>是<code>list_head</code>成员在<code>type</code>结构体中的名称 。</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_jpg/Lnwp73xHJzpdYW0KlHQO5xKqXXqh2cU4nMyQlscv07x0H2pBvGlgnuuDWa7ibRmYRjZ0VKN0ibKibVth1Io30iaAgw/640?wx_fmt=jpeg&from=appmsg&watermark=1&tp=webp&wxfrom=5&wx_lazy=1#imgIndex=2" alt="图片"></p>
+<p>例如，在前面定义的<code>task_struct</code>结构体中，如果我们已知一个指向<code>list</code>节点的指针<code>list_ptr</code>，想要获取对应的<code>task_struct</code>结构体指针，可以这样使用<code>container_of</code>宏：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">struct list_head *list_ptr;// 假设list_ptr已经指向某个链表节点struct task_struct *task_ptr = container_of(list_ptr, struct task_struct, list);</span><br></pre></td></tr></table></figure>
+
+<p>通过这种方式，<code>container_of</code>宏利用<code>list_head</code>节点的地址和偏移量，准确地计算出了<code>task_struct</code>结构体的起始地址，从而让我们能够从链表节点访问到完整的数据内容 。</p>
+<p><code>offsetof</code>和<code>container_of</code>宏的精妙设计，是 Linux 内核链表实现泛型能力的关键所在。它们为链表操作提供了底层的技术支撑，使得内核能够在不依赖具体数据类型的前提下，高效地管理各种数据结构，真正实现了链表与数据的 “无缝对接”。</p>
+<h2 id="三：-极简高效的核心操作：内核级-API-的-“工具箱”"><a href="#三：-极简高效的核心操作：内核级-API-的-“工具箱”" class="headerlink" title="三： 极简高效的核心操作：内核级 API 的 “工具箱”"></a>三： 极简高效的核心操作：内核级 API 的 “工具箱”</h2><h3 id="3-1-链表初始化"><a href="#3-1-链表初始化" class="headerlink" title="3.1  链表初始化"></a>3.1  链表初始化</h3><p>在 Linux 内核中，双向链表的初始化操作堪称简洁高效的典范，主要通过两种方式实现，分别是宏定义和函数调用。</p>
+<p>第一种方式是利用<code>LIST_HEAD</code>宏，它可以直接定义并初始化一个链表头，语法如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LIST_HEAD(my_list);</span><br></pre></td></tr></table></figure>
+
+<p>这行代码等价于：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">struct list_head my_list = &#123; &amp;my_list, &amp;my_list &#125;;</span><br></pre></td></tr></table></figure>
+
+<p>通过这种方式，<code>my_list</code>的<code>next</code>和<code>prev</code>指针都指向自身，形成了一个自引用的循环链表，即一个空链表 。这种初始化方式非常适合在代码中静态地定义链表，例如在定义全局变量时使用，它简洁明了，并且在编译时就完成了初始化，没有额外的运行时开销 。</p>
+<p>第二种方式是使用<code>INIT_LIST_HEAD</code>函数，用于动态地初始化一个已经存在的<code>list_head</code>变量，函数定义如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">static inline void INIT_LIST_HEAD(struct list_head *list)&#123;    WRITE_ONCE(list-&gt;next, list);    WRITE_ONCE(list-&gt;prev, list);&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在使用时，我们可以这样调用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">struct list_head my_list;INIT_LIST_HEAD(&amp;my_list);</span><br></pre></td></tr></table></figure>
+
+<p>这种方式通常用于在函数内部动态创建链表时，先定义一个<code>list_head</code>变量，然后通过<code>INIT_LIST_HEAD</code>函数进行初始化 。无论是宏定义还是函数调用，初始化后的链表头都处于一种特殊的 “自循环” 状态，这为后续的链表操作奠定了基础，使得链表在空状态下也能保持统一的操作接口，大大简化了链表的管理逻辑 。</p>
+<h3 id="3-2-增删节点：无需遍历"><a href="#3-2-增删节点：无需遍历" class="headerlink" title="3.2  增删节点：无需遍历"></a>3.2  增删节点：无需遍历</h3><p>在 Linux 内核双向链表中，插入节点的操作由<code>list_add</code>和<code>list_add_tail</code>两个函数完成，它们的底层实现都依赖于内核内部的<code>__list_add</code>函数 。<code>__list_add</code>函数的定义如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">static inline void __list_add(struct list_head *new,                              struct list_head *prev,                              struct list_head *next)&#123;    next-&gt;prev = new;    new-&gt;next = next;    new-&gt;prev = prev;    prev-&gt;next = new;&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/Lnwp73xHJzpdYW0KlHQO5xKqXXqh2cU4bQ54yxPgvTZauO3t7PBNqDeKyCAlefe9Gfu1eOKsPbORbyAgMHnLibQ/640?wx_fmt=png&from=appmsg&watermark=1&tp=webp&wxfrom=5&wx_lazy=1#imgIndex=3" alt="图片"></p>
+<p>这个函数的作用是将新节点<code>new</code>插入到<code>prev</code>和<code>next</code>两个节点之间，通过直接修改指针的指向，高效地完成节点插入操作 。</p>
+<p><code>list_add</code>函数将新节点插入到链表表头之后，也就是头部插入，定义如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">static inline void list_add(struct list_head *new, struct list_head *head)&#123;    __list_add(new, head, head-&gt;next);&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在实际使用中，假设我们有一个链表头<code>my_list</code>和一个新节点<code>new_node</code>，可以这样调用<code>list_add</code>函数：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">list_add(&amp;new_node, &amp;my_list);</span><br></pre></td></tr></table></figure>
+
+<p>这样，<code>new_node</code>就被插入到了<code>my_list</code>表头之后，成为链表的第一个有效节点 。</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/Lnwp73xHJzpdYW0KlHQO5xKqXXqh2cU46GUx9elmQRKvfwR0qHzIibDwjUJat4zFdU37nsYRrW9rAGecHqic9sVQ/640?wx_fmt=png&from=appmsg&watermark=1&tp=webp&wxfrom=5&wx_lazy=1#imgIndex=4" alt="图片"></p>
+<p><code>list_add_tail</code>函数则将新节点插入到链表表头之前，即尾部插入，定义如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">static inline void list_add_tail(struct list_head *new, struct list_head *head)&#123;    __list_add(new, head-&gt;prev, head);&#125;</span><br></pre></td></tr></table></figure>
+
+<p>同样，使用时可以这样调用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">list_add_tail(&amp;new_node, &amp;my_list);</span><br></pre></td></tr></table></figure>
+
+<p>此时，<code>new_node</code>被插入到了<code>my_list</code>表头之前，成为链表的最后一个节点 。</p>
+<p>这两个函数的精妙之处在于，它们在插入节点时都无需遍历整个链表，直接通过修改指针即可完成操作，时间复杂度为 O (1)。这使得链表在处理频繁的节点插入操作时，能够保持极高的效率，充分体现了双向链表在动态数据管理方面的优势 。</p>
+<p>当需要从链表中删除节点时，Linux 内核提供了<code>list_del</code>函数，其定义如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">static inline void list_del(struct list_head *entry)&#123;    __list_del(entry-&gt;prev, entry-&gt;next);    entry-&gt;next = LIST_POISON1;    entry-&gt;prev = LIST_POISON2;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里，<code>__list_del</code>函数负责将待删除节点<code>entry</code>从链表中摘除，通过修改<code>entry</code>前后节点的指针，使其不再指向<code>entry</code>，从而实现节点的删除 。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">static inline void __list_del(struct list_head * prev, struct list_head * next)&#123;    next-&gt;prev = prev;    prev-&gt;next = next;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在<code>list_del</code>函数中，删除节点后，还将<code>entry</code>的<code>next</code>和<code>prev</code>指针分别赋值为<code>LIST_POISON1</code>和<code>LIST_POISON2</code>，这两个特殊值通常是内核定义的非法指针值，用于标记该节点已从链表中删除。这样做的目的是为了防止程序在后续操作中误访问已删除的节点，提高代码的安全性和健壮性 。</p>
+<p>需要注意的是，<code>list_del</code>函数仅仅断开了节点与链表的链接，并不会释放节点所占用的内存。这是因为在内核中，内存的释放通常需要更谨慎的处理，可能涉及到内存池管理、引用计数等复杂机制。因此，在调用<code>list_del</code>函数后，如果节点不再需要，调用者需要手动释放节点的内存 。</p>
+<p>另外，内核还提供了<code>list_del_init</code>函数，它在删除节点后会重新初始化该节点的<code>next</code>和<code>prev</code>指针，使其再次指向自身，将节点恢复到初始化时的状态，便于后续重新插入链表 。<code>list_del_init</code>函数的定义如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">static inline void list_del_init(struct list_head *entry)&#123;    __list_del_entry(entry);    INIT_LIST_HEAD(entry);&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中，<code>__list_del_entry</code>函数与<code>__list_del</code>函数功能类似，都是用于断开节点与链表的链接 。通过<code>list_del</code>和<code>list_del_init</code>函数，Linux 内核实现了高效且安全的链表节点删除操作，同时兼顾了内存管理的灵活性和代码的健壮性 。</p>
+<h3 id="3-3-链表遍历：两种宏定义"><a href="#3-3-链表遍历：两种宏定义" class="headerlink" title="3.3  链表遍历：两种宏定义"></a>3.3  链表遍历：两种宏定义</h3><h4 id="3-3-1-list-for-each：遍历链表节点"><a href="#3-3-1-list-for-each：遍历链表节点" class="headerlink" title="3.3.1  list_for_each：遍历链表节点"></a>3.3.1  list_for_each：遍历链表节点</h4><p>在 Linux 内核双向链表的操作中，遍历链表是一项常见的任务，<code>list_for_each</code>宏提供了一种基础的遍历方式 。其定义如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#define list_for_each(pos, head) \    for (pos = (head)-&gt;next; &amp;pos != (head); pos = pos-&gt;next)</span><br></pre></td></tr></table></figure>
+
+<p>这里，<code>pos</code>是一个<code>list_head</code>类型的指针，用作遍历的游标；<code>head</code>则是链表头指针 。在使用<code>list_for_each</code>宏时，我们可以这样遍历链表：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">struct list_head *pos, *my_list;list_for_each(pos, my_list) &#123;    // 在此处对pos指向的节点进行操作&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在循环体中，<code>pos</code>依次指向链表中的每个节点（不包括链表头本身），通过<code>pos</code>我们可以访问到每个节点的<code>next</code>和<code>prev</code>指针，从而对链表结构进行操作 。例如，我们可以统计链表中节点的数量：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">struct list_head *pos, *my_list;int count = 0;list_for_each(pos, my_list) &#123;    count++;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然而，<code>list_for_each</code>宏也存在一定的局限性。由于它只能获取到<code>list_head</code>类型的节点指针，无法直接访问到用户自定义数据结构体中的内容。如果我们需要访问用户数据，就必须通过<code>container_of</code>宏进行转换，这无疑增加了代码的复杂性 。此外，在使用<code>list_for_each</code>宏遍历链表的过程中，如果直接删除当前遍历到的节点，会导致后续节点的指针失效，从而引发程序错误 。因此，<code>list_for_each</code>宏更适合那些仅需要对链表结构进行操作，而不涉及用户数据访问和节点删除的场景 。</p>
+<h4 id="3-3-2-list-for-each-entry：直接获取用户数据"><a href="#3-3-2-list-for-each-entry：直接获取用户数据" class="headerlink" title="3.3.2  list_for_each_entry：直接获取用户数据"></a>3.3.2  list_for_each_entry：直接获取用户数据</h4><p>为了克服<code>list_for_each</code>宏的局限性，Linux 内核提供了更为强大的<code>list_for_each_entry</code>宏，它能够在遍历链表的同时，直接获取到用户自定义数据结构体的指针 。</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/Lnwp73xHJzpdYW0KlHQO5xKqXXqh2cU4nGXO1UPVRglibibIribL1EqNgGEhf5DdIaQVvl9E5lC6LaQOW29fhkjcA/640?wx_fmt=png&from=appmsg&watermark=1&tp=webp&wxfrom=5&wx_lazy=1#imgIndex=5" alt="图片"></p>
+<p><code>list_for_each_entry</code>宏的定义如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#define list_for_each_entry(pos, head, member) \    for (pos = list_entry((head)-&gt;next, typeof(*pos), member); \         &amp;pos-&gt;member != (head); \         pos = list_entry(pos-&gt;member.next, typeof(*pos), member))</span><br></pre></td></tr></table></figure>
+
+<p>在这个宏定义中，<code>pos</code>是指向用户自定义数据结构体的指针，<code>head</code>是链表头指针，<code>member</code>是<code>list_head</code>类型成员在用户数据结构体中的名称 。例如，对于前面定义的<code>task_struct</code>结构体：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">struct task_struct &#123;    pid_t pid;    char name[16];    struct list_head list;&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>我们可以使用<code>list_for_each_entry</code>宏来遍历链表并访问每个<code>task_struct</code>结构体的内容：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">struct task_struct *task;struct list_head my_list;list_for_each_entry(task, &amp;my_list, list) &#123;    // 直接访问task的成员，如task-&gt;pid, task-&gt;name&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在循环体中，<code>task</code>直接指向<code>task_struct</code>结构体，我们可以方便地访问其中的<code>pid</code>、<code>name</code>等成员，无需手动进行指针转换，大大提高了代码的可读性和便利性 。</p>
+<p>此外，在实际应用中，我们有时需要在遍历链表的过程中删除当前节点，这对于普通的遍历宏来说是非常危险的，容易导致指针失效和程序崩溃 。为了解决这个问题，Linux 内核提供了<code>list_for_each_entry_safe</code>宏，它通过提前保存下一个节点的地址，确保在删除当前节点时，遍历过程不会受到影响 。<code>list_for_each_entry_safe</code>宏的定义如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#define list_for_each_entry_safe(pos, n, head, member) \    for (pos = list_entry((head)-&gt;next, typeof(*pos), member), \         n = list_entry(pos-&gt;member.next, typeof(*pos), member); \         &amp;pos-&gt;member != (head); \         pos = n, n = list_entry(n-&gt;member.next, typeof(*n), member))</span><br></pre></td></tr></table></figure>
+
+<p>这里，<code>pos</code>是当前遍历的节点指针，<code>n</code>是用于保存下一个节点指针的临时变量 。使用<code>list_for_each_entry_safe</code>宏，我们可以安全地在遍历过程中删除节点：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">struct task_struct *task, *next;struct list_head my_list;list_for_each_entry_safe(task, next, &amp;my_list, list) &#123;    if (/* 满足某个删除条件 */) &#123;        list_del(&amp;task-&gt;list);        // 释放task的内存或进行其他操作    &#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在上述代码中，即使在删除<code>task</code>节点后，由于<code>next</code>已经提前保存了下一个节点的地址，遍历过程仍然能够顺利进行，不会出现指针错误 。<code>list_for_each_entry</code>和<code>list_for_each_entry_safe</code>宏的出现，极大地丰富了 Linux 内核链表的遍历操作，使得链表在处理复杂业务逻辑时更加灵活和安全 。</p>
+<h2 id="四：-实战：双向链表如何管理进程？"><a href="#四：-实战：双向链表如何管理进程？" class="headerlink" title="四： 实战：双向链表如何管理进程？"></a>四： 实战：双向链表如何管理进程？</h2><p>Linux中所有进程通过<code>task_struct</code>的<code>tasks</code>成员（<code>list_head</code>类型）组成全局循环链表，链表头为<code>init_task</code>（0号进程）。所有进程管理的核心操作，本质都是对这个链表的增、删、遍历。</p>
+<p>前面我们讲完了Linux内核双向链表的设计和API，接下来我们结合<strong>真实内核代码片段</strong>，拆解双向链表在进程管理中的实战应用——从进程创建时加入链表，到进程遍历、退出时从链表移除，让“理论”落地为可感知的代码逻辑。</p>
+<h3 id="4-1-进程创建：新进程如何“加入”全局链表？"><a href="#4-1-进程创建：新进程如何“加入”全局链表？" class="headerlink" title="4.1  进程创建：新进程如何“加入”全局链表？"></a>4.1  进程创建：新进程如何“加入”全局链表？</h3><p>在Linux内核的进程管理体系中，双向链表发挥着核心作用，而<code>task_struct</code>结构体则是这一体系的关键枢纽 。每个进程在内核中都由一个<code>task_struct</code>结构体来描述，它就像是进程的 “身份证”，记录了进程的所有关键信息，如进程 ID（PID）、进程状态、内存映射、文件描述符表等 。</p>
+<p>在<code>task_struct</code>结构体中，有一个<code>list_head</code>类型的成员，名为<code>tasks</code>，它是实现进程链表的关键 。通过这个成员，所有的<code>task_struct</code>结构体被链接成一个全局的循环双向链表，其中链表的头节点是<code>init_task</code>，也就是 0 号进程，也被称为<code>swapper</code>进程 。这个特殊的进程是系统启动时创建的第一个进程，它在系统运行过程中始终存在，负责管理系统的一些核心资源和调度任务 。</p>
+<p><strong>实战核心：新进程插入链表的代码逻辑</strong></p>
+<p>当我们调用<code>fork()</code>创建新进程时，内核最终会调用<code>copy_process()</code>函数，其中关键一步就是将新进程的<code>task_struct</code>插入全局进程链表。核心代码片段如下（简化自Linux内核源码）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">// 新进程创建的核心函数（简化版）static struct task_struct *copy_process(unsigned long clone_flags,                                        unsigned long stack_start,                                        struct pt_regs *regs)&#123;    struct task_struct *p;</span><br><span class="line">    // 1. 为新进程分配task_struct结构体（内核中常用slab分配器）    p = kmem_cache_alloc(task_struct_cachep, GFP_KERNEL);    if (!p)        return NULL;</span><br><span class="line">    // 2. 初始化新进程的tasks链表节点（list_head类型）    INIT_LIST_HEAD(&amp;p-&gt;tasks);</span><br><span class="line">    // 3. 其他初始化：设置PID、继承父进程资源、初始化进程状态等    // ...（省略大量初始化逻辑）</span><br><span class="line">    // 4. 将新进程插入全局进程链表（头部插入或尾部插入，此处用尾部）    // init_task.tasks 是全局进程链表的表头    list_add_tail(&amp;p-&gt;tasks, &amp;init_task.tasks);</span><br><span class="line">    return p;&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>第一步先为新进程分配<code>task_struct</code>内存，这是进程的“骨架”；</li>
+<li>第二步用<code>INIT_LIST_HEAD</code>初始化<code>tasks</code>节点，使其成为自引用的空节点，为后续加入链表做准备；</li>
+<li>最后调用<code>list_add_tail</code>，将新进程的<code>tasks</code>节点插入<code>init_task.tasks</code>链表的尾部——这一步就完成了“新进程加入系统全局链表”的核心操作，从此内核就能通过遍历这个链表找到该进程。</li>
+</ol>
+<p><strong>补充：遍历所有进程的实战代码</strong></p>
+<p>内核提供了<code>for_each_process()</code>宏，其本质就是封装了<code>list_for_each_entry</code>，用于遍历全局进程链表。我们可以用它实现“打印系统中所有进程PID”的功能：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">// 遍历所有进程并打印PID（内核模块中可直接使用）void print_all_processes(void)&#123;    struct task_struct *p;</span><br><span class="line">    // for_each_process宏：遍历init_task.tasks链表中的所有task_struct    for_each_process(p) &#123;        printk(KERN_INFO &quot;Process PID: %d, Name: %s\n&quot;, p-&gt;pid, p-&gt;comm);    &#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中<code>for_each_process</code>的宏定义就是对链表遍历宏的封装，源码如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;br class=&quot;Apple-interchange-newline&quot;&gt;&lt;div&gt;&lt;/div&gt;#define for_each_process(p) \    list_for_each_entry(p, &amp;init_task.tasks, tasks)</span><br></pre></td></tr></table></figure>
+
+<p>可见，遍历所有进程的底层逻辑，就是我们前面讲的<code>list_for_each_entry</code>——通过<code>init_task.tasks</code>表头，遍历每个<code>task_struct</code>的<code>tasks</code>成员，直接拿到完整的进程描述符。</p>
+<p>在 Linux 内核的进程管理体系中，双向链表发挥着核心作用，而<code>task_struct</code>结构体则是这一体系的关键枢纽 。每个进程在内核中都由一个<code>task_struct</code>结构体来描述，它就像是进程的 “身份证”，记录了进程的所有关键信息，如进程 ID（PID）、进程状态、内存映射、文件描述符表等 。</p>
+<p>在<code>task_struct</code>结构体中，有一个<code>list_head</code>类型的成员，名为<code>tasks</code>，它是实现进程链表的关键 。通过这个成员，所有的<code>task_struct</code>结构体被链接成一个全局的循环双向链表，其中链表的头节点是<code>init_task</code>，也就是 0 号进程，也被称为<code>swapper</code>进程 。这个特殊的进程是系统启动时创建的第一个进程，它在系统运行过程中始终存在，负责管理系统的一些核心资源和调度任务 。</p>
+<p>例如，当一个新进程被创建时，内核会为其分配一个<code>task_struct</code>结构体，并将其<code>tasks</code>成员插入到进程链表中 。具体来说，内核会调用<code>list_add_tail</code>函数，将新进程的<code>tasks</code>节点添加到<code>init_task.tasks</code>的前面，使其成为链表的最后一个节点 。这样，所有进程就通过<code>tasks</code>链表紧密地联系在一起，内核可以方便地对它们进行统一管理和调度 。</p>
+<p>通过<code>for_each_process</code>宏，内核可以遍历整个进程链表，对每个进程进行操作。这个宏的实现基于<code>list_for_each_entry</code>宏，它从<code>init_task</code>开始，依次访问链表中的每个<code>task_struct</code>结构体，直到再次回到<code>init_task</code>，从而实现对所有进程的遍历 。在遍历过程中，内核可以检查每个进程的状态、优先级等信息，根据系统的需求进行相应的调度决策 。比如，当系统需要进行进程调度时，内核会遍历进程链表，查找处于可运行状态（<code>TASK_RUNNING</code>）且优先级最高的进程，将 CPU 资源分配给它 。</p>
+<h3 id="4-2-运行队列：优先级链表的“精准调度”"><a href="#4-2-运行队列：优先级链表的“精准调度”" class="headerlink" title="4.2  运行队列：优先级链表的“精准调度”"></a>4.2  运行队列：优先级链表的“精准调度”</h3><p>在进程调度的实际场景中，Linux 内核引入了运行队列（runqueue）机制，进一步优化了进程的调度效率 。运行队列是一个双向循环链表，它容纳了系统中所有处于可运行状态（<code>TASK_RUNNING</code>）的进程 。</p>
+<p>在 Linux 2.6 内核之前，所有可运行进程都被放在同一个链表中 。随着系统中进程数量的增加，这种方式会导致调度开销急剧增大，因为每次调度时都需要遍历整个链表来寻找最高优先级的进程 。为了解决这个问题，Linux 2.6 内核引入了一种新的运行队列机制，为每个优先级的进程都建立了一个独立的双向链表 。</p>
+<p>每个<code>task_struct</code>结构体中除了<code>tasks</code>成员外，还有一个<code>list_head</code>类型的<code>run_list</code>字段，用于将进程接入到对应优先级的运行队列链表中 。同时，运行队列的数据结构<code>prio_array_t</code>包含了多个关键字段，其中<code>nr_active</code>表示链表中进程描述符的数量，<code>bitmap</code>是一个优先权位图，用于快速判断某个优先级的进程链表是否为空，<code>queue</code>则是一个包含 140 个优先权队列头结点的数组，每个头结点对应一个优先级的链表 。</p>
+<p><strong>核心1：进程入队（加入运行队列）</strong></p>
+<p>当进程从睡眠状态被唤醒（如等待的IO完成），会进入可运行状态，内核调用<code>enqueue_task()</code>将其加入对应优先级的运行队列。核心代码如下（简化版）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">// 进程入队：将进程加入运行队列的对应优先级链表void enqueue_task(struct task_struct *p, struct prio_array *array)&#123;    // 1. 将进程的run_list节点插入对应优先级的链表尾部    list_add_tail(&amp;p-&gt;run_list, &amp;array-&gt;queue[p-&gt;prio]);</span><br><span class="line">    // 2. 设置优先级位图中对应位，标记该优先级链表非空    __set_bit(p-&gt;prio, array-&gt;bitmap);</span><br><span class="line">    // 3. 更新运行队列中活跃进程数量    array-&gt;nr_active++;</span><br><span class="line">    // 4. 记录进程所属的运行队列    p-&gt;array = array;&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>核心操作是<code>list_add_tail(&amp;p-&gt;run_list, &amp;array-&gt;queue[p-&gt;prio])</code>：根据进程的优先级<code>p-&gt;prio</code>，找到运行队列中对应的链表（<code>array-&gt;queue[p-&gt;prio]</code>），将进程的<code>run_list</code>节点插入尾部；</li>
+<li>设置<code>bitmap</code>是为了后续调度时快速定位到“有可运行进程”的最高优先级链表，避免遍历所有优先级，提升调度效率。</li>
+</ol>
+<p><strong>核心2：进程出队（退出运行队列）</strong></p>
+<p>当进程被调度器选中运行，或进程状态变为非可运行（如调用<code>sleep()</code>），内核会调用<code>dequeue_task()</code>将其从运行队列移除：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">// 进程出队：将进程从运行队列中移除void dequeue_task(struct task_struct *p, struct prio_array *array)&#123;    // 1. 将进程的run_list节点从链表中删除    list_del(&amp;p-&gt;run_list);</span><br><span class="line">    // 2. 更新运行队列中活跃进程数量    array-&gt;nr_active--;</span><br><span class="line">    // 3. 若该优先级链表为空，清除bitmap中对应位    if (list_empty(&amp;array-&gt;queue[p-&gt;prio])) &#123;        __clear_bit(p-&gt;prio, array-&gt;bitmap);    &#125;</span><br><span class="line">    // 4. 清空进程所属的运行队列标记    p-&gt;array = NULL;&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>核心操作是<code>list_del(&amp;p-&gt;run_list)</code>：直接将进程的<code>run_list</code>节点从对应优先级链表中摘除，这一步是双向链表删除操作的直接应用；</li>
+<li>删除后检查该优先级链表是否为空，若为空则清除<code>bitmap</code>对应位，确保调度器不会再扫描空链表，减少无效操作。</li>
+</ol>
+<p><strong>核心3：调度器选进程的核心逻辑</strong></p>
+<p>调度器（如CFS调度器的前身O(1)调度器）选择下一个要运行的进程时，核心是通过<code>bitmap</code>找到最高优先级的非空链表，再从链表头部取出进程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">// 从运行队列中选择最高优先级的可运行进程（简化版）struct task_struct *pick_next_task(struct prio_array *array)&#123;    int highest_prio;    struct list_head *head;    struct task_struct *p;</span><br><span class="line">    // 1. 找到bitmap中置位的最高优先级（从0开始，数值越小优先级越高）    highest_prio = sched_find_first_bit(array-&gt;bitmap);</span><br><span class="line">    // 2. 找到该优先级对应的链表头    head = &amp;array-&gt;queue[highest_prio];</span><br><span class="line">    // 3. 从链表头部取出第一个进程（双向链表的优势：O(1)获取）    p = list_entry(head-&gt;next, struct task_struct, run_list);</span><br><span class="line">    return p;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的关键逻辑的是：双向链表的“头节点后第一个元素”就是该优先级下最先入队的进程，通过<code>list_entry</code>（封装了<code>container_of</code>）从<code>run_list</code>节点快速拿到完整的<code>task_struct</code>。整个选进程的过程时间复杂度为O(1)，完全不受进程数量影响，这也是双向链表+优先级位图设计的精髓所在。</p>
+<p>在进程调度的实际场景中，Linux 内核引入了运行队列（runqueue）机制，进一步优化了进程的调度效率 。运行队列是一个双向循环链表，它容纳了系统中所有处于可运行状态（<code>TASK_RUNNING</code>）的进程 。</p>
+<p>在 Linux 2.6 内核之前，所有可运行进程都被放在同一个链表中 。随着系统中进程数量的增加，这种方式会导致调度开销急剧增大，因为每次调度时都需要遍历整个链表来寻找最高优先级的进程 。为了解决这个问题，Linux 2.6 内核引入了一种新的运行队列机制，为每个优先级的进程都建立了一个独立的双向链表 。</p>
+<p>每个<code>task_struct</code>结构体中除了<code>tasks</code>成员外，还有一个<code>list_head</code>类型的<code>run_list</code>字段，用于将进程接入到对应优先级的运行队列链表中 。同时，运行队列的数据结构<code>prio_array_t</code>包含了多个关键字段，其中<code>nr_active</code>表示链表中进程描述符的数量，<code>bitmap</code>是一个优先权位图，用于快速判断某个优先级的进程链表是否为空，<code>queue</code>则是一个包含 140 个优先权队列头结点的数组，每个头结点对应一个优先级的链表 。</p>
+<p>当一个进程进入可运行状态时，内核会调用<code>enqueue_task</code>函数将其插入到对应的优先级链表中 。这个函数首先使用<code>list_add_tail</code>函数将进程的<code>run_list</code>节点添加到<code>queue[p-&gt;prio]</code>队列的尾部，然后通过<code>__set_bit</code>函数设置<code>bitmap</code>中对应优先级的位，最后更新进程的<code>array</code>指针，使其指向当前的运行队列 。例如，当一个新进程被创建并进入可运行状态时，内核会根据其优先级将其插入到相应的运行队列链表中 。如果该进程的优先级为 50，那么它将被插入到<code>queue[50]</code>链表的尾部 。</p>
+<p>当进程完成运行或状态发生改变时，内核会调用<code>dequeue_task</code>函数将其从运行队列链表中删除 。这个函数会根据进程的优先级，从对应的<code>queue</code>链表中删除其<code>run_list</code>节点，并清除<code>bitmap</code>中相应的位 。比如，当一个进程运行结束或进入睡眠状态时，内核会将其从运行队列链表中删除，以确保只有真正可运行的进程留在队列中 。</p>
+<p>在进行进程调度时，内核首先通过<code>bitmap</code>快速定位到最高优先级且非空的链表，然后从该链表的头部取出进程进行调度 。这种基于优先级链表的调度方式，大大提高了调度的效率，使得内核能够在短时间内快速找到最合适的进程运行，充分发挥了双向链表在高效数据管理和调度方面的优势 。同时，结合优先级位图的设计，进一步优化了调度算法的时间复杂度，使得调度操作几乎不受系统中进程数量的影响，始终保持高效稳定的运行 。</p>
+<h2 id="五：-双向链表的-“两面性”"><a href="#五：-双向链表的-“两面性”" class="headerlink" title="五： 双向链表的 “两面性”"></a>五： 双向链表的 “两面性”</h2><h3 id="5-1-无可替代的优势：通用性、高效性、模块化"><a href="#5-1-无可替代的优势：通用性、高效性、模块化" class="headerlink" title="5.1  无可替代的优势：通用性、高效性、模块化"></a>5.1  无可替代的优势：通用性、高效性、模块化</h3><p>Linux 内核双向链表的设计，堪称计算机科学领域的杰作，它以独特的方式展现出无与伦比的通用性、高效性和模块化优势，完美契合了内核复杂而严苛的运行环境。</p>
+<p>通用性是 Linux 内核双向链表的核心优势之一，也是其设计的精妙之处。传统链表在 C 语言中，由于缺乏泛型支持，针对不同数据类型需要编写大量重复的代码。而 Linux 内核双向链表通过将链表节点（<code>list_head</code>）嵌入到用户自定义数据结构体中的设计，成功突破了这一困境。无论数据结构体多么复杂，无论其存储的数据是整数、字符串还是复杂的结构体，只要包含<code>list_head</code>成员，就可以轻松地将其纳入链表管理体系 。这就好比为所有数据类型提供了一个统一的 “接口”，使得链表操作不再受限于数据类型的差异，真正实现了一套 API 适配所有数据类型，仿佛为 C 语言赋予了 “伪泛型” 的能力 。</p>
+<p>在高效性方面，Linux 内核双向链表同样表现卓越。链表的插入和删除操作是衡量其性能的重要指标，而 Linux 内核双向链表在这方面堪称 “闪电侠”。以插入节点为例，<code>list_add</code>和<code>list_add_tail</code>函数通过直接修改指针的指向，在常数时间 O (1) 内即可完成节点的插入操作，无需遍历整个链表来寻找合适的插入位置 。删除节点时，<code>list_del</code>函数同样通过简单的指针操作，迅速将节点从链表中摘除，并且通过将删除节点的指针标记为特殊值（<code>LIST_POISON1</code>和<code>LIST_POISON2</code>），有效防止了野指针的产生，提高了代码的安全性 。这种高效的增删操作，使得链表在处理动态变化的数据时游刃有余，极大地提高了内核的运行效率 。</p>
+<p>此外，链表的遍历操作也非常高效。<code>list_for_each</code>和<code>list_for_each_entry</code>等宏定义提供了简洁而高效的遍历方式，通过直接操作指针，能够快速地访问链表中的每个节点，使得内核在遍历链表进行数据处理时，能够以最少的时间开销完成任务 。</p>
+<p>Linux 内核双向链表的设计还高度模块化，这使得链表的维护和扩展变得轻而易举。链表的初始化、节点的增删改查等操作都被封装成独立的宏和函数，这些接口具有清晰的定义和明确的功能，使用者只需了解接口的参数和功能，即可方便地对链表进行各种操作 。这种模块化设计就像是搭建积木，每个模块都有其特定的功能，使用者可以根据需求自由组合，大大提高了代码的可维护性和可复用性 。同时，模块化的设计也使得链表的实现细节对使用者透明，降低了使用者的学习成本和使用难度，使得内核开发者能够更加专注于业务逻辑的实现，而无需过多关注链表的底层实现细节 。</p>
+<h3 id="5-2-不可忽视的短板：侵入性"><a href="#5-2-不可忽视的短板：侵入性" class="headerlink" title="5.2  不可忽视的短板：侵入性"></a>5.2  不可忽视的短板：侵入性</h3><p>然而，如同任何技术一样，Linux 内核双向链表的设计并非十全十美，它也存在一些不可忽视的短板，主要体现在侵入性和学习成本两个方面 。</p>
+<p>侵入性是 Linux 内核双向链表设计中较为明显的一个问题。由于采用了将链表节点嵌入用户数据结构体的设计方式，这就要求用户在定义数据结构体时，必须预先考虑到链表的使用，主动添加<code>list_head</code>类型的成员 。这种设计虽然实现了链表的通用性，但也在一定程度上破坏了数据结构的纯净性，对用户数据结构产生了侵入 。特别是在一些对数据结构原有定义要求严格，或者需要与其他不兼容该设计的数据结构进行交互的场景下，这种侵入性可能会带来一些不便 。例如，当我们需要使用一个已有的第三方库中的数据结构，而该库并未考虑到 Linux 内核链表的嵌入设计时，若要将其纳入链表管理，就需要对第三方库的代码进行修改，这不仅增加了代码的维护难度，还可能会引入兼容性问题 。</p>
+</article>
+<div class="article-footer">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    
+
+</div>
+
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2025/08/18/Linux%E5%B8%A7%E7%BC%93%E5%86%B2Framebuffer/">Linux帧缓冲Framebuffer</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/08/18/%E7%AE%80%E5%8D%95%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90glibc%E6%89%A9%E5%B1%95/">简单系统调用glibc扩展</a></div></section></div>
+
+<div class="related-wrap" id="related-posts">
+    <section class='header'>
+      <div class='title cap theme'>您可能感兴趣的文章</div>
+    </section>
+    <section class='body'>
+    <div class="related-posts"><a class="item" href="\2025\08\18\动态链接库(DL)demo\" title="动态链接库（DL）demo"><span class="title">动态链接库（DL）demo</span></a><a class="item" href="\2024\10\30\Cmake构建自动化编译环境\" title="Cmake构建自动化编译环境"><span class="title">Cmake构建自动化编译环境</span></a><a class="item" href="\2024\09\18\Linux嵌入式\" title="Linux嵌入式学习粗略笔记"><span class="title">Linux嵌入式学习粗略笔记</span></a><a class="item" href="\2024\09\18\Linux proc 文件系统\" title="proc 文件系统"><span class="title">proc 文件系统</span></a><a class="item" href="\2025\11\19\SDL编译安装\" title="SDL源码编译安装"><span class="title">SDL源码编译安装</span></a></div></section></div>
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="sitemap" style="column-count:2;"><div class="sitemap-group"><span class="fs15">导航</span><a href="/">首页</a><a href="/archives/">归档</a><a href="/categories/">分类</a><a href="/tags/">标签</a><a href="/atom.xml">RSS</a></div><div class="sitemap-group"><span class="fs15">关于</span><a href="/about/">关于我</a><a href="/friends/">友链</a><a href="/message/">留言板</a></div></div><div class="text"><div align="center" style="color:#666; font-size:14px; line-height:1.85;">
+  <p>© 2023–2025 <a target="_blank" rel="noopener" href="https://github.com/dkyou" style="color:#333; text-decoration:none;">Dkyou</a></p>
+  <p>Powered by <a target="_blank" rel="noopener" href="https://hexo.io" style="color:#333;">Hexo</a> · Theme <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar" style="color:#333;">Stellar</a></p>
+  <p>本站文章（除特别说明外）遵循
+    <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" style="color:#333;">CC BY-NC-SA 4.0</a>。
+  </p>
+</div>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Linux%E5%86%85%E6%A0%B8%E5%8F%8C%E5%90%91%E9%93%BE%E8%A1%A8%E7%9A%84%E7%A5%9E%E7%BA%A7%E8%AE%BE%E8%AE%A1%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E5%AE%83%E8%83%BD%E5%90%8A%E6%89%93%E4%BC%A0%E7%BB%9F%E5%AE%9E%E7%8E%B0%EF%BC%9F"><span class="toc-text">Linux内核双向链表的神级设计：为什么它能吊打传统实现？</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%80%E3%80%81-%E4%BC%A0%E7%BB%9F%E9%93%BE%E8%A1%A8%E7%9A%84%E5%9D%91"><span class="toc-text">一、 传统链表的坑</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%EF%BC%9A-%E9%A2%A0%E8%A6%86%E4%BC%A0%E7%BB%9F%E7%9A%84%E8%AE%BE%E8%AE%A1%E5%93%B2%E5%AD%A6%EF%BC%9A%E6%8A%8A%E8%8A%82%E7%82%B9-%E2%80%9C%E5%B5%8C%E2%80%9D-%E8%BF%9B%E6%95%B0%E6%8D%AE%E9%87%8C"><span class="toc-text">二： 颠覆传统的设计哲学：把节点 “嵌” 进数据里</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E6%A0%B8%E5%BF%83%E7%BB%93%E6%9E%84%E4%BD%93-list-head"><span class="toc-text">2.1  核心结构体 list_head</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%85%B3%E9%94%AE%E5%88%9B%E6%96%B0%EF%BC%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%B5%8C%E5%85%A5%E9%93%BE%E8%A1%A8%E8%8A%82%E7%82%B9%EF%BC%8C%E8%80%8C%E9%9D%9E%E7%9B%B8%E5%8F%8D"><span class="toc-text">2.2  关键创新：数据结构嵌入链表节点，而非相反</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%EF%BC%9A-%E6%9E%81%E7%AE%80%E9%AB%98%E6%95%88%E7%9A%84%E6%A0%B8%E5%BF%83%E6%93%8D%E4%BD%9C%EF%BC%9A%E5%86%85%E6%A0%B8%E7%BA%A7-API-%E7%9A%84-%E2%80%9C%E5%B7%A5%E5%85%B7%E7%AE%B1%E2%80%9D"><span class="toc-text">三： 极简高效的核心操作：内核级 API 的 “工具箱”</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E9%93%BE%E8%A1%A8%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-text">3.1  链表初始化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E5%A2%9E%E5%88%A0%E8%8A%82%E7%82%B9%EF%BC%9A%E6%97%A0%E9%9C%80%E9%81%8D%E5%8E%86"><span class="toc-text">3.2  增删节点：无需遍历</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E9%93%BE%E8%A1%A8%E9%81%8D%E5%8E%86%EF%BC%9A%E4%B8%A4%E7%A7%8D%E5%AE%8F%E5%AE%9A%E4%B9%89"><span class="toc-text">3.3  链表遍历：两种宏定义</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#3-3-1-list-for-each%EF%BC%9A%E9%81%8D%E5%8E%86%E9%93%BE%E8%A1%A8%E8%8A%82%E7%82%B9"><span class="toc-text">3.3.1  list_for_each：遍历链表节点</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-3-2-list-for-each-entry%EF%BC%9A%E7%9B%B4%E6%8E%A5%E8%8E%B7%E5%8F%96%E7%94%A8%E6%88%B7%E6%95%B0%E6%8D%AE"><span class="toc-text">3.3.2  list_for_each_entry：直接获取用户数据</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%EF%BC%9A-%E5%AE%9E%E6%88%98%EF%BC%9A%E5%8F%8C%E5%90%91%E9%93%BE%E8%A1%A8%E5%A6%82%E4%BD%95%E7%AE%A1%E7%90%86%E8%BF%9B%E7%A8%8B%EF%BC%9F"><span class="toc-text">四： 实战：双向链表如何管理进程？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E8%BF%9B%E7%A8%8B%E5%88%9B%E5%BB%BA%EF%BC%9A%E6%96%B0%E8%BF%9B%E7%A8%8B%E5%A6%82%E4%BD%95%E2%80%9C%E5%8A%A0%E5%85%A5%E2%80%9D%E5%85%A8%E5%B1%80%E9%93%BE%E8%A1%A8%EF%BC%9F"><span class="toc-text">4.1  进程创建：新进程如何“加入”全局链表？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E8%BF%90%E8%A1%8C%E9%98%9F%E5%88%97%EF%BC%9A%E4%BC%98%E5%85%88%E7%BA%A7%E9%93%BE%E8%A1%A8%E7%9A%84%E2%80%9C%E7%B2%BE%E5%87%86%E8%B0%83%E5%BA%A6%E2%80%9D"><span class="toc-text">4.2  运行队列：优先级链表的“精准调度”</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%EF%BC%9A-%E5%8F%8C%E5%90%91%E9%93%BE%E8%A1%A8%E7%9A%84-%E2%80%9C%E4%B8%A4%E9%9D%A2%E6%80%A7%E2%80%9D"><span class="toc-text">五： 双向链表的 “两面性”</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E6%97%A0%E5%8F%AF%E6%9B%BF%E4%BB%A3%E7%9A%84%E4%BC%98%E5%8A%BF%EF%BC%9A%E9%80%9A%E7%94%A8%E6%80%A7%E3%80%81%E9%AB%98%E6%95%88%E6%80%A7%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96"><span class="toc-text">5.1  无可替代的优势：通用性、高效性、模块化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E4%B8%8D%E5%8F%AF%E5%BF%BD%E8%A7%86%E7%9A%84%E7%9F%AD%E6%9D%BF%EF%BC%9A%E4%BE%B5%E5%85%A5%E6%80%A7"><span class="toc-text">5.2  不可忽视的短板：侵入性</span></a></li></ol></li></ol></li></ol></div><div class="widget-footer"><a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/><path d="M7 3.338A9.95 9.95 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5"/></g></svg><span>回到顶部</span></a></div></widget>
+
+
+</div></aside><div class='float-panel'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+
+
+<script type="text/javascript">
+  window.canonical = {"originalHost":null,"officialHosts":["localhost"],"encoded":""};
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+    tag_plugins: {
+      chat: Object.assign({"api":"https://siteinfo.listentothewind.cn/api/v1"}),
+    }
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":null,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+    loading: `https://api.iconify.design/eos-icons:three-dots-loading.svg?color=%231cd0fd`,
+  };
+  const deps = {
+    jquery: `https://gcore.jsdelivr.net/npm/jquery@3.7/dist/jquery.min.js`,
+    marked: `https://gcore.jsdelivr.net/npm/marked@13.0/lib/marked.umd.min.js`,
+    lazyload: `/%5Bobject%20Object%5D`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  
+  function RunItem() {
+    this.list = []; // 存放回调函数
+    this.start = () => {
+      for (var i = 0; i < this.list.length; i++) {
+        this.list[i].run();
+      }
+    };
+    this.push = (fn, name, setRequestAnimationFrame = true) => {
+      let myfn = fn
+      if (setRequestAnimationFrame) {
+        myfn = () => {
+          utils.requestAnimationFrame(fn)
+        }
+      }
+      var f = new Item(myfn, name);
+      this.list.push(f);
+    };
+    this.remove = (name) => {
+      for (let index = 0; index < this.list.length; index++) {
+        const e = this.list[index];
+        if (e.name == name) {
+          this.list.splice(index, 1);
+        }
+      }
+    }
+    // 构造一个可以run的对象
+    function Item(fn, name) {
+      // 函数名称
+      this.name = name || fn.name;
+      // run方法
+      this.run = () => {
+        try {
+          fn()
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    }
+  }
+
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')) {
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function () {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      const maxRetry = 3;
+      let retryCount = 0;
+
+      return new Promise((resolve, reject) => {
+        const load = () => {
+          utils.onLoading?.(el);
+
+          let timedOut = false;
+          const timeout = setTimeout(() => {
+            timedOut = true;
+            console.warn('[request] 超时:', url);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject('请求超时');
+            } else {
+              setTimeout(load, 1000);
+            }
+          }, 5000);
+
+          fetch(url).then(resp => {
+            if (timedOut) return;
+            clearTimeout(timeout);
+
+            if (!resp.ok) throw new Error('响应失败');
+            return resp;
+          }).then(data => {
+            if (timedOut) return;
+            utils.onLoadSuccess?.(el);
+            callback(data);
+            resolve(data);
+          }).catch(err => {
+            clearTimeout(timeout);
+            console.warn('[request] 错误:', err);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject(err);
+            } else {
+              setTimeout(load, 1000);
+            }
+          });
+        };
+
+        load();
+      });
+    },
+    requestWithoutLoading: (url, options = {}, maxRetry = 2, timeout = 5000) => {
+      return new Promise((resolve, reject) => {
+        let retryCount = 0;
+
+        const tryRequest = () => {
+          let timedOut = false;
+          const timer = setTimeout(() => {
+            timedOut = true;
+            if (++retryCount > maxRetry) reject('timeout');
+            else tryRequest();
+          }, timeout);
+
+          fetch(url, options)
+            .then(resp => {
+              clearTimeout(timer);
+              if (!resp.ok) throw new Error('bad response');
+              resolve(resp);
+            })
+            .catch(err => {
+              clearTimeout(timer);
+              if (++retryCount > maxRetry) reject(err);
+              else setTimeout(tryRequest, 500);
+            });
+        };
+
+        tryRequest();
+      });
+    },
+    /********************** requestAnimationFrame ********************************/
+    // 1、requestAnimationFrame 会把每一帧中的所有 DOM 操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
+    // 2、在隐藏或不可见的元素中，requestAnimationFrame 将不会进行重绘或回流，这当然就意味着更少的的 cpu，gpu 和内存使用量。
+    requestAnimationFrame: (fn) => {
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+      }
+      window.requestAnimationFrame(fn)
+    },
+    dark: {},
+  };
+
+  // utils.dark.mode 当前模式 dark or light
+  // utils.dark.toggle() 暗黑模式触发器
+  // utils.dark.push(callBack[,"callBackName"]) 传入触发器回调函数
+  utils.dark.method = {
+    toggle: new RunItem(),
+  };
+  utils.dark = Object.assign(utils.dark, {
+    push: utils.dark.method.toggle.push,
+  });
+</script>
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+<script async src="https://gcore.jsdelivr.net/npm/vanilla-lazyload@19.1/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+    callback_loaded: (el) => {
+      el.classList.add('loaded');
+      const wrapper = el.closest('.lazy-box');
+      const icon = wrapper?.querySelector('.lazy-icon');
+      if (icon) icon.remove();
+    }
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+
+  window.wrapLazyloadImages = (container) => {
+    if (typeof container === 'string') {
+      container = document.querySelector(container);
+    }
+    if (!container) return;
+    
+    const images = container.querySelectorAll('img');
+    images.forEach((img) => {
+      if (img.classList.contains('lazy')) return;
+
+      const src = img.getAttribute('src');
+      if (!src) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'lazy-box';
+
+      const newImg = img.cloneNode();
+      newImg.removeAttribute('src');
+      newImg.setAttribute('data-src', src);
+      newImg.classList.add('lazy');
+
+      const icon = document.createElement('div');
+      icon.className = 'lazy-icon';
+      if (def.loading) {
+        icon.style.backgroundImage = `url("${def.loading}")`;
+      }
+
+      wrapper.appendChild(newImg);
+      wrapper.appendChild(icon);
+
+      img.replaceWith(wrapper);
+    });
+
+    // 通知 LazyLoad 更新
+    if (window.lazyLoadInstance?.update) {
+      window.lazyLoadInstance.update();
+    }
+  }
+  
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.33.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    // applyThemeToGiscus(theme)
+  }
+
+  // FIXME: 这会导致无法使用 preferred_color_scheme 以外的主题
+  const applyThemeToGiscus = (theme) => {
+    // theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+    utils.dark.mode = newTheme === 'auto' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : newTheme;
+    utils.dark.method.toggle.start();
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    } else {
+      utils.dark.mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    utils.dark.method.toggle.start();
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"rating":{"js":"/js/services/rating.js","api":"https://star-vote.xaox.cc/api/rating"},"vote":{"js":"/js/services/vote.js","api":"https://star-vote.xaox.cc/api/vote"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"friends_and_posts":{"js":"/js/services/friends_and_posts.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"voice":{"js":"/js/plugins/voice.js"},"video":{"js":"/js/plugins/video.js"},"download-file":{"js":"/js/plugins/download-file.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"},"contributors":{"edit_this_page":{"_posts/":null,"wiki/stellar/":"https://github.com/xaoxuu/hexo-theme-stellar-docs/blob/main/"},"js":"/js/services/contributors.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else if (id == 'voice') {
+        ctx.voiceAudios = document.querySelectorAll('.voice>audio');
+        if (ctx.voiceAudios?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            createVoiceDom(ctx.voiceAudios);
+          });
+        }
+      } else if (id == 'video') {
+        ctx.videos = document.querySelectorAll('.video>video');
+        if (ctx.videos?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            videoEvents(ctx.videos);
+          });
+        }
+      } else if (id == 'download-file') {
+        ctx.files = document.querySelectorAll('.file');
+        if (ctx.files?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            downloadFileEvent(ctx.files);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+
+    // chat iphone time
+    let phoneTimes = document.querySelectorAll('.chat .status-bar .time');
+
+    if (phoneTimes.length > 0) {
+      NowTime();
+      var date = new Date();
+      var sec = date.getSeconds();
+      var firstAdjustInterval = setInterval(firstAdjustTime, 1000 * (60 - sec));
+    }
+
+    function firstAdjustTime() {
+      NowTime();
+      clearInterval(firstAdjustInterval);
+      setInterval(NowTime, 1000 * 60);
+    }
+
+    function NowTime() {
+      for (let i = 0; i < phoneTimes.length; ++i) {
+        var timeSpan = phoneTimes[i];
+        var date = new Date();
+        var hour = date.getHours();
+        var min = date.getMinutes();
+        timeSpan.innerHTML = check(hour) + ":" + check(min);
+      }
+    };
+
+    function check(val) {
+      if (val < 10) {
+        return ("0" + val);
+      }
+      return (val);
+    }
+
+    // chat quote
+    const chat_quote_obverser = new IntersectionObserver((entries, observer) => {
+      entries.filter((entry) => { return entry.isIntersecting }).sort((a, b) => a.intersectionRect.y !== b.intersectionRect.y ? a.intersectionRect.y - b.intersectionRect.y : a.intersectionRect.x - b.intersectionRect.x).forEach((entry, index) => {
+          observer.unobserve(entry.target);
+          setTimeout(() => {
+            entry.target.classList.add('quote-blink');
+            setTimeout(() => {
+              entry.target.classList.remove('quote-blink');
+            }, 1000);
+          }, Math.max(100, 16) * (index + 1));
+        });
+    });
+
+    var chatQuotes = document.querySelectorAll(".chat .talk .quote");
+    chatQuotes.forEach((quote) => {
+      quote.addEventListener('click', function () {
+        var chatCellDom = document.getElementById("quote-" + quote.getAttribute("quotedCellTag"));
+        if (chatCellDom) {
+          var chatDiv = chatCellDom.parentElement;
+          var mid = chatDiv.clientHeight / 2;
+          var offsetTop = chatCellDom.offsetTop;
+          if (offsetTop > mid - chatCellDom.clientHeight / 2) {
+            chatDiv.scrollTo({
+              top: chatCellDom.offsetTop - mid + chatCellDom.clientHeight / 2,
+              behavior: "smooth"
+            });
+          } else {
+            chatDiv.scrollTo({
+              top: 0,
+              behavior: "smooth"
+            });
+          }
+          chat_quote_obverser.observe(chatCellDom);
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://gcore.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error), .with-fancybox .atk-content img:not([atk-emoticon])';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const memos = document.getElementsByClassName('ds-memos');
+    if (memos != undefined && memos.length > 0) {
+      needFancybox = true;
+    }
+    const fancybox = document.getElementsByClassName('with-fancybox');
+    if (fancybox != undefined && fancybox.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `不能复制哦~`,
+        success_text: `竟没骗到你！复制成功`,
+        toast: `又被你小子复制了！🌈`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
