@@ -17,24 +17,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
   <meta name="theme-color" content="#f9fafb">
-  <title>又是摸鱼的一天</title>
+  <title>项目 Git Submodule（LVGL 依赖）管理规范 - 又是摸鱼的一天</title>
 
   
     <meta name="description" content="项目 Git Submodule（LVGL 依赖）管理规范 一、规范目的本规范用于统一项目中 LVGL 依赖子模块的全流程操作标准，核心目标为：  保证项目所有开发、协作环境使用的 LVGL 代码版本100% 完全一致，彻底杜绝因依赖版本差异导致的编译异常、功能不一致、兼容性问题。 明确不同角色的操作权责，规避 Git 子模块的常见协作坑点，降低团队协作成本。 规范 LVGL 版本的升级、回退、自">
 <meta property="og:type" content="article">
-<meta property="og:title" content="又是摸鱼的一天">
-<meta property="og:url" content="https://dkyou.github.io/2026/03/29/%E9%A1%B9%E7%9B%AEGit_Submodule_LVGL%E4%BE%9D%E8%B5%96_%E7%AE%A1%E7%90%86%E8%A7%84%E8%8C%83/">
+<meta property="og:title" content="项目 Git Submodule（LVGL 依赖）管理规范">
+<meta property="og:url" content="https://dkyou.github.io/2026/01/02/%E9%A1%B9%E7%9B%AEGit_Submodule_LVGL%E4%BE%9D%E8%B5%96_%E7%AE%A1%E7%90%86%E8%A7%84%E8%8C%83/">
 <meta property="og:site_name" content="又是摸鱼的一天">
 <meta property="og:description" content="项目 Git Submodule（LVGL 依赖）管理规范 一、规范目的本规范用于统一项目中 LVGL 依赖子模块的全流程操作标准，核心目标为：  保证项目所有开发、协作环境使用的 LVGL 代码版本100% 完全一致，彻底杜绝因依赖版本差异导致的编译异常、功能不一致、兼容性问题。 明确不同角色的操作权责，规避 Git 子模块的常见协作坑点，降低团队协作成本。 规范 LVGL 版本的升级、回退、自">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2026-03-29T05:09:35.808Z">
-<meta property="article:modified_time" content="2026-03-29T05:18:51.020Z">
+<meta property="article:published_time" content="2026-01-01T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-30T11:43:53.295Z">
 <meta property="article:author" content="Dku">
-<meta name="twitter:card" content="summary">
+<meta property="article:tag" content="git">
+<meta name="twitter:card" content="summary_large_image">
   
   
   
-  
+  <meta name="keywords" content="git">
 
   <!-- feed -->
   
@@ -46,7 +47,7 @@
 
   
 
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dku","sameAs":[]},"dateCreated":"2026-03-29T13:09:35+08:00","dateModified":"2026-03-29T13:18:51+08:00","datePublished":"2026-03-29T13:09:35+08:00","description":"","headline":"","mainEntityOfPage":{"@type":"WebPage","@id":"https://dkyou.github.io/2026/03/29/%E9%A1%B9%E7%9B%AEGit_Submodule_LVGL%E4%BE%9D%E8%B5%96_%E7%AE%A1%E7%90%86%E8%A7%84%E8%8C%83/"},"publisher":{"@type":"Organization","name":"Dku","sameAs":[]},"url":"https://dkyou.github.io/2026/03/29/%E9%A1%B9%E7%9B%AEGit_Submodule_LVGL%E4%BE%9D%E8%B5%96_%E7%AE%A1%E7%90%86%E8%A7%84%E8%8C%83/","image":[]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dku","sameAs":[]},"dateCreated":"2026-01-02T00:00:00+08:00","dateModified":"2026-05-30T19:43:53+08:00","datePublished":"2026-01-02T00:00:00+08:00","description":"","headline":"项目 Git Submodule（LVGL 依赖）管理规范","mainEntityOfPage":{"@type":"WebPage","@id":"https://dkyou.github.io/2026/01/02/%E9%A1%B9%E7%9B%AEGit_Submodule_LVGL%E4%BE%9D%E8%B5%96_%E7%AE%A1%E7%90%86%E8%A7%84%E8%8C%83/"},"publisher":{"@type":"Organization","name":"Dku","sameAs":[]},"url":"https://dkyou.github.io/2026/01/02/%E9%A1%B9%E7%9B%AEGit_Submodule_LVGL%E4%BE%9D%E8%B5%96_%E7%AE%A1%E7%90%86%E8%A7%84%E8%8C%83/","keywords":"git","thumbnailUrl":"https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/%E4%B9%A6%E6%9E%B6-%E4%B9%A6%E6%A1%8C%E6%96%87%E5%85%B7.png","image":1}</script>
   
 </head>
 <body><div class="sitebg"><div class="siteblur"></div></div>
@@ -65,7 +66,7 @@
 
 
 
-<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2026/01/02/%E7%BC%96%E8%AF%91%E8%84%9A%E6%9C%AC%E9%87%8C%E5%AE%9A%E4%B9%89%E7%9A%84%E5%8F%98%E9%87%8F%E5%95%A5%E6%84%8F%E6%80%9D%EF%BC%8C%E6%80%8E%E4%B9%88%E5%8F%91%E6%8C%A5%E4%BD%9C%E7%94%A8%E7%9A%84/"><span class="title">编译脚本里定义的变量啥意思，怎么发挥作用的</span></a><a class="item title" href="/2026/05/30/vscode-Codex-Clash-Proxy-Troubleshooting/"><span class="title">VS Code + Codex + Clash 代理排障笔记</span></a><a class="item title" href="/2025/08/18/hash%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/"><span class="title">hash数据结构</span></a><a class="item title" href="/2025/08/18/%E5%86%85%E6%A0%B8ERR_PTR%E9%94%99%E8%AF%AF%E6%8C%87%E9%92%88/"><span class="title">内核ERR_PTR错误指针</span></a><a class="item title" href="/2025/08/18/%E5%86%85%E6%A0%B8%E9%93%BE%E8%A1%A8%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90/"><span class="title">内核链表源码分析</span></a><a class="item title" href="/2025/08/18/git%E5%88%9D%E5%A7%8B%E9%85%8D%E7%BD%AE/"><span class="title">git初始配置</span></a><a class="item title" href="/2025/08/18/git%20ssh%E5%A4%B1%E8%B4%A5/"><span class="title">git ssh失败</span></a><a class="item title" href="/2024/09/20/rk3506b%E4%BD%BF%E7%94%A8lvgl/"><span class="title">LVGL</span></a><a class="item title" href="/2026/01/02/rk3506b%E6%9F%A5%E7%9C%8B%E8%AE%BE%E5%A4%87%E6%A0%91%E4%BB%A5%E5%8F%8Adefconfig/"><span class="title">rk3506b查看设备树及defconfig</span></a><a class="item title" href="/2025/08/18/is_defined%E5%AE%8F%E5%AE%9A%E4%B9%89%E5%88%86%E6%9E%90/"><span class="title">Linux内核中实现 __is_defined(x)宏的技巧</span></a></div></widget>
+<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2026/05/30/WSL_Ubuntu20.04_VSCode_Codex_Proxy_Login_Fix/"><span class="title">WSL Ubuntu 20.04 中 VS Code Codex 插件登录失败问题排查与解决笔记</span></a><a class="item title" href="/2026/02/02/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/observer%20mode/"><span class="title">「observer」设计模式</span></a><a class="item title" href="/2026/01/02/rk3506b%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91ws2812%E7%81%AF%E6%9D%BF/"><span class="title">rk3506b交叉编译ws2812灯板</span></a><a class="item title" href="/2026/01/02/rk3506b%E7%A7%BB%E6%A4%8Dlvgl_chess%E6%B5%81%E7%A8%8B/"><span class="title">rk3506b移植lvgl_chess流程</span></a><a class="item title" href="/2026/01/02/%E9%A1%B9%E7%9B%AEGit_Submodule_LVGL%E4%BE%9D%E8%B5%96_%E7%AE%A1%E7%90%86%E8%A7%84%E8%8C%83/"><span class="title">项目 Git Submodule（LVGL 依赖）管理规范</span></a><a class="item title" href="/2026/01/02/%E7%BC%96%E8%AF%91%E8%84%9A%E6%9C%AC%E9%87%8C%E5%AE%9A%E4%B9%89%E7%9A%84%E5%8F%98%E9%87%8F%E5%95%A5%E6%84%8F%E6%80%9D%EF%BC%8C%E6%80%8E%E4%B9%88%E5%8F%91%E6%8C%A5%E4%BD%9C%E7%94%A8%E7%9A%84/"><span class="title">编译脚本里定义的变量啥意思，怎么发挥作用的</span></a><a class="item title" href="/2026/05/30/vscode-Codex-Clash-Proxy-Troubleshooting/"><span class="title">VS Code + Codex + Clash 代理排障笔记</span></a><a class="item title" href="/2025/08/18/hash%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/"><span class="title">hash数据结构</span></a><a class="item title" href="/2025/08/18/%E5%86%85%E6%A0%B8ERR_PTR%E9%94%99%E8%AF%AF%E6%8C%87%E9%92%88/"><span class="title">内核ERR_PTR错误指针</span></a><a class="item title" href="/2025/08/18/%E5%86%85%E6%A0%B8%E9%93%BE%E8%A1%A8%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90/"><span class="title">内核链表源码分析</span></a></div></widget>
 </div>
 <footer class="footer dis-select"><div class="social-wrap"><a class="social" href="https://github.com/dkyou" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="mailto:2328727915@qq.com" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/gmail.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="https://space.bilibili.com/" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/bilibili.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="/atom.xml" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/rss.svg" height="20" style="opacity:0.9;"/></a></div></footer>
 </div></aside><div class="l_main" id="main">
@@ -74,11 +75,19 @@
 
 
 
-<div class="article banner top">
+<div class="article banner top"><img class="lazy bg" data-src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/%E4%B9%A6%E6%9E%B6-%E4%B9%A6%E6%A1%8C%E6%96%87%E5%85%B7.png">
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
-<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2026-03-29T05:09:35.808Z">2026-03-29</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2026-03-29T05:18:51.020Z">2026-03-29</time></span></div></div></div>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/Git/">Git</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2026-01-01T16:00:00.000Z">2026-01-02</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2026-05-30T11:43:53.295Z">2026-05-30</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>项目 Git Submodule（LVGL 依赖）管理规范</span></h1>
+        
+      </div>
+    </div>
     
   </div>
   </div><article class="md-text content"><h1 id="项目-Git-Submodule（LVGL-依赖）管理规范"><a href="#项目-Git-Submodule（LVGL-依赖）管理规范" class="headerlink" title="项目 Git Submodule（LVGL 依赖）管理规范"></a>项目 Git Submodule（LVGL 依赖）管理规范</h1><hr>
@@ -375,14 +384,14 @@
 
 </div>
 
-<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2026/05/30/vscode-Codex-Clash-Proxy-Troubleshooting/">VS Code + Codex + Clash 代理排障笔记</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2026/03/28/rk3506b%E7%A7%BB%E6%A4%8Dlvgl_chess%E6%B5%81%E7%A8%8B/">2026-03-28</a></div></section></div>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2026/01/02/rk3506b%E6%9F%A5%E7%9C%8B%E8%AE%BE%E5%A4%87%E6%A0%91%E4%BB%A5%E5%8F%8Adefconfig/">rk3506b查看设备树及defconfig</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2026/01/02/%E7%BC%96%E8%AF%91%E8%84%9A%E6%9C%AC%E9%87%8C%E5%AE%9A%E4%B9%89%E7%9A%84%E5%8F%98%E9%87%8F%E5%95%A5%E6%84%8F%E6%80%9D%EF%BC%8C%E6%80%8E%E4%B9%88%E5%8F%91%E6%8C%A5%E4%BD%9C%E7%94%A8%E7%9A%84/">编译脚本里定义的变量啥意思，怎么发挥作用的</a></div></section></div>
 
 <div class="related-wrap" id="related-posts">
     <section class='header'>
       <div class='title cap theme'>您可能感兴趣的文章</div>
     </section>
     <section class='body'>
-    <div class="related-posts"><a class="item" href="\2024\05\20\ChessLearning\" title="车类残局定式"><span class="title">车类残局定式</span></a></div></section></div>
+    <div class="related-posts"><a class="item" href="\2025\08\18\git ssh失败\" title="git ssh失败"><span class="title">git ssh失败</span></a><a class="item" href="\2025\08\18\git本地已经有修改但是想同步远程仓库的更新\" title="git本地已经有修改但是想同步远程仓库的更新"><span class="title">git本地已经有修改但是想同步远程仓库的更新</span></a><a class="item" href="\2025\08\18\git回退\" title="git 回退commit和push"><span class="title">git 回退commit和push</span></a><a class="item" href="\2025\08\18\git保留本地新文件的同时同步远程更新并上传修改\" title="git保留本地新文件的同时同步远程更新并上传修改"><span class="title">git保留本地新文件的同时同步远程更新并上传修改</span></a></div></section></div>
 
 
 
