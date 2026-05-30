@@ -1,0 +1,1116 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.33.1" theme-name="Stellar" theme-version="1.33.1">
+  
+  
+  <meta name="generator" content="Hexo 8.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  <title>又是摸鱼的一天</title>
+
+  
+    <meta name="description" content="项目 Git Submodule（LVGL 依赖）管理规范 一、规范目的本规范用于统一项目中 LVGL 依赖子模块的全流程操作标准，核心目标为：  保证项目所有开发、协作环境使用的 LVGL 代码版本100% 完全一致，彻底杜绝因依赖版本差异导致的编译异常、功能不一致、兼容性问题。 明确不同角色的操作权责，规避 Git 子模块的常见协作坑点，降低团队协作成本。 规范 LVGL 版本的升级、回退、自">
+<meta property="og:type" content="article">
+<meta property="og:title" content="又是摸鱼的一天">
+<meta property="og:url" content="https://dkyou.github.io/2026/03/29/%E9%A1%B9%E7%9B%AEGit_Submodule_LVGL%E4%BE%9D%E8%B5%96_%E7%AE%A1%E7%90%86%E8%A7%84%E8%8C%83/">
+<meta property="og:site_name" content="又是摸鱼的一天">
+<meta property="og:description" content="项目 Git Submodule（LVGL 依赖）管理规范 一、规范目的本规范用于统一项目中 LVGL 依赖子模块的全流程操作标准，核心目标为：  保证项目所有开发、协作环境使用的 LVGL 代码版本100% 完全一致，彻底杜绝因依赖版本差异导致的编译异常、功能不一致、兼容性问题。 明确不同角色的操作权责，规避 Git 子模块的常见协作坑点，降低团队协作成本。 规范 LVGL 版本的升级、回退、自">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-03-29T05:09:35.808Z">
+<meta property="article:modified_time" content="2026-03-29T05:18:51.020Z">
+<meta property="article:author" content="Dku">
+<meta name="twitter:card" content="summary">
+  
+  
+  
+  
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.33.1">
+
+
+  
+
+  
+
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Dku","sameAs":[]},"dateCreated":"2026-03-29T13:09:35+08:00","dateModified":"2026-03-29T13:18:51+08:00","datePublished":"2026-03-29T13:09:35+08:00","description":"","headline":"","mainEntityOfPage":{"@type":"WebPage","@id":"https://dkyou.github.io/2026/03/29/%E9%A1%B9%E7%9B%AEGit_Submodule_LVGL%E4%BE%9D%E8%B5%96_%E7%AE%A1%E7%90%86%E8%A7%84%E8%8C%83/"},"publisher":{"@type":"Organization","name":"Dku","sameAs":[]},"url":"https://dkyou.github.io/2026/03/29/%E9%A1%B9%E7%9B%AEGit_Submodule_LVGL%E4%BE%9D%E8%B5%96_%E7%AE%A1%E7%90%86%E8%A7%84%E8%8C%83/","image":[]}</script>
+  
+</head>
+<body><div class="sitebg"><div class="siteblur"></div></div>
+
+<div class="l_body content" id="start" layout="post" type="tech" ><aside class="l_left"><div class="sidebg"></div><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://cdn.jsdelivr.net/gh/dkyou/ImageHostingdku/img/大白鹅喝酒.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main">👀瞅啥呢！👀</div><div class="sub normal cap">今天又是摸鱼的一天！</div><div class="sub hover cap" style="opacity:0">可不摸鱼又干什么呢？</div></a></div></header>
+
+<div class="nav-area">
+
+<nav class="menu dis-select"><a class="nav-item active" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="文档" href="/wiki/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="探索" href="/explore/" style="color:#FA6400"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M20 12a8 8 0 1 1-16 0a8 8 0 0 1 16 0" opacity=".5"/><path fill="currentColor" d="M17.712 5.453c1.047-.193 2.006-.259 2.797-.152c.77.103 1.536.393 1.956 1.064c.446.714.312 1.542-.012 2.258c-.33.728-.918 1.499-1.672 2.268c-1.516 1.547-3.836 3.226-6.597 4.697c-2.763 1.472-5.495 2.484-7.694 2.92c-1.095.217-2.098.299-2.923.201c-.8-.095-1.6-.383-2.032-1.075c-.47-.752-.296-1.63.07-2.379c.375-.768 1.032-1.586 1.872-2.403L4 12.416c0 .219.083.71.168 1.146c.045.23.09.444.123.596c-.652.666-1.098 1.263-1.339 1.756c-.277.567-.208.825-.145.925c.072.116.305.305.937.38c.609.073 1.44.018 2.455-.183c2.02-.4 4.613-1.351 7.28-2.772c2.667-1.42 4.85-3.015 6.23-4.423c.694-.707 1.15-1.334 1.377-1.836c.233-.515.167-.75.107-.844c-.07-.112-.289-.294-.883-.374c-.542-.072-1.272-.041-2.163.112L16.87 5.656c.338-.101.658-.17.842-.203"/></svg></a><a class="nav-item" title="社交" href="/friends/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+
+<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2026/01/02/%E7%BC%96%E8%AF%91%E8%84%9A%E6%9C%AC%E9%87%8C%E5%AE%9A%E4%B9%89%E7%9A%84%E5%8F%98%E9%87%8F%E5%95%A5%E6%84%8F%E6%80%9D%EF%BC%8C%E6%80%8E%E4%B9%88%E5%8F%91%E6%8C%A5%E4%BD%9C%E7%94%A8%E7%9A%84/"><span class="title">编译脚本里定义的变量啥意思，怎么发挥作用的</span></a><a class="item title" href="/2026/05/30/vscode-Codex-Clash-Proxy-Troubleshooting/"><span class="title">VS Code + Codex + Clash 代理排障笔记</span></a><a class="item title" href="/2025/08/18/hash%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/"><span class="title">hash数据结构</span></a><a class="item title" href="/2025/08/18/%E5%86%85%E6%A0%B8ERR_PTR%E9%94%99%E8%AF%AF%E6%8C%87%E9%92%88/"><span class="title">内核ERR_PTR错误指针</span></a><a class="item title" href="/2025/08/18/%E5%86%85%E6%A0%B8%E9%93%BE%E8%A1%A8%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90/"><span class="title">内核链表源码分析</span></a><a class="item title" href="/2025/08/18/git%E5%88%9D%E5%A7%8B%E9%85%8D%E7%BD%AE/"><span class="title">git初始配置</span></a><a class="item title" href="/2025/08/18/git%20ssh%E5%A4%B1%E8%B4%A5/"><span class="title">git ssh失败</span></a><a class="item title" href="/2024/09/20/rk3506b%E4%BD%BF%E7%94%A8lvgl/"><span class="title">LVGL</span></a><a class="item title" href="/2026/01/02/rk3506b%E6%9F%A5%E7%9C%8B%E8%AE%BE%E5%A4%87%E6%A0%91%E4%BB%A5%E5%8F%8Adefconfig/"><span class="title">rk3506b查看设备树及defconfig</span></a><a class="item title" href="/2025/08/18/is_defined%E5%AE%8F%E5%AE%9A%E4%B9%89%E5%88%86%E6%9E%90/"><span class="title">Linux内核中实现 __is_defined(x)宏的技巧</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="https://github.com/dkyou" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="mailto:2328727915@qq.com" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/gmail.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="https://space.bilibili.com/" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/bilibili.svg" height="20" style="opacity:0.9;"/></a><a class="social" href="/atom.xml" rel="noopener noreferrer"><img src="https://gcore.jsdelivr.net/gh/simple-icons/simple-icons/icons/rss.svg" height="20" style="opacity:0.9;"/></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2026-03-29T05:09:35.808Z">2026-03-29</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2026-03-29T05:18:51.020Z">2026-03-29</time></span></div></div></div>
+    
+  </div>
+  </div><article class="md-text content"><h1 id="项目-Git-Submodule（LVGL-依赖）管理规范"><a href="#项目-Git-Submodule（LVGL-依赖）管理规范" class="headerlink" title="项目 Git Submodule（LVGL 依赖）管理规范"></a>项目 Git Submodule（LVGL 依赖）管理规范</h1><hr>
+<h2 id="一、规范目的"><a href="#一、规范目的" class="headerlink" title="一、规范目的"></a>一、规范目的</h2><p>本规范用于统一项目中 LVGL 依赖子模块的全流程操作标准，核心目标为：</p>
+<ol>
+<li>保证项目所有开发、协作环境使用的 LVGL 代码版本<strong>100% 完全一致</strong>，彻底杜绝因依赖版本差异导致的编译异常、功能不一致、兼容性问题。</li>
+<li>明确不同角色的操作权责，规避 Git 子模块的常见协作坑点，降低团队协作成本。</li>
+<li>规范 LVGL 版本的升级、回退、自定义补丁修改流程，保证依赖变更可追溯、可同步、可回滚。</li>
+</ol>
+<h2 id="二、核心概念说明"><a href="#二、核心概念说明" class="headerlink" title="二、核心概念说明"></a>二、核心概念说明</h2><ol>
+<li><strong>版本锁定规则</strong>：主仓库不会存储 LVGL 子模块的具体代码，仅通过记录 LVGL 仓库对应的<strong>唯一、不可变的 commit 哈希值</strong>锁定版本。该哈希值是保证全团队版本一致的唯一依据，不受 LVGL 官方仓库更新的影响。</li>
+<li><strong>仓库独立性</strong>：LVGL 子模块为独立的 Git 仓库，仅项目维护者拥有版本变更与修改权限，所有协作者仅可同步主仓库已锁定的版本，不得擅自修改子模块内容与版本。</li>
+</ol>
+<h2 id="三、角色与权责划分"><a href="#三、角色与权责划分" class="headerlink" title="三、角色与权责划分"></a>三、角色与权责划分</h2><h3 id="3-1-项目维护者"><a href="#3-1-项目维护者" class="headerlink" title="3.1 项目维护者"></a>3.1 项目维护者</h3><p>指本规范的修订者、项目核心负责人，拥有 LVGL 子模块的完整操作权限，唯一允许的操作包括：</p>
+<ol>
+<li>LVGL 子模块的添加、地址变更、版本升级与回退。</li>
+<li>LVGL 源码的自定义修改、补丁提交与版本锁定。</li>
+<li>本规范的修订与解释。</li>
+</ol>
+<h3 id="3-2-项目协作者"><a href="#3-2-项目协作者" class="headerlink" title="3.2 项目协作者"></a>3.2 项目协作者</h3><p>指项目所有参与开发、测试的人员，对 LVGL 子模块仅拥有<strong>只读权限与版本同步权限</strong>，权责包括：</p>
+<ol>
+<li>严格遵守本规范，仅使用规定命令完成子模块的克隆、同步操作。</li>
+<li>不得进入 LVGL 子模块目录执行任何 Git 命令，不得修改 LVGL 子模块的任何文件内容。</li>
+<li>发现 LVGL 版本异常时，按本规范的排查流程处理，不得擅自操作子模块。</li>
+</ol>
+<h2 id="四、标准操作规范"><a href="#四、标准操作规范" class="headerlink" title="四、标准操作规范"></a>四、标准操作规范</h2><h3 id="4-1-首次克隆项目（全成员通用）"><a href="#4-1-首次克隆项目（全成员通用）" class="headerlink" title="4.1 首次克隆项目（全成员通用）"></a>4.1 首次克隆项目（全成员通用）</h3><p>必须使用递归克隆命令，一步完成主仓库与 LVGL 子模块的完整拉取，自动同步到主仓库锁定的版本。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># 唯一合规的克隆命令</span><br><span class="line">git clone --recurse-submodules &lt;本项目远程仓库地址&gt;</span><br></pre></td></tr></table></figure>
+
+<p>若已执行普通<code>git clone</code>，未拉取 LVGL 子模块代码，必须在主仓库根目录执行以下补救命令，不得手动克隆 LVGL 仓库：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># 初始化并同步主仓库锁定的LVGL版本</span><br><span class="line">git submodule update --init --recursive</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-2-日常拉取更新与版本同步（协作者专用）"><a href="#4-2-日常拉取更新与版本同步（协作者专用）" class="headerlink" title="4.2 日常拉取更新与版本同步（协作者专用）"></a>4.2 日常拉取更新与版本同步（协作者专用）</h3><p>拉取主仓库最新代码后，若主仓库锁定的 LVGL 版本有更新，必须在主仓库根目录执行以下命令，完成 LVGL 版本同步，全程不得进入 LVGL 子模块目录：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 1. 拉取主仓库最新代码</span><br><span class="line">git pull origin main</span><br><span class="line"></span><br><span class="line"># 2. 同步LVGL到主仓库当前锁定的版本（强制合规，必须执行）</span><br><span class="line">git submodule update --init --recursive</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-3-LVGL-版本升级-回退（维护者专用）"><a href="#4-3-LVGL-版本升级-回退（维护者专用）" class="headerlink" title="4.3 LVGL 版本升级 &#x2F; 回退（维护者专用）"></a>4.3 LVGL 版本升级 &#x2F; 回退（维护者专用）</h3><p>仅项目维护者可执行 LVGL 版本变更操作，必须严格遵循以下流程，不得省略任何步骤：</p>
+<ol>
+<li><p>进入 LVGL 子模块目录，拉取官方仓库最新的 tag 与提交记录：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd src/lvgl</span><br><span class="line">git fetch origin</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>切换到目标版本（推荐锁定官方正式发布的 tag，禁止随意跟踪 main&#x2F;master 分支）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># 示例：切换到LVGL v9.3.0正式版</span><br><span class="line">git checkout v9.3.0</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>返回主仓库根目录，提交新版本锁定记录：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cd ../../</span><br><span class="line">git add src/lvgl</span><br><span class="line">git commit -m &quot;chore: 升级LVGL版本至v9.3.0正式版&quot;</span><br><span class="line">git push origin main</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h3 id="4-4-LVL-自定义补丁修改（维护者专用）"><a href="#4-4-LVL-自定义补丁修改（维护者专用）" class="headerlink" title="4.4 LVL 自定义补丁修改（维护者专用）"></a>4.4 LVL 自定义补丁修改（维护者专用）</h3><p>若需对 LVGL 源码进行自定义修改、添加适配补丁，必须使用 fork 仓库方案，严格遵循以下流程：</p>
+<ol>
+<li><p>提前 fork LVGL 官方仓库，将项目子模块地址切换为 fork 后的自有仓库（拥有推送权限）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 切换子模块地址</span><br><span class="line">git submodule set-url src/lvgl &lt;fork后的LVGL仓库地址&gt;</span><br><span class="line">git add .gitmodules</span><br><span class="line">git commit -m &quot;chore: 切换LVGL子模块为fork仓库&quot;</span><br><span class="line">git push origin main</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>进入 LVGL 子模块目录，切换到开发分支，完成代码修改：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cd src/lvgl</span><br><span class="line">git checkout main</span><br><span class="line"># 完成自定义代码修改</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>提交修改并推送到 fork 仓库，再返回主仓库锁定新版本：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"># 子模块内提交补丁</span><br><span class="line">git add .</span><br><span class="line">git commit -m &quot;fix: LVGL添加xx功能适配补丁&quot;</span><br><span class="line">git push origin main</span><br><span class="line"></span><br><span class="line"># 返回主仓库提交版本锁定</span><br><span class="line">cd ../../</span><br><span class="line">git add src/lvgl</span><br><span class="line">git commit -m &quot;chore: 更新LVGL至带xx适配补丁的版本&quot;</span><br><span class="line">git push origin main</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="五、绝对禁止的红线规则"><a href="#五、绝对禁止的红线规则" class="headerlink" title="五、绝对禁止的红线规则"></a>五、绝对禁止的红线规则</h2><p>全体成员必须严格遵守以下禁令，任何违反以下规则的操作均视为不合规操作，由此导致的代码冲突、版本异常、编译失败等问题，由操作人承担全部责任：</p>
+<ol>
+<li>禁止协作者进入 LVGL 子模块目录执行任何 Git 命令（包括但不限于<code>git pull</code>、<code>git checkout</code>、<code>git commit</code>、<code>git push</code>）。</li>
+<li>禁止任何人员执行<code>git submodule update --remote</code>命令，该命令会拉取 LVGL 官方最新代码，覆盖主仓库锁定的版本，导致全团队版本不一致。</li>
+<li>禁止协作者手动修改、删除 LVGL 子模块目录下的任何文件，包括源码、配置文件、编译产物。</li>
+<li>禁止维护者在 LVGL 子模块的游离头（detached HEAD）状态下提交代码，避免提交丢失、版本无法同步。</li>
+<li>禁止维护者未推送 LVGL 子模块的修改，就提前推送主仓库的版本锁定记录，导致协作者无法同步到对应版本。</li>
+<li>禁止任何人员擅自修改<code>.gitmodules</code>文件中的子模块配置信息。</li>
+</ol>
+<h2 id="六、版本一致性校验方法"><a href="#六、版本一致性校验方法" class="headerlink" title="六、版本一致性校验方法"></a>六、版本一致性校验方法</h2><p>全体成员可在主仓库根目录执行以下命令，校验本地 LVGL 版本是否与主仓库锁定版本一致：</p>
+<ol>
+<li><p>查看当前子模块锁定状态：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git submodule status</span><br></pre></td></tr></table></figure>
+
+<p>正常输出示例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">e23e52a8f7b3d4f8a9c0d1e2f3a4b5c6d7e8f9a src/lvgl (v9.3.0)</span><br></pre></td></tr></table></figure>
+
+<p>若输出的哈希值与主仓库最新提交记录中的 LVGL 哈希值完全一致，即为版本合规。</p>
+</li>
+<li><p>强制校验哈希匹配度：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 查看主仓库锁定的LVGL哈希</span><br><span class="line">git ls-files --stage src/lvgl</span><br><span class="line"></span><br><span class="line"># 查看本地LVGL当前实际哈希</span><br><span class="line">git -C src/lvgl rev-parse HEAD</span><br></pre></td></tr></table></figure>
+
+<p>两条命令输出的哈希值必须完全一致，否则为版本异常。</p>
+</li>
+</ol>
+<h2 id="七、常见问题排查与解决方案"><a href="#七、常见问题排查与解决方案" class="headerlink" title="七、常见问题排查与解决方案"></a>七、常见问题排查与解决方案</h2><h3 id="7-1-问题-1：LVGL-子模块目录为空"><a href="#7-1-问题-1：LVGL-子模块目录为空" class="headerlink" title="7.1 问题 1：LVGL 子模块目录为空"></a>7.1 问题 1：LVGL 子模块目录为空</h3><p><strong>解决方案</strong>：在主仓库根目录执行合规同步命令，无需手动克隆：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git submodule update --init --recursive</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-2-问题-2：本地-LVGL-版本与主仓库锁定版本不一致"><a href="#7-2-问题-2：本地-LVGL-版本与主仓库锁定版本不一致" class="headerlink" title="7.2 问题 2：本地 LVGL 版本与主仓库锁定版本不一致"></a>7.2 问题 2：本地 LVGL 版本与主仓库锁定版本不一致</h3><p><strong>解决方案</strong>：执行强制重置命令，丢弃子模块内所有本地改动，强制同步到主仓库锁定版本：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git submodule update --init --recursive --force</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-3-问题-3：拉取更新后，同步子模块提示fatal-reference-is-not-a-tree"><a href="#7-3-问题-3：拉取更新后，同步子模块提示fatal-reference-is-not-a-tree" class="headerlink" title="7.3 问题 3：拉取更新后，同步子模块提示fatal: reference is not a tree"></a>7.3 问题 3：拉取更新后，同步子模块提示<code>fatal: reference is not a tree</code></h3><p><strong>根因</strong>：维护者未推送 LVGL 子模块的提交，就推送了主仓库的版本锁定记录。</p>
+<p><strong>解决方案</strong>：联系项目维护者，确认 LVGL 子模块的修改已完整推送到远程仓库，再执行同步命令。</p>
+<h3 id="7-4-问题-4：子模块地址变更后，同步提示旧地址无法连接"><a href="#7-4-问题-4：子模块地址变更后，同步提示旧地址无法连接" class="headerlink" title="7.4 问题 4：子模块地址变更后，同步提示旧地址无法连接"></a>7.4 问题 4：子模块地址变更后，同步提示旧地址无法连接</h3><p><strong>解决方案</strong>：在主仓库根目录执行地址同步命令，再重新初始化更新：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git submodule sync</span><br><span class="line">git submodule update --init --recursive --force</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="附录："><a href="#附录：" class="headerlink" title="附录："></a>附录：</h2><h3 id="一、核心常用命令与实操"><a href="#一、核心常用命令与实操" class="headerlink" title="一、核心常用命令与实操"></a>一、核心常用命令与实操</h3><ol>
+<li>添加子模块</li>
+</ol>
+<p>将远程子仓库添加为主仓库的子模块，指定本地存放路径。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 基础用法</span><br><span class="line">git submodule add &lt;子仓库远程地址&gt; [本地存放路径]</span><br><span class="line"></span><br><span class="line"># 示例：将 utils 仓库添加到主仓库的 src/utils 目录</span><br><span class="line">git submodule add https://github.com/yourname/utils.git src/utils</span><br></pre></td></tr></table></figure>
+
+<p>执行后会发生两件事：</p>
+<ol>
+<li>主仓库根目录生成 <code>.gitmodules</code> 文件，记录子模块的配置信息，该文件必须提交到主仓库。</li>
+<li>子模块代码被克隆到指定路径，主仓库会自动记录子模块当前的最新提交哈希。</li>
+</ol>
+<p>最后需要提交变更到主仓库：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git add .gitmodules src/utils</span><br><span class="line">git commit -m &quot;feat: 添加 utils 子模块&quot;</span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>克隆包含子模块的仓库</li>
+</ol>
+<p>默认克隆主仓库时，只会创建子模块的空目录，不会拉取子模块代码，有两种完整克隆方式：</p>
+<p>方式 1：递归克隆（推荐，一步到位）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone --recurse-submodules &lt;主仓库地址&gt;</span><br></pre></td></tr></table></figure>
+
+<p>该命令会自动克隆主仓库，并递归初始化、拉取所有子模块（包括嵌套的子模块）。</p>
+<p>方式 2：先克隆主仓库，再初始化子模块</p>
+<p>如果已经克隆了主仓库，执行以下命令补全子模块：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># 1. 初始化子模块配置（将 .gitmodules 的信息写入本地 .git/config）</span><br><span class="line">git submodule init</span><br><span class="line"># 2. 拉取子模块代码，并 checkout 到主仓库记录的提交</span><br><span class="line">git submodule update</span><br><span class="line"></span><br><span class="line"># 合并为一条命令（支持嵌套子模块，最常用）</span><br><span class="line">git submodule update --init --recursive</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>更新子模块</li>
+</ol>
+<p>场景 1：同步主仓库记录的子模块版本</p>
+<p>当拉取主仓库更新后，主仓库记录的子模块提交哈希发生了变化，需要同步子模块到该版本：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git submodule update</span><br></pre></td></tr></table></figure>
+
+<p>场景 2：拉取子模块远程仓库的最新版本</p>
+<p>如果子模块的远程仓库有了新提交，想更新到对应分支的最新版本：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 更新所有子模块到其配置分支的最新提交</span><br><span class="line">git submodule update --remote</span><br><span class="line"></span><br><span class="line"># 只更新指定子模块</span><br><span class="line">git submodule update --remote src/utils</span><br></pre></td></tr></table></figure>
+
+<p>更新后，主仓库会检测到子模块的提交哈希变化，必须在主仓库提交该变更，否则其他协作者无法同步更新。</p>
+<ol start="4">
+<li>修改子模块并提交（最关键的流程）</li>
+</ol>
+<p>子模块是独立仓库，修改后<strong>必须严格遵循 “先提交子模块，再提交主仓库” 的顺序</strong>，否则会导致协作者拉取时报错。</p>
+<p>完整正确流程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"># 1. 进入子模块目录</span><br><span class="line">cd src/utils</span><br><span class="line"></span><br><span class="line"># 2. 切换到对应分支（避免 detached HEAD 状态丢失提交）</span><br><span class="line">git checkout main</span><br><span class="line"></span><br><span class="line"># 3. 修改代码后，提交并推送到子模块的远程仓库</span><br><span class="line">git add .</span><br><span class="line">git commit -m &quot;fix: 修复工具函数bug&quot;</span><br><span class="line">git push origin main</span><br><span class="line"></span><br><span class="line"># 4. 回到主仓库根目录</span><br><span class="line">cd ../../</span><br><span class="line"></span><br><span class="line"># 5. 主仓库会检测到子模块的提交哈希变化，提交并推送</span><br><span class="line">git add src/utils</span><br><span class="line">git commit -m &quot;feat: 更新 utils 子模块到修复bug版本&quot;</span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>删除子模块</li>
+</ol>
+<p>Git 2.12+ 推荐使用以下标准流程，避免配置残留：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"># 1. 停用并清理子模块的本地配置</span><br><span class="line">git submodule deinit -f src/utils</span><br><span class="line"></span><br><span class="line"># 2. 删除子模块目录，并移除 .gitmodules 中的对应配置</span><br><span class="line">git rm -f src/utils</span><br><span class="line"></span><br><span class="line"># 3. （可选）清理主仓库缓存的子模块Git数据</span><br><span class="line">rm -rf .git/modules/src/utils</span><br><span class="line"></span><br><span class="line"># 4. 提交变更</span><br><span class="line">git commit -m &quot;refactor: 移除 utils 子模块&quot;</span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="二、新手必避的核心坑点与解决方法"><a href="#二、新手必避的核心坑点与解决方法" class="headerlink" title="二、新手必避的核心坑点与解决方法"></a>二、新手必避的核心坑点与解决方法</h3><ol>
+<li>detached HEAD（游离头）状态问题</li>
+</ol>
+<p><strong>现象</strong>：克隆后进入子模块，执行 <code>git status</code> 提示 <code>HEAD detached at xxx</code>，修改提交后，切换分支或再次更新时提交丢失。</p>
+<p><strong>根本原因</strong>：子模块默认会 checkout 到主仓库记录的<strong>精确提交哈希</strong>，而不是某个分支，因此处于游离头状态，提交不会关联到任何分支。</p>
+<p><strong>解决方法</strong>：</p>
+<ul>
+<li>修改子模块前，必须先执行 <code>git checkout 对应分支</code>，切换到正常分支再开发。</li>
+<li>提交后及时 push 到子模块远程仓库，避免提交丢失。</li>
+</ul>
+<ol start="2">
+<li>提交顺序错误导致协作者无法拉取</li>
+</ol>
+<p><strong>现象</strong>：协作者拉取主仓库后，更新子模块时报错 <code>fatal: reference is not a tree: xxx</code>。</p>
+<p><strong>根本原因</strong>：你只在主仓库提交了子模块的新哈希，但没有把子模块的修改 push 到远程仓库，别人无法获取到这个不存在的提交。</p>
+<p><strong>解决方法</strong>：严格遵守「先 push 子模块，再 push 主仓库」的顺序。</p>
+<ol start="3">
+<li>子模块更新后，主仓库代码不生效</li>
+</ol>
+<p><strong>现象</strong>：在子模块目录执行了 <code>git pull</code>，但主仓库里的子模块代码还是旧的。</p>
+<p><strong>根本原因</strong>：<code>git pull</code> 只更新了子模块本地的代码，主仓库仍然锁定在原来的提交哈希，不会自动同步新的提交。</p>
+<p><strong>解决方法</strong>：子模块更新后，回到主仓库执行 <code>git add 子模块路径</code>，并提交新的提交哈希。</p>
+<ol start="4">
+<li>子模块远程 URL 变更后无法同步</li>
+</ol>
+<p><strong>现象</strong>：子模块的仓库地址更换了，执行更新时报错无法连接旧地址。</p>
+<p><strong>解决方法</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 1. 更新 .gitmodules 中的子模块URL</span><br><span class="line">git submodule set-url src/utils https://github.com/yourname/new-utils.git</span><br><span class="line"></span><br><span class="line"># 2. 同步新URL到本地 .git/config</span><br><span class="line">git submodule sync</span><br><span class="line"></span><br><span class="line"># 3. 重新初始化更新</span><br><span class="line">git submodule update --init --recursive</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="三、进阶用法"><a href="#三、进阶用法" class="headerlink" title="三、进阶用法"></a>三、进阶用法</h3><ol>
+<li>批量操作所有子模块</li>
+</ol>
+<p>使用 <code>git submodule foreach</code> 可以对所有子模块执行统一命令，适合多子模块项目：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 所有子模块切换到 main 分支</span><br><span class="line">git submodule foreach &#x27;git checkout main&#x27;</span><br><span class="line"></span><br><span class="line"># 所有子模块拉取远程最新代码</span><br><span class="line">git submodule foreach &#x27;git pull origin main&#x27;</span><br><span class="line"></span><br><span class="line"># 递归执行命令（处理嵌套子模块）</span><br><span class="line">git submodule foreach --recursive &#x27;git fetch origin&#x27;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>为子模块指定跟踪分支</li>
+</ol>
+<p>添加子模块时指定分支，或修改已有子模块的跟踪分支：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># 添加时指定分支</span><br><span class="line">git submodule add -b main https://github.com/yourname/utils.git src/utils</span><br><span class="line"></span><br><span class="line"># 修改已有子模块的跟踪分支</span><br><span class="line">git config -f .gitmodules submodule.src/utils.branch main</span><br><span class="line"></span><br><span class="line"># 提交配置变更</span><br><span class="line">git add .gitmodules</span><br><span class="line">git commit -m &quot;chore: 指定 utils 子模块跟踪 main 分支&quot;</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>查看子模块状态</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 查看所有子模块的当前提交、分支状态</span><br><span class="line">git submodule status</span><br><span class="line"></span><br><span class="line"># 递归查看嵌套子模块状态</span><br><span class="line">git submodule status --recursive</span><br><span class="line"></span><br><span class="line"># 查看子模块的提交日志变更</span><br><span class="line">git diff --submodule=log</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="四、Git-Submodule-vs-Git-Subtree"><a href="#四、Git-Submodule-vs-Git-Subtree" class="headerlink" title="四、Git Submodule vs Git Subtree"></a>四、Git Submodule vs Git Subtree</h3><table>
+<thead>
+<tr>
+<th>特性</th>
+<th>Git Submodule</th>
+<th>Git Subtree</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>仓库独立性</td>
+<td>子模块完全独立，拥有独立的提交历史和版本控制</td>
+<td>子仓库代码合并到主仓库，无独立的仓库环境</td>
+</tr>
+<tr>
+<td>主仓库体积</td>
+<td>体积小，仅存储引用，不包含子模块代码</td>
+<td>体积大，包含子仓库的完整代码</td>
+</tr>
+<tr>
+<td>学习成本</td>
+<td>较高，有额外的操作流程，容易踩坑</td>
+<td>较低，和普通 Git 操作一致，无额外命令</td>
+</tr>
+<tr>
+<td>版本控制</td>
+<td>可精确锁定到提交哈希，版本控制粒度极细</td>
+<td>只能基于分支 &#x2F; 标签同步，无法精确锁定单个提交</td>
+</tr>
+<tr>
+<td>协作要求</td>
+<td>高，需要团队遵守严格的提交顺序</td>
+<td>低，和普通开发流程一致</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>子仓库独立维护、更新频率低，需要精确版本控制</td>
+<td>子仓库和主仓库频繁联动修改，需要简化协作流程</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="五、常用命令速查表"><a href="#五、常用命令速查表" class="headerlink" title="五、常用命令速查表"></a>五、常用命令速查表</h3><table>
+<thead>
+<tr>
+<th>命令</th>
+<th>核心作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>git submodule add &lt;repo&gt; &lt;path&gt;</code></td>
+<td>添加子模块</td>
+</tr>
+<tr>
+<td><code>git clone --recurse-submodules &lt;repo&gt;</code></td>
+<td>递归克隆主仓库 + 所有子模块</td>
+</tr>
+<tr>
+<td><code>git submodule update --init --recursive</code></td>
+<td>初始化并更新所有子模块（含嵌套）</td>
+</tr>
+<tr>
+<td><code>git submodule update --remote</code></td>
+<td>拉取所有子模块远程最新提交</td>
+</tr>
+<tr>
+<td><code>git submodule foreach &lt;command&gt;</code></td>
+<td>对所有子模块批量执行命令</td>
+</tr>
+<tr>
+<td><code>git submodule status</code></td>
+<td>查看子模块状态</td>
+</tr>
+<tr>
+<td><code>git submodule deinit &lt;path&gt;</code></td>
+<td>停用子模块</td>
+</tr>
+<tr>
+<td><code>git submodule sync</code></td>
+<td>同步子模块 URL 配置</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="六、最佳实践"><a href="#六、最佳实践" class="headerlink" title="六、最佳实践"></a>六、最佳实践</h3><ol>
+<li>子模块尽量引用稳定的标签（tag）版本，而非分支的最新提交，避免非预期的更新引入风险。</li>
+<li>修改子模块前，必须先切换到对应分支，杜绝在 detached HEAD 状态下开发。</li>
+<li>提交代码时，永远先推送子模块的修改，再推送主仓库的变更。</li>
+<li>在 README 中明确说明项目包含子模块，标注克隆和初始化命令，降低协作成本。</li>
+<li>CI&#x2F;CD 流程中，必须添加 <code>--recurse-submodules</code> 参数，确保构建时能完整拉取子模块代码。</li>
+</ol>
+</article>
+<div class="article-footer">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    
+
+</div>
+
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2026/05/30/vscode-Codex-Clash-Proxy-Troubleshooting/">VS Code + Codex + Clash 代理排障笔记</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2026/03/28/rk3506b%E7%A7%BB%E6%A4%8Dlvgl_chess%E6%B5%81%E7%A8%8B/">2026-03-28</a></div></section></div>
+
+<div class="related-wrap" id="related-posts">
+    <section class='header'>
+      <div class='title cap theme'>您可能感兴趣的文章</div>
+    </section>
+    <section class='body'>
+    <div class="related-posts"><a class="item" href="\2024\05\20\ChessLearning\" title="车类残局定式"><span class="title">车类残局定式</span></a></div></section></div>
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="sitemap" style="column-count:2;"><div class="sitemap-group"><span class="fs15">导航</span><a href="/">首页</a><a href="/archives/">归档</a><a href="/categories/">分类</a><a href="/tags/">标签</a><a href="/atom.xml">RSS</a></div><div class="sitemap-group"><span class="fs15">关于</span><a href="/about/">关于我</a><a href="/friends/">友链</a><a href="/message/">留言板</a></div></div><div class="text"><div align="center" style="color:#666; font-size:14px; line-height:1.85;">
+  <p>© 2023–2025 <a target="_blank" rel="noopener" href="https://github.com/dkyou" style="color:#333; text-decoration:none;">Dkyou</a></p>
+  <p>Powered by <a target="_blank" rel="noopener" href="https://hexo.io" style="color:#333;">Hexo</a> · Theme <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar" style="color:#333;">Stellar</a></p>
+  <p>本站文章（除特别说明外）遵循
+    <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" style="color:#333;">CC BY-NC-SA 4.0</a>。
+  </p>
+</div>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%A1%B9%E7%9B%AE-Git-Submodule%EF%BC%88LVGL-%E4%BE%9D%E8%B5%96%EF%BC%89%E7%AE%A1%E7%90%86%E8%A7%84%E8%8C%83"><span class="toc-text">项目 Git Submodule（LVGL 依赖）管理规范</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E8%A7%84%E8%8C%83%E7%9B%AE%E7%9A%84"><span class="toc-text">一、规范目的</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E"><span class="toc-text">二、核心概念说明</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%A7%92%E8%89%B2%E4%B8%8E%E6%9D%83%E8%B4%A3%E5%88%92%E5%88%86"><span class="toc-text">三、角色与权责划分</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E9%A1%B9%E7%9B%AE%E7%BB%B4%E6%8A%A4%E8%80%85"><span class="toc-text">3.1 项目维护者</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E9%A1%B9%E7%9B%AE%E5%8D%8F%E4%BD%9C%E8%80%85"><span class="toc-text">3.2 项目协作者</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%A0%87%E5%87%86%E6%93%8D%E4%BD%9C%E8%A7%84%E8%8C%83"><span class="toc-text">四、标准操作规范</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E9%A6%96%E6%AC%A1%E5%85%8B%E9%9A%86%E9%A1%B9%E7%9B%AE%EF%BC%88%E5%85%A8%E6%88%90%E5%91%98%E9%80%9A%E7%94%A8%EF%BC%89"><span class="toc-text">4.1 首次克隆项目（全成员通用）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E6%97%A5%E5%B8%B8%E6%8B%89%E5%8F%96%E6%9B%B4%E6%96%B0%E4%B8%8E%E7%89%88%E6%9C%AC%E5%90%8C%E6%AD%A5%EF%BC%88%E5%8D%8F%E4%BD%9C%E8%80%85%E4%B8%93%E7%94%A8%EF%BC%89"><span class="toc-text">4.2 日常拉取更新与版本同步（协作者专用）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-LVGL-%E7%89%88%E6%9C%AC%E5%8D%87%E7%BA%A7-%E5%9B%9E%E9%80%80%EF%BC%88%E7%BB%B4%E6%8A%A4%E8%80%85%E4%B8%93%E7%94%A8%EF%BC%89"><span class="toc-text">4.3 LVGL 版本升级 &#x2F; 回退（维护者专用）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-LVL-%E8%87%AA%E5%AE%9A%E4%B9%89%E8%A1%A5%E4%B8%81%E4%BF%AE%E6%94%B9%EF%BC%88%E7%BB%B4%E6%8A%A4%E8%80%85%E4%B8%93%E7%94%A8%EF%BC%89"><span class="toc-text">4.4 LVL 自定义补丁修改（维护者专用）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E7%BB%9D%E5%AF%B9%E7%A6%81%E6%AD%A2%E7%9A%84%E7%BA%A2%E7%BA%BF%E8%A7%84%E5%88%99"><span class="toc-text">五、绝对禁止的红线规则</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E7%89%88%E6%9C%AC%E4%B8%80%E8%87%B4%E6%80%A7%E6%A0%A1%E9%AA%8C%E6%96%B9%E6%B3%95"><span class="toc-text">六、版本一致性校验方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E4%B8%8E%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="toc-text">七、常见问题排查与解决方案</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E9%97%AE%E9%A2%98-1%EF%BC%9ALVGL-%E5%AD%90%E6%A8%A1%E5%9D%97%E7%9B%AE%E5%BD%95%E4%B8%BA%E7%A9%BA"><span class="toc-text">7.1 问题 1：LVGL 子模块目录为空</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E9%97%AE%E9%A2%98-2%EF%BC%9A%E6%9C%AC%E5%9C%B0-LVGL-%E7%89%88%E6%9C%AC%E4%B8%8E%E4%B8%BB%E4%BB%93%E5%BA%93%E9%94%81%E5%AE%9A%E7%89%88%E6%9C%AC%E4%B8%8D%E4%B8%80%E8%87%B4"><span class="toc-text">7.2 问题 2：本地 LVGL 版本与主仓库锁定版本不一致</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-%E9%97%AE%E9%A2%98-3%EF%BC%9A%E6%8B%89%E5%8F%96%E6%9B%B4%E6%96%B0%E5%90%8E%EF%BC%8C%E5%90%8C%E6%AD%A5%E5%AD%90%E6%A8%A1%E5%9D%97%E6%8F%90%E7%A4%BAfatal-reference-is-not-a-tree"><span class="toc-text">7.3 问题 3：拉取更新后，同步子模块提示fatal: reference is not a tree</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-4-%E9%97%AE%E9%A2%98-4%EF%BC%9A%E5%AD%90%E6%A8%A1%E5%9D%97%E5%9C%B0%E5%9D%80%E5%8F%98%E6%9B%B4%E5%90%8E%EF%BC%8C%E5%90%8C%E6%AD%A5%E6%8F%90%E7%A4%BA%E6%97%A7%E5%9C%B0%E5%9D%80%E6%97%A0%E6%B3%95%E8%BF%9E%E6%8E%A5"><span class="toc-text">7.4 问题 4：子模块地址变更后，同步提示旧地址无法连接</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%99%84%E5%BD%95%EF%BC%9A"><span class="toc-text">附录：</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%A0%B8%E5%BF%83%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E4%B8%8E%E5%AE%9E%E6%93%8D"><span class="toc-text">一、核心常用命令与实操</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%96%B0%E6%89%8B%E5%BF%85%E9%81%BF%E7%9A%84%E6%A0%B8%E5%BF%83%E5%9D%91%E7%82%B9%E4%B8%8E%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95"><span class="toc-text">二、新手必避的核心坑点与解决方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%BF%9B%E9%98%B6%E7%94%A8%E6%B3%95"><span class="toc-text">三、进阶用法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E3%80%81Git-Submodule-vs-Git-Subtree"><span class="toc-text">四、Git Submodule vs Git Subtree</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E9%80%9F%E6%9F%A5%E8%A1%A8"><span class="toc-text">五、常用命令速查表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="toc-text">六、最佳实践</span></a></li></ol></li></ol></li></ol></div><div class="widget-footer"><a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/><path d="M7 3.338A9.95 9.95 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5"/></g></svg><span>回到顶部</span></a></div></widget>
+
+
+</div></aside><div class='float-panel'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+
+
+<script type="text/javascript">
+  window.canonical = {"originalHost":null,"officialHosts":["localhost"],"encoded":""};
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+    tag_plugins: {
+      chat: Object.assign({"api":"https://siteinfo.listentothewind.cn/api/v1"}),
+    }
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":null,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+    loading: `https://api.iconify.design/eos-icons:three-dots-loading.svg?color=%231cd0fd`,
+  };
+  const deps = {
+    jquery: `https://gcore.jsdelivr.net/npm/jquery@3.7/dist/jquery.min.js`,
+    marked: `https://gcore.jsdelivr.net/npm/marked@13.0/lib/marked.umd.min.js`,
+    lazyload: `/%5Bobject%20Object%5D`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  
+  function RunItem() {
+    this.list = []; // 存放回调函数
+    this.start = () => {
+      for (var i = 0; i < this.list.length; i++) {
+        this.list[i].run();
+      }
+    };
+    this.push = (fn, name, setRequestAnimationFrame = true) => {
+      let myfn = fn
+      if (setRequestAnimationFrame) {
+        myfn = () => {
+          utils.requestAnimationFrame(fn)
+        }
+      }
+      var f = new Item(myfn, name);
+      this.list.push(f);
+    };
+    this.remove = (name) => {
+      for (let index = 0; index < this.list.length; index++) {
+        const e = this.list[index];
+        if (e.name == name) {
+          this.list.splice(index, 1);
+        }
+      }
+    }
+    // 构造一个可以run的对象
+    function Item(fn, name) {
+      // 函数名称
+      this.name = name || fn.name;
+      // run方法
+      this.run = () => {
+        try {
+          fn()
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    }
+  }
+
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')) {
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function () {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      const maxRetry = 3;
+      let retryCount = 0;
+
+      return new Promise((resolve, reject) => {
+        const load = () => {
+          utils.onLoading?.(el);
+
+          let timedOut = false;
+          const timeout = setTimeout(() => {
+            timedOut = true;
+            console.warn('[request] 超时:', url);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject('请求超时');
+            } else {
+              setTimeout(load, 1000);
+            }
+          }, 5000);
+
+          fetch(url).then(resp => {
+            if (timedOut) return;
+            clearTimeout(timeout);
+
+            if (!resp.ok) throw new Error('响应失败');
+            return resp;
+          }).then(data => {
+            if (timedOut) return;
+            utils.onLoadSuccess?.(el);
+            callback(data);
+            resolve(data);
+          }).catch(err => {
+            clearTimeout(timeout);
+            console.warn('[request] 错误:', err);
+
+            if (++retryCount >= maxRetry) {
+              utils.onLoadFailure?.(el);
+              onFailure?.();
+              reject(err);
+            } else {
+              setTimeout(load, 1000);
+            }
+          });
+        };
+
+        load();
+      });
+    },
+    requestWithoutLoading: (url, options = {}, maxRetry = 2, timeout = 5000) => {
+      return new Promise((resolve, reject) => {
+        let retryCount = 0;
+
+        const tryRequest = () => {
+          let timedOut = false;
+          const timer = setTimeout(() => {
+            timedOut = true;
+            if (++retryCount > maxRetry) reject('timeout');
+            else tryRequest();
+          }, timeout);
+
+          fetch(url, options)
+            .then(resp => {
+              clearTimeout(timer);
+              if (!resp.ok) throw new Error('bad response');
+              resolve(resp);
+            })
+            .catch(err => {
+              clearTimeout(timer);
+              if (++retryCount > maxRetry) reject(err);
+              else setTimeout(tryRequest, 500);
+            });
+        };
+
+        tryRequest();
+      });
+    },
+    /********************** requestAnimationFrame ********************************/
+    // 1、requestAnimationFrame 会把每一帧中的所有 DOM 操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
+    // 2、在隐藏或不可见的元素中，requestAnimationFrame 将不会进行重绘或回流，这当然就意味着更少的的 cpu，gpu 和内存使用量。
+    requestAnimationFrame: (fn) => {
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+      }
+      window.requestAnimationFrame(fn)
+    },
+    dark: {},
+  };
+
+  // utils.dark.mode 当前模式 dark or light
+  // utils.dark.toggle() 暗黑模式触发器
+  // utils.dark.push(callBack[,"callBackName"]) 传入触发器回调函数
+  utils.dark.method = {
+    toggle: new RunItem(),
+  };
+  utils.dark = Object.assign(utils.dark, {
+    push: utils.dark.method.toggle.push,
+  });
+</script>
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+<script async src="https://gcore.jsdelivr.net/npm/vanilla-lazyload@19.1/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+    callback_loaded: (el) => {
+      el.classList.add('loaded');
+      const wrapper = el.closest('.lazy-box');
+      const icon = wrapper?.querySelector('.lazy-icon');
+      if (icon) icon.remove();
+    }
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+
+  window.wrapLazyloadImages = (container) => {
+    if (typeof container === 'string') {
+      container = document.querySelector(container);
+    }
+    if (!container) return;
+    
+    const images = container.querySelectorAll('img');
+    images.forEach((img) => {
+      if (img.classList.contains('lazy')) return;
+
+      const src = img.getAttribute('src');
+      if (!src) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'lazy-box';
+
+      const newImg = img.cloneNode();
+      newImg.removeAttribute('src');
+      newImg.setAttribute('data-src', src);
+      newImg.classList.add('lazy');
+
+      const icon = document.createElement('div');
+      icon.className = 'lazy-icon';
+      if (def.loading) {
+        icon.style.backgroundImage = `url("${def.loading}")`;
+      }
+
+      wrapper.appendChild(newImg);
+      wrapper.appendChild(icon);
+
+      img.replaceWith(wrapper);
+    });
+
+    // 通知 LazyLoad 更新
+    if (window.lazyLoadInstance?.update) {
+      window.lazyLoadInstance.update();
+    }
+  }
+  
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.33.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    // applyThemeToGiscus(theme)
+  }
+
+  // FIXME: 这会导致无法使用 preferred_color_scheme 以外的主题
+  const applyThemeToGiscus = (theme) => {
+    // theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+    utils.dark.mode = newTheme === 'auto' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : newTheme;
+    utils.dark.method.toggle.start();
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    } else {
+      utils.dark.mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    utils.dark.method.toggle.start();
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"rating":{"js":"/js/services/rating.js","api":"https://star-vote.xaox.cc/api/rating"},"vote":{"js":"/js/services/vote.js","api":"https://star-vote.xaox.cc/api/vote"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"friends_and_posts":{"js":"/js/services/friends_and_posts.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"voice":{"js":"/js/plugins/voice.js"},"video":{"js":"/js/plugins/video.js"},"download-file":{"js":"/js/plugins/download-file.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"},"contributors":{"edit_this_page":{"_posts/":null,"wiki/stellar/":"https://github.com/xaoxuu/hexo-theme-stellar-docs/blob/main/"},"js":"/js/services/contributors.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else if (id == 'voice') {
+        ctx.voiceAudios = document.querySelectorAll('.voice>audio');
+        if (ctx.voiceAudios?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            createVoiceDom(ctx.voiceAudios);
+          });
+        }
+      } else if (id == 'video') {
+        ctx.videos = document.querySelectorAll('.video>video');
+        if (ctx.videos?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            videoEvents(ctx.videos);
+          });
+        }
+      } else if (id == 'download-file') {
+        ctx.files = document.querySelectorAll('.file');
+        if (ctx.files?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            downloadFileEvent(ctx.files);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+
+    // chat iphone time
+    let phoneTimes = document.querySelectorAll('.chat .status-bar .time');
+
+    if (phoneTimes.length > 0) {
+      NowTime();
+      var date = new Date();
+      var sec = date.getSeconds();
+      var firstAdjustInterval = setInterval(firstAdjustTime, 1000 * (60 - sec));
+    }
+
+    function firstAdjustTime() {
+      NowTime();
+      clearInterval(firstAdjustInterval);
+      setInterval(NowTime, 1000 * 60);
+    }
+
+    function NowTime() {
+      for (let i = 0; i < phoneTimes.length; ++i) {
+        var timeSpan = phoneTimes[i];
+        var date = new Date();
+        var hour = date.getHours();
+        var min = date.getMinutes();
+        timeSpan.innerHTML = check(hour) + ":" + check(min);
+      }
+    };
+
+    function check(val) {
+      if (val < 10) {
+        return ("0" + val);
+      }
+      return (val);
+    }
+
+    // chat quote
+    const chat_quote_obverser = new IntersectionObserver((entries, observer) => {
+      entries.filter((entry) => { return entry.isIntersecting }).sort((a, b) => a.intersectionRect.y !== b.intersectionRect.y ? a.intersectionRect.y - b.intersectionRect.y : a.intersectionRect.x - b.intersectionRect.x).forEach((entry, index) => {
+          observer.unobserve(entry.target);
+          setTimeout(() => {
+            entry.target.classList.add('quote-blink');
+            setTimeout(() => {
+              entry.target.classList.remove('quote-blink');
+            }, 1000);
+          }, Math.max(100, 16) * (index + 1));
+        });
+    });
+
+    var chatQuotes = document.querySelectorAll(".chat .talk .quote");
+    chatQuotes.forEach((quote) => {
+      quote.addEventListener('click', function () {
+        var chatCellDom = document.getElementById("quote-" + quote.getAttribute("quotedCellTag"));
+        if (chatCellDom) {
+          var chatDiv = chatCellDom.parentElement;
+          var mid = chatDiv.clientHeight / 2;
+          var offsetTop = chatCellDom.offsetTop;
+          if (offsetTop > mid - chatCellDom.clientHeight / 2) {
+            chatDiv.scrollTo({
+              top: chatCellDom.offsetTop - mid + chatCellDom.clientHeight / 2,
+              behavior: "smooth"
+            });
+          } else {
+            chatDiv.scrollTo({
+              top: 0,
+              behavior: "smooth"
+            });
+          }
+          chat_quote_obverser.observe(chatCellDom);
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://gcore.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error), .with-fancybox .atk-content img:not([atk-emoticon])';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const memos = document.getElementsByClassName('ds-memos');
+    if (memos != undefined && memos.length > 0) {
+      needFancybox = true;
+    }
+    const fancybox = document.getElementsByClassName('with-fancybox');
+    if (fancybox != undefined && fancybox.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `不能复制哦~`,
+        success_text: `竟没骗到你！复制成功`,
+        toast: `又被你小子复制了！🌈`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
